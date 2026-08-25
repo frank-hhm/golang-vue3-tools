@@ -1,0 +1,1 @@
+import{d as t,r as s,o as a,c as r,a as c,b as l,g as i}from"./index.81b41911.js";const f=t({__name:"index",setup(u){const{proxy:p,proxy:{$utils:_,$wailsjs:o}}=i();s([]);const n=()=>{o.GetSerialPorts().then(e=>{alert(e)})};return a(()=>{console.log("res:",11)}),(e,d)=>(l(),r("div",null,[c("div",{onClick:n},"\u70B9\u51FB")]))}});export{f as default};

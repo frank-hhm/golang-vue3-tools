@@ -1,0 +1,1 @@
+import{d as s,r as n,o as t,c as r,t as a,g as c,a as l}from"./index.c8cb868d.js";console.error("111111111111:",window==null?void 0:window.wails);const f=s({__name:"index",setup(i){const{proxy:p,proxy:{$utils:u,wailsjs:e}}=c(),o=n([]);return t(async()=>{console.log("res:",e.GetSerialPorts())}),(_,d)=>(l(),r("div",null,a(o.value),1))}});export{f as default};

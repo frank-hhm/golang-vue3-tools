@@ -1,0 +1,1 @@
+import{d as n,r,o as t,c as a,a as c,b as s}from"./index.b11f73b6.js";function l(e){return window.go.main.App.Greet(e)}const p=n({__name:"index",setup(e){r([]);const o=()=>{console.log("11111",l("World"))};return t(()=>{console.log("res:",11)}),(i,d)=>(s(),a("div",null,[c("div",{onClick:o},"\u70B9\u51FB")]))}});export{p as default};
