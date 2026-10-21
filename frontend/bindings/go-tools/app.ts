@@ -8,7 +8,7 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
+import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -44,9 +44,7 @@ export function CloseConnection(): $CancellablePromise<void> {
  * ConnectionStatus 返回当前连接状态
  */
 export function ConnectionStatus(): $CancellablePromise<usbserial$0.ConnStatus> {
-    return $Call.ByID(1883682691).then(($result: any) => {
-        return $$createType0($result);
-    });
+    return $Call.ByID(1883682691);
 }
 
 /**
@@ -56,28 +54,22 @@ export function ConnectionStatus(): $CancellablePromise<usbserial$0.ConnStatus> 
  * 		return sniffer.GetDevices()
  * 	}
  */
-export function GetDevicesSniffer(): $CancellablePromise<sniffer$0.PcapDeviceInfo[]> {
-    return $Call.ByID(1408748705).then(($result: any) => {
-        return $$createType2($result);
-    });
+export function GetDevicesSniffer(): $CancellablePromise<sniffer$0.PcapDeviceInfo[] | null> {
+    return $Call.ByID(1408748705);
 }
 
 /**
  * GetLocalIPs 获取本机可用 IPv4 地址列表（供 TCP/UDP 本地地址选择）
  */
-export function GetLocalIPs(): $CancellablePromise<string[]> {
-    return $Call.ByID(1089204084).then(($result: any) => {
-        return $$createType3($result);
-    });
+export function GetLocalIPs(): $CancellablePromise<string[] | null> {
+    return $Call.ByID(1089204084);
 }
 
 /**
  * GetSerialPorts 获取系统串口列表
  */
-export function GetSerialPorts(): $CancellablePromise<usbserial$0.SerialDeviceInfo[]> {
-    return $Call.ByID(2103145165).then(($result: any) => {
-        return $$createType5($result);
-    });
+export function GetSerialPorts(): $CancellablePromise<usbserial$0.SerialDeviceInfo[] | null> {
+    return $Call.ByID(2103145165);
 }
 
 /**
@@ -104,7 +96,7 @@ export function MySQLAddColumn(id: string, database: string, table: string, col:
 /**
  * MySQLBackup 生成 SQL 备份文本
  */
-export function MySQLBackup(id: string, database: string, tables: string[]): $CancellablePromise<string> {
+export function MySQLBackup(id: string, database: string, tables: string[] | null): $CancellablePromise<string> {
     return $Call.ByID(960772607, id, database, tables);
 }
 
@@ -147,61 +139,49 @@ export function MySQLDropColumn(id: string, database: string, table: string, col
  * MySQLExecute 执行 SQL（查询返回结果集，其余返回受影响行）
  */
 export function MySQLExecute(id: string, database: string, sqlText: string): $CancellablePromise<mysql$0.QueryResult> {
-    return $Call.ByID(2907278648, id, database, sqlText).then(($result: any) => {
-        return $$createType6($result);
-    });
+    return $Call.ByID(2907278648, id, database, sqlText);
 }
 
 /**
  * MySQLInsertRow 插入一行
  */
-export function MySQLInsertRow(id: string, database: string, table: string, data: { [_ in string]?: string }): $CancellablePromise<number> {
+export function MySQLInsertRow(id: string, database: string, table: string, data: { [_ in string]?: string } | null): $CancellablePromise<number> {
     return $Call.ByID(2201039212, id, database, table, data);
 }
 
 /**
  * MySQLListDatabases 列出数据库
  */
-export function MySQLListDatabases(id: string): $CancellablePromise<string[]> {
-    return $Call.ByID(2502895709, id).then(($result: any) => {
-        return $$createType3($result);
-    });
+export function MySQLListDatabases(id: string): $CancellablePromise<string[] | null> {
+    return $Call.ByID(2502895709, id);
 }
 
 /**
  * MySQLListRoutines 列出函数/存储过程
  */
-export function MySQLListRoutines(id: string, database: string): $CancellablePromise<mysql$0.RoutineInfo[]> {
-    return $Call.ByID(3546892372, id, database).then(($result: any) => {
-        return $$createType8($result);
-    });
+export function MySQLListRoutines(id: string, database: string): $CancellablePromise<mysql$0.RoutineInfo[] | null> {
+    return $Call.ByID(3546892372, id, database);
 }
 
 /**
  * MySQLListTables 列出基表
  */
-export function MySQLListTables(id: string, database: string): $CancellablePromise<mysql$0.TableInfo[]> {
-    return $Call.ByID(3608111224, id, database).then(($result: any) => {
-        return $$createType10($result);
-    });
+export function MySQLListTables(id: string, database: string): $CancellablePromise<mysql$0.TableInfo[] | null> {
+    return $Call.ByID(3608111224, id, database);
 }
 
 /**
  * MySQLListViews 列出视图
  */
-export function MySQLListViews(id: string, database: string): $CancellablePromise<mysql$0.ViewInfo[]> {
-    return $Call.ByID(2937346173, id, database).then(($result: any) => {
-        return $$createType12($result);
-    });
+export function MySQLListViews(id: string, database: string): $CancellablePromise<mysql$0.ViewInfo[] | null> {
+    return $Call.ByID(2937346173, id, database);
 }
 
 /**
  * MySQLLoadConnections 从文件读取连接列表
  */
-export function MySQLLoadConnections(): $CancellablePromise<mysql$0.ConnConfig[]> {
-    return $Call.ByID(2111961026).then(($result: any) => {
-        return $$createType14($result);
-    });
+export function MySQLLoadConnections(): $CancellablePromise<mysql$0.ConnConfig[] | null> {
+    return $Call.ByID(2111961026);
 }
 
 /**
@@ -228,7 +208,7 @@ export function MySQLRollbackTx(txID: string): $CancellablePromise<void> {
 /**
  * MySQLSaveConnections 保存连接配置到文件
  */
-export function MySQLSaveConnections(configs: mysql$0.ConnConfig[]): $CancellablePromise<string> {
+export function MySQLSaveConnections(configs: mysql$0.ConnConfig[] | null): $CancellablePromise<string> {
     return $Call.ByID(3750105001, configs);
 }
 
@@ -236,27 +216,21 @@ export function MySQLSaveConnections(configs: mysql$0.ConnConfig[]): $Cancellabl
  * MySQLTableData 分页浏览表数据
  */
 export function MySQLTableData(id: string, database: string, table: string, filter: string, orderBy: string, desc: boolean, page: number, size: number): $CancellablePromise<mysql$0.QueryResult> {
-    return $Call.ByID(1431334087, id, database, table, filter, orderBy, desc, page, size).then(($result: any) => {
-        return $$createType6($result);
-    });
+    return $Call.ByID(1431334087, id, database, table, filter, orderBy, desc, page, size);
 }
 
 /**
  * MySQLTableSchema 返回表结构（列/索引/DDL）
  */
 export function MySQLTableSchema(id: string, database: string, table: string): $CancellablePromise<mysql$0.TableSchema> {
-    return $Call.ByID(3285355648, id, database, table).then(($result: any) => {
-        return $$createType15($result);
-    });
+    return $Call.ByID(3285355648, id, database, table);
 }
 
 /**
  * MySQLTxExecute 在事务中执行语句
  */
 export function MySQLTxExecute(txID: string, sqlText: string): $CancellablePromise<mysql$0.QueryResult> {
-    return $Call.ByID(2881411876, txID, sqlText).then(($result: any) => {
-        return $$createType6($result);
-    });
+    return $Call.ByID(2881411876, txID, sqlText);
 }
 
 /**
@@ -322,7 +296,7 @@ export function RedisConnectionsFilePath(): $CancellablePromise<string> {
 /**
  * RedisDeleteKeys 删除若干键，返回删除数量
  */
-export function RedisDeleteKeys(id: string, keys: string[]): $CancellablePromise<number> {
+export function RedisDeleteKeys(id: string, keys: string[] | null): $CancellablePromise<number> {
     return $Call.ByID(1012390855, id, keys);
 }
 
@@ -330,18 +304,14 @@ export function RedisDeleteKeys(id: string, keys: string[]): $CancellablePromise
  * RedisGetKey 读取键详情（按类型返回结构）
  */
 export function RedisGetKey(id: string, key: string): $CancellablePromise<redis$0.KeyValue> {
-    return $Call.ByID(3543651543, id, key).then(($result: any) => {
-        return $$createType16($result);
-    });
+    return $Call.ByID(3543651543, id, key);
 }
 
 /**
  * RedisLoadConnections 从配置文件读取连接列表
  */
-export function RedisLoadConnections(): $CancellablePromise<redis$0.ConnConfig[]> {
-    return $Call.ByID(1426630705).then(($result: any) => {
-        return $$createType18($result);
-    });
+export function RedisLoadConnections(): $CancellablePromise<redis$0.ConnConfig[] | null> {
+    return $Call.ByID(1426630705);
 }
 
 /**
@@ -354,7 +324,7 @@ export function RedisOpen(cfg: redis$0.ConnConfig): $CancellablePromise<void> {
 /**
  * RedisSaveConnections 将连接配置保存到用户配置文件，返回文件路径
  */
-export function RedisSaveConnections(configs: redis$0.ConnConfig[]): $CancellablePromise<string> {
+export function RedisSaveConnections(configs: redis$0.ConnConfig[] | null): $CancellablePromise<string> {
     return $Call.ByID(2787864914, configs);
 }
 
@@ -362,9 +332,7 @@ export function RedisSaveConnections(configs: redis$0.ConnConfig[]): $Cancellabl
  * RedisScan 增量扫描键（pattern 为空默认 *，limit 限制返回数量）
  */
 export function RedisScan(id: string, pattern: string, count: number, limit: number): $CancellablePromise<redis$0.ScanResult> {
-    return $Call.ByID(1634125981, id, pattern, count, limit).then(($result: any) => {
-        return $$createType19($result);
-    });
+    return $Call.ByID(1634125981, id, pattern, count, limit);
 }
 
 /**
@@ -384,10 +352,8 @@ export function RedisSetTTL(id: string, key: string, ttl: number): $CancellableP
 /**
  * RedisSlowlog 拉取慢查询日志
  */
-export function RedisSlowlog(id: string, count: number): $CancellablePromise<redis$0.SlowlogEntry[]> {
-    return $Call.ByID(2417336661, id, count).then(($result: any) => {
-        return $$createType21($result);
-    });
+export function RedisSlowlog(id: string, count: number): $CancellablePromise<redis$0.SlowlogEntry[] | null> {
+    return $Call.ByID(2417336661, id, count);
 }
 
 /**
@@ -401,9 +367,7 @@ export function RedisStartMonitor(cfg: redis$0.ConnConfig): $CancellablePromise<
  * RedisStatus 获取服务器状态概览
  */
 export function RedisStatus(id: string): $CancellablePromise<redis$0.ServerStatus> {
-    return $Call.ByID(2999982438, id).then(($result: any) => {
-        return $$createType22($result);
-    });
+    return $Call.ByID(2999982438, id);
 }
 
 /**
@@ -470,7 +434,7 @@ export function SnifferProxyStatus(): $CancellablePromise<[boolean, number]> {
  * 注意：devices 参数现在直接接收 Npcap 的真实设备名 (pcapName)
  * 新增 ports 参数，例如传入 ["80"] 或 ["80", "443"]
  */
-export function StartCaptureSniffer(devices: string[], protocols: string[], ports: string[]): $CancellablePromise<void> {
+export function StartCaptureSniffer(devices: string[] | null, protocols: string[] | null, ports: string[] | null): $CancellablePromise<void> {
     return $Call.ByID(44330958, devices, protocols, ports);
 }
 
@@ -561,28 +525,3 @@ export function VideoSavePrompt(session: string): $CancellablePromise<string> {
 export function VideoWidgetDone(savePath: string): $CancellablePromise<void> {
     return $Call.ByID(3960415720, savePath);
 }
-
-// Private type creation functions
-const $$createType0 = usbserial$0.ConnStatus.createFrom;
-const $$createType1 = sniffer$0.PcapDeviceInfo.createFrom;
-const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = $Create.Array($Create.Any);
-const $$createType4 = usbserial$0.SerialDeviceInfo.createFrom;
-const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = mysql$0.QueryResult.createFrom;
-const $$createType7 = mysql$0.RoutineInfo.createFrom;
-const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = mysql$0.TableInfo.createFrom;
-const $$createType10 = $Create.Array($$createType9);
-const $$createType11 = mysql$0.ViewInfo.createFrom;
-const $$createType12 = $Create.Array($$createType11);
-const $$createType13 = mysql$0.ConnConfig.createFrom;
-const $$createType14 = $Create.Array($$createType13);
-const $$createType15 = mysql$0.TableSchema.createFrom;
-const $$createType16 = redis$0.KeyValue.createFrom;
-const $$createType17 = redis$0.ConnConfig.createFrom;
-const $$createType18 = $Create.Array($$createType17);
-const $$createType19 = redis$0.ScanResult.createFrom;
-const $$createType20 = redis$0.SlowlogEntry.createFrom;
-const $$createType21 = $Create.Array($$createType20);
-const $$createType22 = redis$0.ServerStatus.createFrom;

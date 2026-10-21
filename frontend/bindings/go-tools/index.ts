@@ -8,7 +8,7 @@ export {
     GreetService
 };
 
-export {
+export type {
     UIMessage,
     VideoStatus
 } from "./models.js";

@@ -128,9 +128,16 @@
 
 <script setup lang="ts">
 import { computed, getCurrentInstance, onMounted, onUnmounted, reactive, ref } from "vue";
-import { Message } from "@arco-design/web-vue";
 import { Events } from "@wailsio/runtime";
 import { mimeExt, pickMime, recFilename, savePromptRetry, uploadVideoBlob } from "@/utils/videorec";
+
+// 提示统一走 Go 原生通道：完成/成功 → 系统通知中心（原生 Toast）；错误/异常 → Go 自绘 Message 小窗
+function notifyDone(title: string, content: string) {
+  try { GoTools?.ShowSystemNotification(title, content); } catch { /* ignore */ }
+}
+function notifyError(text: string) {
+  try { GoTools?.ShowMessage("error", text); } catch { /* ignore */ }
+}
 
 const GoTools = (getCurrentInstance() as any)?.appContext.config.globalProperties.$GoTools;
 
@@ -287,7 +294,7 @@ function captureSnapshotFrame() {
 /** 区域模式第一步：先选择共享内容 → 再拖动框选区域 */
 async function beginRegion() {
   if (typeof GoTools?.VideoOpenWidget !== "function") {
-    Message.error("需在应用窗口中使用（后端方法不可用）");
+    notifyError("需在应用窗口中使用（后端方法不可用）");
     return;
   }
   try {
@@ -297,14 +304,14 @@ async function beginRegion() {
   } catch (e: any) {
     stopRecSource();
     st.status = "idle";
-    Message.warning("未选择共享内容：" + (e?.message || e));
+    notifyError("未选择共享内容：" + (e?.message || e));
   }
 }
 
 /** 屏幕模式：选择共享内容 → 直接开始录制 */
 async function startScreen() {
   if (typeof GoTools?.VideoOpenWidget !== "function") {
-    Message.error("需在应用窗口中使用（后端方法不可用）");
+    notifyError("需在应用窗口中使用（后端方法不可用）");
     return;
   }
   try {
@@ -312,7 +319,7 @@ async function startScreen() {
   } catch (e: any) {
     stopRecSource();
     st.status = "idle";
-    Message.warning("未选择共享内容：" + (e?.message || e));
+    notifyError("未选择共享内容：" + (e?.message || e));
     return;
   }
   await launchRecorder("screen", { x: 0, y: 0, w: 0, h: 0 }, window.screen.width, window.screen.height);
@@ -360,7 +367,7 @@ async function launchRecorder(mode: "screen" | "region", frac: { x: number; y: n
     stopRecSource();
     recActive = false;
     st.status = mode === "region" && st.snapUrl ? "selecting" : "idle";
-    Message.error("启动录制失败：" + (e?.message || e));
+    notifyError("启动录制失败：" + (e?.message || e));
   }
 }
 
@@ -376,7 +383,7 @@ function startPendingRec() {
     stopRecSource();
     reportRec("closed");
     st.status = "idle";
-    Message.error("开始录制失败：" + (e?.message || e));
+    notifyError("开始录制失败：" + (e?.message || e));
     return;
   }
   recActive = true;
@@ -427,7 +434,7 @@ function onRecTrackEnded() {
     stopRecSource();
     reportRec("closed");
     st.status = "idle";
-    Message.info("共享已结束");
+    notifyDone("共享已结束", "录制未启动，已返回初始状态");
   } else if (!recActive && st.status === "selecting") {
     // 框选期间共享结束 → 回到初始状态
     stopRecSource();
@@ -435,7 +442,7 @@ function onRecTrackEnded() {
     st.rect = null;
     st.selPx = null;
     st.status = "idle";
-    Message.info("共享已结束");
+    notifyDone("共享已结束", "区域框选已取消");
   }
 }
 
@@ -459,11 +466,11 @@ function finalizeCapture() {
   if (recBlob.size > 0) st.blobUrl = URL.createObjectURL(recBlob);
   st.status = "stopped";
   try { GoTools?.VideoWidgetDone(""); } catch { /* ignore */ }
-  Message.success("录制完成，请在「结果/说明」中预览并点击「另存为…」保存");
+  notifyDone("视频录制完成", `时长 ${fmtTime(recElapsedSec())} · 大小 ${fmtSize(st.size)}，请在「结果/说明」中预览并点击「另存为…」保存。`);
 }
 
 async function saveUploaded() {
-  if (!recBlob || recBlob.size === 0) { Message.error("录制数据为空"); return; }
+  if (!recBlob || recBlob.size === 0) { notifyError("录制数据为空"); return; }
   if (saving.value) return;
   saving.value = true;
   try {
@@ -479,12 +486,12 @@ async function saveUploaded() {
     if (path) {
       st.savedPath = path;
       st.savedExt = path.toLowerCase().endsWith(".webm") ? "webm" : "mp4";
-      Message.success("已保存：" + path);
+      notifyDone("视频已保存", path);
     }
     // 空路径 = 取消了对话框，数据保留，可再次点「另存为…」
   } catch (e: any) {
     recSession = "";
-    Message.error("保存失败：" + (e?.message || e));
+    notifyError("保存失败：" + (e?.message || e));
   } finally {
     saving.value = false;
   }
@@ -572,9 +579,9 @@ function computeSel() {
 
 /** 区域模式第二步：框选完成后点开始录制（共享已选过，不再弹选择框） */
 async function startRegion() {
-  if (!st.rect) { Message.warning("请先框选区域"); return; }
+  if (!st.rect) { notifyError("请先框选区域"); return; }
   if (!recStream || !recVideo || recVideo.videoWidth === 0) {
-    Message.warning("共享已失效，请重新框选");
+    notifyError("共享已失效，请重新框选");
     st.status = "idle";
     return;
   }
@@ -609,7 +616,7 @@ async function openCamera() {
     await v.play();
     st.status = "ready";
   } catch (e: any) {
-    Message.error("打开摄像头失败：" + (e?.message || e));
+    notifyError("打开摄像头失败：" + (e?.message || e));
     stopSource();
   }
 }
@@ -622,7 +629,7 @@ function startCamera() {
   try {
     camRecorder = new MediaRecorder(camStream, mime ? { mimeType: mime, videoBitsPerSecond: 6_000_000 } : undefined);
   } catch (e: any) {
-    Message.error("初始化录制器失败：" + (e?.message || e));
+    notifyError("初始化录制器失败：" + (e?.message || e));
     return;
   }
   camRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) camChunks.push(e.data); };
@@ -633,7 +640,7 @@ function startCamera() {
     cleanupResult();
     st.blobUrl = URL.createObjectURL(blob);
     st.status = "stopped";
-    Message.success("录制完成，请点击「另存为…」选择保存目录");
+    notifyDone("视频录制完成", `大小 ${fmtSize(st.size)}，请点击「另存为…」选择保存目录。`);
   };
   camRecorder.start(1000);
   camElapsed.value = 0;
@@ -674,11 +681,11 @@ async function saveCamera() {
     if (path) {
       st.savedPath = path;
       st.savedExt = path.toLowerCase().endsWith(".webm") ? "webm" : "mp4";
-      Message.success("已保存：" + path);
+      notifyDone("视频已保存", path);
     }
   } catch (e: any) {
     camSession = "";
-    Message.error("保存失败：" + (e?.message || e));
+    notifyError("保存失败：" + (e?.message || e));
   } finally {
     saving.value = false;
   }

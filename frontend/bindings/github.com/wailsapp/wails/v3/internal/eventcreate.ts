@@ -6,36 +6,4 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as main$0 from "../../../../../go-tools/models.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as redis$0 from "../../../../../go-tools/tools/redis/models.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as sniffer$0 from "../../../../../go-tools/tools/sniffer/models.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as usbserial$0 from "../../../../../go-tools/tools/usbserial/models.js";
-
-function configure() {
-    Object.freeze(Object.assign($Create.Events, {
-        "redis:monitor": $$createType0,
-        "serial:data": $$createType1,
-        "serial:status": $$createType2,
-        "sniffer:flow": $$createType3,
-        "ui:message": $$createType4,
-        "video:status": $$createType5,
-    }));
-}
-
-// Private type creation functions
-const $$createType0 = redis$0.MonitorLine.createFrom;
-const $$createType1 = usbserial$0.SerialData.createFrom;
-const $$createType2 = usbserial$0.ConnStatusEvent.createFrom;
-const $$createType3 = sniffer$0.Flow.createFrom;
-const $$createType4 = main$0.UIMessage.createFrom;
-const $$createType5 = main$0.VideoStatus.createFrom;
-
-configure();
+Object.freeze($Create.Events);

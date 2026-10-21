@@ -3,7 +3,7 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
+import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wailsio/runtime";
 
 export function CaptureDisplay(id: number): $CancellablePromise<string> {
     return $Call.ByID(1256582795, id);
@@ -28,7 +28,7 @@ export function CaptureSelectedRegion(format: string): $CancellablePromise<strin
     return $Call.ByID(2842139334, format);
 }
 
-export function ComposeAnnotations(base64Image: string, canvasWidth: number, canvasHeight: number, annotations: { [_ in string]?: any }[]): $CancellablePromise<string> {
+export function ComposeAnnotations(base64Image: string, canvasWidth: number, canvasHeight: number, annotations: ({ [_ in string]?: any } | null)[] | null): $CancellablePromise<string> {
     return $Call.ByID(3904073321, base64Image, canvasWidth, canvasHeight, annotations);
 }
 
@@ -36,10 +36,8 @@ export function CopyToClipboard(data: string): $CancellablePromise<void> {
     return $Call.ByID(806392727, data);
 }
 
-export function DisplayInfo(): $CancellablePromise<{ [_ in string]?: any }[]> {
-    return $Call.ByID(2950096583).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function DisplayInfo(): $CancellablePromise<({ [_ in string]?: any } | null)[] | null> {
+    return $Call.ByID(2950096583);
 }
 
 /**
@@ -55,7 +53,3 @@ export function PickColorFromScreen(): $CancellablePromise<string> {
 export function SaveImage(path: string, data: string): $CancellablePromise<void> {
     return $Call.ByID(144252787, path, data);
 }
-
-// Private type creation functions
-const $$createType0 = $Create.Map($Create.Any, $Create.Any);
-const $$createType1 = $Create.Array($$createType0);
