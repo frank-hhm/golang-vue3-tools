@@ -1,5 +1,5 @@
 <template>
-    <div class="main-body">
+    <layout-body>
         <a-space class="mt10">
             <a-button @click="onGetDevices">获取设备列表</a-button>
         </a-space>
@@ -37,20 +37,21 @@
                 </template>
             </a-table>
         </div>
-    </div>
+    </layout-body>
 </template>
 <script setup lang="ts">
 import { getCurrentInstance, ref, onMounted, watch } from "vue";
 
 const {
     proxy,
-    proxy: { $utils, $wailsjs, $wailsRun },
+    proxy: { $utils, $GoTools },
 } = getCurrentInstance() as any;
 
 
 const deviceList = ref<any[]>([]);
 const onGetDevices = () => {
-    $wailsjs.GetDevicesSniffer().then((res) => {
+    console.log("onGetDevices", $GoTools.GreetService);
+    $GoTools.GetDevicesSniffer().then((res) => {
         console.log("res:", res);
         deviceList.value = res
     });
@@ -59,7 +60,7 @@ const onGetDevices = () => {
 const selectedProtocols = ref<string[]>(['tcp', 'udp']);
 
 const onOpen = (record: any) => {
-    $wailsjs.StartCaptureSniffer([record.pcapName], selectedProtocols.value, ['80']).then((res) => {
+    $GoTools.StartCaptureSniffer([record.pcapName], selectedProtocols.value, ['80']).then((res) => {
         console.log("res:", res);
     });
 };
@@ -70,18 +71,12 @@ onMounted(() => {
     onGetDevices();
 
     // 监听后端发来的 'packet:update' 事件
-    console.log("res:", $wailsjs, $wailsRun);
-    $wailsRun.EventsOn('packet:update', (packetData) => {
-        console.log('收到数据包:', packetData);
-        // 将收到的数据包添加到列表中（注意：高频更新时注意性能）
-        packets.value.push(packetData);
-    });
+    // console.log("res:", $GoTools, $wailsRun);
+    // $wailsRun.EventsOn('packet:update', (packetData) => {
+    //     console.log('收到数据包:', packetData);
+    //     // 将收到的数据包添加到列表中（注意：高频更新时注意性能）
+    //     packets.value.push(packetData);
+    // });
 });
 </script>
-<style scoped>
-.main-body {
-    min-height: 100vh;
-    min-width: 100vw;
-    background-color: #fff;
-}
-</style>
+<style scoped></style>

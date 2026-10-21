@@ -1,1 +1,0 @@
-import{d as o,r as n,o as a,c as s,a as c,b as t}from"./index.f779b71c.js";const i=o({__name:"index",setup(r){n([]);const e=()=>{};return a(()=>{console.log("res:",11)}),(l,_)=>(t(),s("div",null,[c("div",{onClick:e},"\u70B9\u51FB")]))}});export{i as default};

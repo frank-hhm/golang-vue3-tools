@@ -1,4 +1,5 @@
 import { type App } from "vue"
+import { ComponentsPlugin } from '@/components'
 import { loadStorePlus } from "./store"
 import { loadRouterPlus } from "./router"
 import { loadArcoPlus } from "./arco"
@@ -9,4 +10,5 @@ export function loadPlugins(app: App) {
     loadRouterPlus(app)
     loadArcoPlus(app)
     loadArcoIconPlus(app)
+    app.use(ComponentsPlugin)
 }

@@ -1,41 +1,78 @@
 <template>
-  <div class="main-body">
+  <layout-body>
     <a-button @click="_onConnectSerial">连接串口</a-button>
     <a-button @click="_onStartReading">监听</a-button>
     <a-button @click="_onStopReading">取消监听</a-button>
-    <a-button @click="_onStartReading">断开</a-button>
-  </div>
+    <a-button @click="_onDisconnectSerial">断开</a-button>
+  </layout-body>
 </template>
 <script setup lang="ts">
 import { getCurrentInstance, ref, onMounted, watch } from "vue";
 
 const {
   proxy,
-  proxy: { $utils, $wailsjs },
+  proxy: { $utils, $GoTools },
 } = getCurrentInstance() as any;
 
 const ports = ref<any[]>([]);
+// 当前已连接的串口号，供监听/断开等操作使用
+const connectedPort = ref<string>("");
 
 const _onConnectSerial = () => {
-  $wailsjs.GetSerialPorts().then(res => {
-    console.log(res)
-    $wailsjs.ConnectSerial(res[0].port_name).then((res) => {
-      console.log('连接成功', res)
-    })
-
-  })
+  $GoTools.GetSerialPorts().then(res => {
+    ports.value = res;
+    if (!res || res.length === 0) {
+      console.warn("未发现可用串口");
+      return;
+    }
+    const portName = res[0].port_name;
+    $GoTools.ConnectSerial(portName).then(() => {
+      connectedPort.value = portName;
+      console.log('连接成功', portName);
+    }).catch((err) => {
+      console.error('连接失败', err);
+    });
+  }).catch((err) => {
+    console.error("获取串口列表失败:", err);
+  });
 }
-const _onStartReading = () => {
 
-  $wailsjs.StartReading().then((res) => {
-    console.log('监听成功', res)
-  })
+const _onStartReading = () => {
+  if (!connectedPort.value) {
+    console.warn("请先连接串口");
+    return;
+  }
+  $GoTools.StartReadingSerial(connectedPort.value).then((res) => {
+    console.log('监听成功', res);
+  }).catch((err) => {
+    console.error('监听失败', err);
+  });
 }
 
 const _onStopReading = () => {
-  $wailsjs.StopReading().then((res) => {
-    console.log('取消成功', res)
-  })
+  if (!connectedPort.value) {
+    console.warn("请先连接串口");
+    return;
+  }
+  $GoTools.StopReadingSerial(connectedPort.value).then((res) => {
+    console.log('取消成功', res);
+  }).catch((err) => {
+    console.error('取消监听失败', err);
+  });
+}
+
+const _onDisconnectSerial = () => {
+  if (!connectedPort.value) {
+    console.warn("请先连接串口");
+    return;
+  }
+  const portName = connectedPort.value;
+  $GoTools.DisconnectSerial(portName).then(() => {
+    connectedPort.value = "";
+    console.log('已断开', portName);
+  }).catch((err) => {
+    console.error('断开失败', err);
+  });
 }
 
 
@@ -49,9 +86,4 @@ onMounted(() => {
 });
 </script>
 <style scoped>
-.main-body {
-  min-height: 100vh;
-  min-width: 100vw;
-  background-color: #fff;
-}
 </style>

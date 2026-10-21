@@ -1,22 +1,55 @@
 <template>
-  <div class="main-body">
+  <layout-body>
     <div class="tools-list">
-      <div v-for="(item, index) in toolsList" class="tools-item" @click="toPath(item)">
+      <div v-for="(item, index) in toolsList" :key="index" class="tools-item" @click="onToolClick(item)">
         {{ item.name }}
       </div>
     </div>
-  </div>
+
+    <a-modal
+      v-model:visible="toolEvents.screenshot.visible"
+      title="截图预览"
+      :width="800"
+      ok-text="下载"
+      cancel-text="关闭"
+      @ok="toolEvents.screenshot.download"
+    >
+      <div class="preview-wrap">
+        <img v-if="toolEvents.screenshot.image" :src="toolEvents.screenshot.image" class="preview-img" alt="screenshot" />
+        <div class="preview-tip">截图已自动复制到剪贴板，可直接 Ctrl+V 粘贴；点击「下载」保存为 PNG 文件。</div>
+      </div>
+    </a-modal>
+  </layout-body>
 </template>
 <script setup lang="ts">
 import router from "@/router";
-import { getCurrentInstance, ref, onMounted, watch } from "vue";
+import { reactive, ref } from "vue";
+import { useToolEvents, type ToolItem } from "./events";
 
-const {
-  proxy,
-  proxy: { $utils },
-} = getCurrentInstance() as any;
+/** 工具事件处理器集合（reactive 包裹后，模板可深层访问内部 ref） */
+const toolEvents = reactive(useToolEvents());
 
-const toolsList = ref<any[]>([
+const toolsList = ref<ToolItem[]>([
+  {
+    name: '截图',
+    event: 'screenshot',
+  },
+  {
+    name: '时间戳转换',
+    path: '/tools/timestamp',
+  },
+  {
+    name: '随机字符串生成',
+    path: '/tools/strrandom',
+  },
+  {
+    name: '文字加密解密',
+    path: '/tools/encdec',
+  },
+  {
+    name: '进制转换',
+    path: '/tools/hexconvert',
+  },
   {
     name: '抓包工具',
     path: '/tools/sniffer',
@@ -25,19 +58,21 @@ const toolsList = ref<any[]>([
     name: 'USB调试',
     path: '/tools/usbserial',
   },
+  
 ]);
 
-
-const toPath = (item: any) => {
-  router.push(item.path);
+/** 统一处理工具卡片点击：有 path 则路由跳转，有 event 则派发对应事件 */
+const onToolClick = (item: ToolItem) => {
+  if (item.path) {
+    router.push(item.path);
+    return;
+  }
+  if (item.event) {
+    toolEvents.runEvent(item.event);
+  }
 };
 </script>
 <style scoped>
-.main-body {
-  min-height: 100vh;
-  min-width: 100vw;
-  background-color: #fff;
-}
 
 .tools-list {
   padding: 20px;
@@ -60,5 +95,20 @@ const toPath = (item: any) => {
 }
 .tools-item:hover {
   background-color: #e5e5e5;
+}
+
+.preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.preview-img {
+  max-width: 100%;
+  border: 1px solid #e5e6eb;
+  border-radius: var(--base-radius-default);
+}
+.preview-tip {
+  color: #86909c;
+  font-size: 13px;
 }
 </style>

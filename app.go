@@ -6,11 +6,12 @@ import (
 	"go-tools/tools/sniffer"
 	"go-tools/tools/usbserial"
 
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // App struct
 type App struct {
+	app      *application.App
 	ctx      context.Context
 	engine   *sniffer.Engine
 	packetCh chan sniffer.PacketInfo
@@ -21,10 +22,20 @@ func NewApp() *App {
 	return &App{}
 }
 
+// SetApp 注入 Wails v3 应用实例，供事件推送使用
+func (a *App) SetApp(app *application.App) {
+	a.app = app
+}
+
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+// ApplicationStartup 标记 App 为 Wails v3 服务，并在应用启动时注入上下文
+func (a *App) ApplicationStartup(ctx context.Context) {
+	a.startup(ctx)
 }
 
 // Greet returns a greeting for the given name
@@ -63,7 +74,7 @@ func (a *App) GetDevicesSniffer() ([]sniffer.PcapDeviceInfo, error) {
 // 新增 ports 参数，例如传入 ["80"] 或 ["80", "443"]
 func (a *App) StartCaptureSniffer(devices []string, protocols []string, ports []string) error {
 	fmt.Printf("[Sniffer] 收到抓包请求 - 网卡: %v, 协议: %v, 端口: %v\n", devices, protocols, ports)
-	runtime.EventsEmit(a.ctx, "packet:update", "收到抓包请求")
+	a.app.Event.Emit("packet:update", "收到抓包请求")
 
 	// 将 ports 传递给底层
 	packetCh, err := sniffer.StartCapture(a.ctx, devices, protocols, ports)
@@ -84,7 +95,7 @@ func (a *App) StartCaptureSniffer(devices []string, protocols []string, ports []
 			} else {
 				fmt.Printf("[Sniffer] %s %s:%d -> %s:%d [%s]\n", pkt.Protocol, pkt.SrcIP, pkt.SrcPort, pkt.DstIP, pkt.DstPort, pkt.Flags)
 			}
-			runtime.EventsEmit(a.ctx, "packet:update", pkt)
+			a.app.Event.Emit("packet:update", pkt)
 		}
 		fmt.Println("[Sniffer] 数据包通道已关闭，抓包协程退出。")
 	}()
