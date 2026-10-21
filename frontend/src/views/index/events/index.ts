@@ -15,8 +15,12 @@ export interface ToolItem {
   event?: ToolEventId;
   /** 窗口是否单例：true 时重复打开会复用（聚焦）已存在的窗口；默认 false 允许多开 */
   single?: boolean;
-  /** 新窗口是否全屏启动；默认 false（未配置则沿用常规尺寸） */
+  /** 新窗口是否铺满显示器（最大化启动）；默认 false（未配置则沿用常规尺寸） */
   fullscreen?: boolean;
+  /** 新窗口视口宽度；未设定（<=0）则继承默认尺寸 */
+  width?: number;
+  /** 新窗口视口高度；未设定（<=0）则继承默认尺寸 */
+  height?: number;
 }
 
 /**

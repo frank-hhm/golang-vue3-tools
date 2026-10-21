@@ -541,6 +541,21 @@ func (s *ScreenshotService) CaptureSelectedRegion(format string) (string, error)
 	return encodeImageToBase64Format(img, format)
 }
 
+// PickColorFromScreen 弹出全屏取色覆盖层（冻结屏幕 + 放大镜），单击取色，
+// 返回 "#RRGGBB"；用户取消（右键/ESC）时返回空字符串。
+// 不依赖 WebView 窗口可见性；“取色时隐藏本窗口”已移除（与 Wails 窗口
+// 状态机冲突导致隐藏后被复原/卡死），冻结帧中可能残留本窗口画面。
+func (s *ScreenshotService) PickColorFromScreen() (string, error) {
+	hex, ok, err := pickColorWindows()
+	if err != nil {
+		return "", fmt.Errorf("pick color failed: %w", err)
+	}
+	if !ok {
+		return "", nil
+	}
+	return hex, nil
+}
+
 // encodeImageToBase64Format 按指定格式将图像编码为带 data 前缀的 base64。
 // 支持 "png" 与 "jpg"/"jpeg"；未知/空值回退到 png。
 func encodeImageToBase64Format(img image.Image, format string) (string, error) {

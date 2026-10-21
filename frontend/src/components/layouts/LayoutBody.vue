@@ -1,6 +1,10 @@
 <template>
     <!-- 空白布局（原生新窗口）：不渲染卡片/标题，直接输出内容 -->
-    <slot v-if="blank"></slot>
+    <div  v-if="blank" class="layout-body-main" :style="styles">
+        <div class="layout-body-main-content">
+            <slot></slot>
+        </div>
+    </div>
     <div v-else class="layout-body-main" :style="styles">
 
         <div class="layout-body-main-header" v-if="title">

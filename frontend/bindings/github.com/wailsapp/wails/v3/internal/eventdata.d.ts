@@ -7,11 +7,20 @@ import type { Events } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import type * as redis$0 from "../../../../../go-tools/tools/redis/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import type * as sniffer$0 from "../../../../../go-tools/tools/sniffer/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import type * as usbserial$0 from "../../../../../go-tools/tools/usbserial/models.js";
 
 declare module "@wailsio/runtime" {
     namespace Events {
         interface CustomEvents {
+            "redis:monitor": redis$0.MonitorLine;
+            "serial:data": usbserial$0.SerialData;
+            "serial:status": usbserial$0.ConnStatusEvent;
             "sniffer:flow": sniffer$0.Flow;
             "time": string;
         }

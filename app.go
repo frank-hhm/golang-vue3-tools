@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"go-tools/tools/redis"
 	"go-tools/tools/sniffer"
 	"go-tools/tools/usbserial"
 	"strings"
@@ -52,8 +53,9 @@ func (a *App) Greet(name string) string {
 // OpenToolWindow 在新的 Wails 原生窗口中打开指定前端路由（hash 路由）。
 // path 形如 "/tools/timestamp"；title 为新窗口标题；
 // single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
-// fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡），否则沿用默认尺寸。
-func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen bool) error {
+// fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡）；
+// width/height 为新窗口视口尺寸，<=0 时继承默认尺寸（1000x718）。
+func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen bool, width int, height int) error {
 	if a.app == nil {
 		return fmt.Errorf("应用尚未初始化")
 	}
@@ -71,10 +73,17 @@ func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen 
 		// 用最大化铺满显示器（而非排他全屏），保证自绘标题栏/菜单不被遮挡
 		startState = application.WindowStateMaximised
 	}
+	// 视口尺寸：未设定（<=0）则继承默认 1000x718
+	if width <= 0 {
+		width = 1000
+	}
+	if height <= 0 {
+		height = 718
+	}
 	opts := application.WebviewWindowOptions{
 		Title:            title,
-		Width:            1000,
-		Height:           718,
+		Width:            width,
+		Height:           height,
 		BackgroundColour: application.NewRGB(6, 7, 15),
 		StartState:       startState,
 		// 无边框：标题栏与“视图”菜单均由前端 BlankLayout 自绘（菜单在标题右侧）
@@ -100,21 +109,56 @@ func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen 
 	return nil
 }
 
-// GetSerialPorts 暴露给 Vue 前端的获取串口方法
+/* ============================ 串口 / 网络调试 ============================ */
+
+// GetSerialPorts 获取系统串口列表
 func (a *App) GetSerialPorts() ([]usbserial.SerialDeviceInfo, error) {
 	return usbserial.ListSerialPorts()
 }
-func (a *App) ConnectSerial(portId string) error {
-	return usbserial.ConnectSerial(portId)
+
+// GetLocalIPs 获取本机可用 IPv4 地址列表（供 TCP/UDP 本地地址选择）
+func (a *App) GetLocalIPs() []string {
+	return usbserial.LocalIPs()
 }
-func (a *App) StartReadingSerial(portId string) error {
-	return usbserial.StartReading(portId)
+
+// OpenSerial 打开串口
+func (a *App) OpenSerial(cfg usbserial.ConnConfig) error {
+	return usbserial.OpenSerial(cfg)
 }
-func (a *App) StopReadingSerial(portId string) error {
-	return usbserial.StopReading(portId)
+
+// OpenTCPClient 作为 TCP 客户端连接远端
+func (a *App) OpenTCPClient(cfg usbserial.ConnConfig) error {
+	return usbserial.OpenTCPClient(cfg)
 }
-func (a *App) DisconnectSerial(portId string) error {
-	return usbserial.DisconnectSerial(portId)
+
+// ListenTCPServer 作为 TCP 服务端侦听
+func (a *App) ListenTCPServer(cfg usbserial.ConnConfig) error {
+	return usbserial.ListenTCPServer(cfg)
+}
+
+// OpenUDP 打开 UDP 连接
+func (a *App) OpenUDP(cfg usbserial.ConnConfig) error {
+	return usbserial.OpenUDP(cfg)
+}
+
+// CloseConnection 关闭当前连接（串口/TCP/UDP 通用）
+func (a *App) CloseConnection() error {
+	return usbserial.Close()
+}
+
+// SendSerialHex 以 hex 字符串发送数据到当前连接对端，返回发送字节数
+func (a *App) SendSerialHex(hexData string) (int, error) {
+	return usbserial.SendHex(hexData)
+}
+
+// SetSerialControlBits 实时切换串口 RTS / DTR 电平
+func (a *App) SetSerialControlBits(rts, dtr bool) error {
+	return usbserial.SetControlBits(rts, dtr)
+}
+
+// ConnectionStatus 返回当前连接状态
+func (a *App) ConnectionStatus() usbserial.ConnStatus {
+	return usbserial.Status()
 }
 
 // GetDevices 暴露给前端：获取网卡列表
@@ -230,4 +274,76 @@ func (a *App) SnifferProxyStatus() (bool, int) {
 		return a.snifferRunning, a.mitm.Port()
 	}
 	return a.snifferRunning, 0
+}
+
+/* ============================ Redis 管理 ============================ */
+
+// RedisOpen 建立并登记一个 Redis 连接
+func (a *App) RedisOpen(cfg redis.ConnConfig) error {
+	return redis.Open(cfg)
+}
+
+// RedisClose 关闭指定 Redis 连接
+func (a *App) RedisClose(id string) error {
+	return redis.Close(id)
+}
+
+// RedisStatus 获取服务器状态概览
+func (a *App) RedisStatus(id string) (redis.ServerStatus, error) {
+	return redis.Status(id)
+}
+
+// RedisScan 增量扫描键（pattern 为空默认 *，limit 限制返回数量）
+func (a *App) RedisScan(id, pattern string, count, limit int) (redis.ScanResult, error) {
+	return redis.Scan(id, pattern, count, limit)
+}
+
+// RedisGetKey 读取键详情（按类型返回结构）
+func (a *App) RedisGetKey(id, key string) (redis.KeyValue, error) {
+	return redis.GetKey(id, key)
+}
+
+// RedisSetString 写入/更新 string 类型键
+func (a *App) RedisSetString(id, key, value string, ttl int) error {
+	return redis.SetString(id, key, value, ttl)
+}
+
+// RedisDeleteKeys 删除若干键，返回删除数量
+func (a *App) RedisDeleteKeys(id string, keys []string) (int64, error) {
+	return redis.DeleteKeys(id, keys)
+}
+
+// RedisSetTTL 设置/清除键过期时间
+func (a *App) RedisSetTTL(id, key string, ttl int) error {
+	return redis.SetTTL(id, key, ttl)
+}
+
+// RedisSlowlog 拉取慢查询日志
+func (a *App) RedisSlowlog(id string, count int) ([]redis.SlowlogEntry, error) {
+	return redis.Slowlog(id, count)
+}
+
+// RedisStartMonitor 开始监控命令（逐条通过 redis:monitor 事件推送）
+func (a *App) RedisStartMonitor(cfg redis.ConnConfig) error {
+	return redis.StartMonitor(cfg)
+}
+
+// RedisStopMonitor 停止监控命令
+func (a *App) RedisStopMonitor() error {
+	return redis.StopMonitor()
+}
+
+// RedisSaveConnections 将连接配置保存到用户配置文件，返回文件路径
+func (a *App) RedisSaveConnections(configs []redis.ConnConfig) (string, error) {
+	return redis.SaveConnections(configs)
+}
+
+// RedisLoadConnections 从配置文件读取连接列表
+func (a *App) RedisLoadConnections() ([]redis.ConnConfig, error) {
+	return redis.LoadConnections()
+}
+
+// RedisConnectionsFilePath 返回配置文件路径
+func (a *App) RedisConnectionsFilePath() string {
+	return redis.ConnectionsFilePath()
 }

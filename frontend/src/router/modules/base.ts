@@ -5,6 +5,7 @@ import BlankLayout from "@/components/layouts/BlankLayout.vue";
 const TOOLS = [
     { key: "Sniffer", menu_name: "抓包工具", path: "tools/sniffer", component: () => import('@/views/tools/sniffer/index.vue') },
     { key: "Usbserial", menu_name: "USB调试", path: "tools/usbserial", component: () => import('@/views/tools/usbserial/index.vue') },
+    { key: "Redis", menu_name: "Redis管理", path: "tools/redis", component: () => import('@/views/tools/redis/index.vue') },
     { key: "Timestamp", menu_name: "时间戳转换", path: "tools/timestamp", component: () => import('@/views/tools/timestamp/index.vue') },
     { key: "Strrandom", menu_name: "随机字符串生成", path: "tools/strrandom", component: () => import('@/views/tools/strrandom/index.vue') },
     { key: "Encdec", menu_name: "文字加密解密", path: "tools/encdec", component: () => import('@/views/tools/encdec/index.vue') },
@@ -13,6 +14,7 @@ const TOOLS = [
     { key: "Qrcode", menu_name: "二维码生成", path: "tools/qrcode", component: () => import('@/views/tools/qrcode/index.vue') },
     { key: "Websocket", menu_name: "WebSocket调试", path: "tools/websocket", component: () => import('@/views/tools/websocket/index.vue') },
     { key: "Screenshot", menu_name: "截图预览", path: "tools/screenshot", component: () => import('@/views/tools/screenshot/index.vue') },
+    { key: "Colorpicker", menu_name: "颜色取色器", path: "tools/colorpicker", component: () => import('@/views/tools/colorpicker/index.vue') },
 ];
 
 /**

@@ -1,6 +1,18 @@
 import { getCurrentInstance } from "vue";
 import router from "@/router";
 
+/** 新窗口打开选项 */
+export interface OpenToolWindowOptions {
+    /** 是否单例窗口（true：已存在则复用/聚焦，不重复开） */
+    single?: boolean;
+    /** 新窗口是否铺满显示器（true：最大化启动；否则沿用常规尺寸） */
+    fullscreen?: boolean;
+    /** 新窗口视口宽度，<=0 或未设定则继承默认尺寸 */
+    width?: number;
+    /** 新窗口视口高度，<=0 或未设定则继承默认尺寸 */
+    height?: number;
+}
+
 /**
  * 统一的“工具窗口”打开入口。
  *
@@ -17,16 +29,28 @@ export function useToolWindow() {
     /**
      * @param path 常规路由路径，如 "/tools/timestamp"
      * @param title 新窗口标题
-     * @param single 是否单例窗口（true：已存在则复用/聚焦，不重复开）
-     * @param fullscreen 新窗口是否全屏启动（true：全屏；否则沿用常规尺寸）
+     * @param options 单例 / 全屏 / 视口尺寸等配置（见 OpenToolWindowOptions）
      */
-    const openToolWindow = async (path: string, title: string, single = false, fullscreen = false) => {
+    const openToolWindow = async (
+        path: string,
+        title: string,
+        options: OpenToolWindowOptions = {}
+    ) => {
+        const { single = false, fullscreen = false, width = 0, height = 0 } = options;
         try {
             if (typeof $GoTools?.OpenToolWindow !== "function") {
                 throw new Error("OpenToolWindow 不可用");
             }
-            // 新窗口统一用 /win 前缀的空白布局路由（菜单由原生窗口菜单提供）
-            await $GoTools.OpenToolWindow("/win" + path, title, !!single, !!fullscreen);
+            // 新窗口统一用 /win 前缀的空白布局路由（标题栏/菜单由 BlankLayout 自绘）
+            // width/height 为 0 时后端继承默认尺寸
+            await $GoTools.OpenToolWindow(
+                "/win" + path,
+                title,
+                !!single,
+                !!fullscreen,
+                width > 0 ? Math.floor(width) : 0,
+                height > 0 ? Math.floor(height) : 0
+            );
         } catch (e) {
             console.warn("新窗口打开失败，回退到当前窗口路由:", e);
             await router.push(path);

@@ -3,7 +3,7 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wailsio/runtime";
+import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
 
 export function CaptureDisplay(id: number): $CancellablePromise<string> {
     return $Call.ByID(1256582795, id);
@@ -28,7 +28,7 @@ export function CaptureSelectedRegion(format: string): $CancellablePromise<strin
     return $Call.ByID(2842139334, format);
 }
 
-export function ComposeAnnotations(base64Image: string, canvasWidth: number, canvasHeight: number, annotations: ({ [_ in string]?: any } | null)[] | null): $CancellablePromise<string> {
+export function ComposeAnnotations(base64Image: string, canvasWidth: number, canvasHeight: number, annotations: { [_ in string]?: any }[]): $CancellablePromise<string> {
     return $Call.ByID(3904073321, base64Image, canvasWidth, canvasHeight, annotations);
 }
 
@@ -36,10 +36,26 @@ export function CopyToClipboard(data: string): $CancellablePromise<void> {
     return $Call.ByID(806392727, data);
 }
 
-export function DisplayInfo(): $CancellablePromise<({ [_ in string]?: any } | null)[] | null> {
-    return $Call.ByID(2950096583);
+export function DisplayInfo(): $CancellablePromise<{ [_ in string]?: any }[]> {
+    return $Call.ByID(2950096583).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
+/**
+ * PickColorFromScreen 弹出全屏取色覆盖层（冻结屏幕 + 放大镜），单击取色，
+ * 返回 "#RRGGBB"；用户取消（右键/ESC）时返回空字符串。
+ * 不依赖 WebView 窗口可见性；“取色时隐藏本窗口”已移除（与 Wails 窗口
+ * 状态机冲突导致隐藏后被复原/卡死），冻结帧中可能残留本窗口画面。
+ */
+export function PickColorFromScreen(): $CancellablePromise<string> {
+    return $Call.ByID(1800835909);
 }
 
 export function SaveImage(path: string, data: string): $CancellablePromise<void> {
     return $Call.ByID(144252787, path, data);
 }
+
+// Private type creation functions
+const $$createType0 = $Create.Map($Create.Any, $Create.Any);
+const $$createType1 = $Create.Array($$createType0);

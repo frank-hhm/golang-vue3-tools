@@ -64,13 +64,31 @@ const toolsList = ref<ToolItem[]>([
     name: 'USB调试',
     path: '/tools/usbserial',
   },
+  {
+    name: 'Redis管理',
+    path: '/tools/redis',
+    single: true,
+    fullscreen: true,
+  },
+  {
+    name: '颜色取色器',
+    path: '/tools/colorpicker',
+    single: true,
+    width: 480,
+    height: 560,
+  },
   
 ]);
 
-/** 统一处理工具卡片点击：path 用原生新窗口打开（按 single/fullscreen 配置）；event 直接派发 */
+/** 统一处理工具卡片点击：path 用原生新窗口打开（按 single/fullscreen/width/height 配置）；event 直接派发 */
 const onToolClick = (item: ToolItem) => {
   if (item.path) {
-    openToolWindow(item.path, item.name, item.single, item.fullscreen);
+    openToolWindow(item.path, item.name, {
+      single: item.single,
+      fullscreen: item.fullscreen,
+      width: item.width,
+      height: item.height,
+    });
     return;
   }
   if (item.event) {

@@ -8,11 +8,14 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wailsio/runtime";
+import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as application$0 from "../github.com/wailsapp/wails/v3/pkg/application/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as redis$0 from "./tools/redis/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as sniffer$0 from "./tools/sniffer/models.js";
@@ -27,12 +30,20 @@ export function ApplicationStartup(): $CancellablePromise<void> {
     return $Call.ByID(328487970);
 }
 
-export function ConnectSerial(portId: string): $CancellablePromise<void> {
-    return $Call.ByID(2374759445, portId);
+/**
+ * CloseConnection 关闭当前连接（串口/TCP/UDP 通用）
+ */
+export function CloseConnection(): $CancellablePromise<void> {
+    return $Call.ByID(2951556907);
 }
 
-export function DisconnectSerial(portId: string): $CancellablePromise<void> {
-    return $Call.ByID(3231387415, portId);
+/**
+ * ConnectionStatus 返回当前连接状态
+ */
+export function ConnectionStatus(): $CancellablePromise<usbserial$0.ConnStatus> {
+    return $Call.ByID(1883682691).then(($result: any) => {
+        return $$createType0($result);
+    });
 }
 
 /**
@@ -42,15 +53,28 @@ export function DisconnectSerial(portId: string): $CancellablePromise<void> {
  * 		return sniffer.GetDevices()
  * 	}
  */
-export function GetDevicesSniffer(): $CancellablePromise<sniffer$0.PcapDeviceInfo[] | null> {
-    return $Call.ByID(1408748705);
+export function GetDevicesSniffer(): $CancellablePromise<sniffer$0.PcapDeviceInfo[]> {
+    return $Call.ByID(1408748705).then(($result: any) => {
+        return $$createType2($result);
+    });
 }
 
 /**
- * GetSerialPorts 暴露给 Vue 前端的获取串口方法
+ * GetLocalIPs 获取本机可用 IPv4 地址列表（供 TCP/UDP 本地地址选择）
  */
-export function GetSerialPorts(): $CancellablePromise<usbserial$0.SerialDeviceInfo[] | null> {
-    return $Call.ByID(2103145165);
+export function GetLocalIPs(): $CancellablePromise<string[]> {
+    return $Call.ByID(1089204084).then(($result: any) => {
+        return $$createType3($result);
+    });
+}
+
+/**
+ * GetSerialPorts 获取系统串口列表
+ */
+export function GetSerialPorts(): $CancellablePromise<usbserial$0.SerialDeviceInfo[]> {
+    return $Call.ByID(2103145165).then(($result: any) => {
+        return $$createType5($result);
+    });
 }
 
 /**
@@ -61,13 +85,157 @@ export function Greet(name: string): $CancellablePromise<string> {
 }
 
 /**
+ * ListenTCPServer 作为 TCP 服务端侦听
+ */
+export function ListenTCPServer(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
+    return $Call.ByID(739254498, cfg);
+}
+
+/**
+ * OpenSerial 打开串口
+ */
+export function OpenSerial(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
+    return $Call.ByID(1493124709, cfg);
+}
+
+/**
+ * OpenTCPClient 作为 TCP 客户端连接远端
+ */
+export function OpenTCPClient(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
+    return $Call.ByID(4217696779, cfg);
+}
+
+/**
  * OpenToolWindow 在新的 Wails 原生窗口中打开指定前端路由（hash 路由）。
  * path 形如 "/tools/timestamp"；title 为新窗口标题；
  * single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
- * fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡），否则沿用默认尺寸。
+ * fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡）；
+ * width/height 为新窗口视口尺寸，<=0 时继承默认尺寸（1000x718）。
  */
-export function OpenToolWindow(path: string, title: string, single: boolean, fullscreen: boolean): $CancellablePromise<void> {
-    return $Call.ByID(144879371, path, title, single, fullscreen);
+export function OpenToolWindow(path: string, title: string, single: boolean, fullscreen: boolean, width: number, height: number): $CancellablePromise<void> {
+    return $Call.ByID(144879371, path, title, single, fullscreen, width, height);
+}
+
+/**
+ * OpenUDP 打开 UDP 连接
+ */
+export function OpenUDP(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
+    return $Call.ByID(91747768, cfg);
+}
+
+/**
+ * RedisClose 关闭指定 Redis 连接
+ */
+export function RedisClose(id: string): $CancellablePromise<void> {
+    return $Call.ByID(201680576, id);
+}
+
+/**
+ * RedisConnectionsFilePath 返回配置文件路径
+ */
+export function RedisConnectionsFilePath(): $CancellablePromise<string> {
+    return $Call.ByID(4106273276);
+}
+
+/**
+ * RedisDeleteKeys 删除若干键，返回删除数量
+ */
+export function RedisDeleteKeys(id: string, keys: string[]): $CancellablePromise<number> {
+    return $Call.ByID(1012390855, id, keys);
+}
+
+/**
+ * RedisGetKey 读取键详情（按类型返回结构）
+ */
+export function RedisGetKey(id: string, key: string): $CancellablePromise<redis$0.KeyValue> {
+    return $Call.ByID(3543651543, id, key).then(($result: any) => {
+        return $$createType6($result);
+    });
+}
+
+/**
+ * RedisLoadConnections 从配置文件读取连接列表
+ */
+export function RedisLoadConnections(): $CancellablePromise<redis$0.ConnConfig[]> {
+    return $Call.ByID(1426630705).then(($result: any) => {
+        return $$createType8($result);
+    });
+}
+
+/**
+ * RedisOpen 建立并登记一个 Redis 连接
+ */
+export function RedisOpen(cfg: redis$0.ConnConfig): $CancellablePromise<void> {
+    return $Call.ByID(479973788, cfg);
+}
+
+/**
+ * RedisSaveConnections 将连接配置保存到用户配置文件，返回文件路径
+ */
+export function RedisSaveConnections(configs: redis$0.ConnConfig[]): $CancellablePromise<string> {
+    return $Call.ByID(2787864914, configs);
+}
+
+/**
+ * RedisScan 增量扫描键（pattern 为空默认 *，limit 限制返回数量）
+ */
+export function RedisScan(id: string, pattern: string, count: number, limit: number): $CancellablePromise<redis$0.ScanResult> {
+    return $Call.ByID(1634125981, id, pattern, count, limit).then(($result: any) => {
+        return $$createType9($result);
+    });
+}
+
+/**
+ * RedisSetString 写入/更新 string 类型键
+ */
+export function RedisSetString(id: string, key: string, value: string, ttl: number): $CancellablePromise<void> {
+    return $Call.ByID(4177271893, id, key, value, ttl);
+}
+
+/**
+ * RedisSetTTL 设置/清除键过期时间
+ */
+export function RedisSetTTL(id: string, key: string, ttl: number): $CancellablePromise<void> {
+    return $Call.ByID(795415312, id, key, ttl);
+}
+
+/**
+ * RedisSlowlog 拉取慢查询日志
+ */
+export function RedisSlowlog(id: string, count: number): $CancellablePromise<redis$0.SlowlogEntry[]> {
+    return $Call.ByID(2417336661, id, count).then(($result: any) => {
+        return $$createType11($result);
+    });
+}
+
+/**
+ * RedisStartMonitor 开始监控命令（逐条通过 redis:monitor 事件推送）
+ */
+export function RedisStartMonitor(cfg: redis$0.ConnConfig): $CancellablePromise<void> {
+    return $Call.ByID(3160585286, cfg);
+}
+
+/**
+ * RedisStatus 获取服务器状态概览
+ */
+export function RedisStatus(id: string): $CancellablePromise<redis$0.ServerStatus> {
+    return $Call.ByID(2999982438, id).then(($result: any) => {
+        return $$createType12($result);
+    });
+}
+
+/**
+ * RedisStopMonitor 停止监控命令
+ */
+export function RedisStopMonitor(): $CancellablePromise<void> {
+    return $Call.ByID(2637994250);
+}
+
+/**
+ * SendSerialHex 以 hex 字符串发送数据到当前连接对端，返回发送字节数
+ */
+export function SendSerialHex(hexData: string): $CancellablePromise<number> {
+    return $Call.ByID(3579778468, hexData);
 }
 
 /**
@@ -75,6 +243,13 @@ export function OpenToolWindow(path: string, title: string, single: boolean, ful
  */
 export function SetApp(app: application$0.App | null): $CancellablePromise<void> {
     return $Call.ByID(4256893662, app);
+}
+
+/**
+ * SetSerialControlBits 实时切换串口 RTS / DTR 电平
+ */
+export function SetSerialControlBits(rts: boolean, dtr: boolean): $CancellablePromise<void> {
+    return $Call.ByID(1884079928, rts, dtr);
 }
 
 /**
@@ -89,12 +264,8 @@ export function SnifferProxyStatus(): $CancellablePromise<[boolean, number]> {
  * 注意：devices 参数现在直接接收 Npcap 的真实设备名 (pcapName)
  * 新增 ports 参数，例如传入 ["80"] 或 ["80", "443"]
  */
-export function StartCaptureSniffer(devices: string[] | null, protocols: string[] | null, ports: string[] | null): $CancellablePromise<void> {
+export function StartCaptureSniffer(devices: string[], protocols: string[], ports: string[]): $CancellablePromise<void> {
     return $Call.ByID(44330958, devices, protocols, ports);
-}
-
-export function StartReadingSerial(portId: string): $CancellablePromise<void> {
-    return $Call.ByID(2341914417, portId);
 }
 
 /**
@@ -112,13 +283,24 @@ export function StopCaptureSniffer(): $CancellablePromise<void> {
     return $Call.ByID(807243424);
 }
 
-export function StopReadingSerial(portId: string): $CancellablePromise<void> {
-    return $Call.ByID(1325778439, portId);
-}
-
 /**
  * StopSnifferProxy 停止 MITM 代理：还原系统代理并卸载根证书
  */
 export function StopSnifferProxy(): $CancellablePromise<void> {
     return $Call.ByID(392022348);
 }
+
+// Private type creation functions
+const $$createType0 = usbserial$0.ConnStatus.createFrom;
+const $$createType1 = sniffer$0.PcapDeviceInfo.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = $Create.Array($Create.Any);
+const $$createType4 = usbserial$0.SerialDeviceInfo.createFrom;
+const $$createType5 = $Create.Array($$createType4);
+const $$createType6 = redis$0.KeyValue.createFrom;
+const $$createType7 = redis$0.ConnConfig.createFrom;
+const $$createType8 = $Create.Array($$createType7);
+const $$createType9 = redis$0.ScanResult.createFrom;
+const $$createType10 = redis$0.SlowlogEntry.createFrom;
+const $$createType11 = $Create.Array($$createType10);
+const $$createType12 = redis$0.ServerStatus.createFrom;

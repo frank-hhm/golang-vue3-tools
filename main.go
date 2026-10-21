@@ -5,8 +5,10 @@ import (
 	"log"
 	"time"
 
+	"go-tools/tools/redis"
 	"go-tools/tools/screenshot"
 	"go-tools/tools/sniffer"
+	"go-tools/tools/usbserial"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -25,6 +27,9 @@ func init() {
 	// and provide a strongly typed JS/TS API for them.
 	application.RegisterEvent[string]("time")
 	application.RegisterEvent[sniffer.Flow]("sniffer:flow")
+	application.RegisterEvent[usbserial.SerialData]("serial:data")
+	application.RegisterEvent[usbserial.ConnStatusEvent]("serial:status")
+	application.RegisterEvent[redis.MonitorLine]("redis:monitor")
 }
 func main() {
 	// Create an instance of the app structure
@@ -52,6 +57,16 @@ func main() {
 
 	// 注入应用实例，使 App 可以向前端推送事件
 	appInstance.SetApp(app)
+
+	// 注入事件发射器，使 usbserial 包可将收到/状态数据实时推送给前端
+	usbserial.SetEmitter(func(name string, data ...any) {
+		app.Event.Emit(name, data...)
+	})
+
+	// 注入事件发射器，使 redis 包可将监控命令实时推送给前端
+	redis.SetEmitter(func(name string, data ...any) {
+		app.Event.Emit(name, data...)
+	})
 
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.

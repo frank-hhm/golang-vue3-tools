@@ -96,7 +96,6 @@ const onRefresh = () => {
 }
 
 .layout-content {
-
     left: 0;
     top: 50px;
     position: fixed;

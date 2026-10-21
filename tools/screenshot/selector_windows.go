@@ -287,6 +287,9 @@ func (st *selectorState) containsLocked(x, y int32) bool {
 
 var gState *selectorState
 
+// selectorTimerID 选区遮罩窗口的兜底超时定时器 ID（与取色器不同 ID，同包共享 WM_TIMER 常量）。
+const selectorTimerID = uintptr(0x5E10)
+
 // ============================================================
 // 说明：不再使用 GDI FillRect（其实际位于 user32.dll，且 LazyProc
 // 指针恒非 nil、存在性判断不可靠会导致 Call 时 panic）。
@@ -838,9 +841,20 @@ func windowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		// 我们自己每帧全量绘制，跳过默认擦除背景，避免闪烁。
 		return 1
 
+	case WM_TIMER:
+		// 兜底超时：取消选区。
+		if wParam == selectorTimerID {
+			procKillTimer.Call(hwnd, selectorTimerID)
+			gState.mu.Lock()
+			gState.cancel = true
+			gState.done = true
+			gState.mu.Unlock()
+			selLogf("selector 兜底超时（WM_TIMER），取消选区")
+		}
+
 	case WM_DESTROY:
-		selLogf("destroy -> 投递退出消息 PostQuitMessage")
-		procPostQuitMessage.Call(0)
+		// 故意不 PostQuitMessage：循环靠 done/退出事件退出。WM_QUIT 一旦投递，
+		// 若未被消费就会残留在线程队列，毒化下一次取色/选区（“秒进秒退”）。
 	}
 
 	return defWindowProc(hwnd, uintptr(msg), wParam, lParam)
@@ -1038,15 +1052,20 @@ func selectRegionWindows() (image.Rectangle, bool, error) {
 	// 步骤 4：首帧绘制（立即展示遮罩 + 光标位置的放大镜）。
 	doRedraw(hwnd, st)
 
-	// 步骤 5：消息循环，直到 done（确认/取消）或收到 WM_QUIT。
-	// 选区确认/取消都由 windowProc 将 done 置位，故循环会及时退出。
+	// 步骤 5：消息循环。确认/取消都由 windowProc 将 done 置位（在
+	// dispatchMessage 期间发生），循环检查到 done 即退出；不再依赖 WM_QUIT。
+	// 5 分钟定时器作为兜底超时（与取色器同一模式）。
 	selLogf("步骤 5：进入消息循环，等待用户操作…")
+	procSetTimer.Call(hwnd, selectorTimerID, uintptr(5*60*1000), 0)
+	defer procKillTimer.Call(hwnd, selectorTimerID)
+
 	var msg MSG
 	for {
 		ret := getMessage(&msg, 0, 0, 0)
 		if ret == 0 {
-			selLogf("消息循环退出：GetMessage 返回 0（WM_QUIT）")
-			break
+			// 意外 WM_QUIT（历史残留等）：丢弃并继续，不作为退出结果。
+			selLogf("selector 收到意外 WM_QUIT，丢弃并继续等待")
+			continue
 		}
 		translateMessage(&msg)
 		dispatchMessage(&msg)

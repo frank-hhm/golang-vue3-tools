@@ -31,7 +31,7 @@ export function useScreenshotEvent() {
         /* localStorage 不可用时忽略，仅影响新窗口预览 */
       }
       // 截图预览窗口单例：重复触发时复用并聚焦已有窗口
-      await openToolWindow("/tools/screenshot", "截图预览", true);
+      await openToolWindow("/tools/screenshot", "截图预览", { single: true });
       Message.success("截图完成，已复制到剪贴板");
     } catch (err) {
       console.error("截图失败:", err);
