@@ -1,7 +1,7 @@
 import BasicLayout from "@/components/layouts/index.vue";
 import BlankLayout from "@/components/layouts/BlankLayout.vue";
 
-/** 工具路由定义（相对路径，供两种父布局复用） */
+/** 工具路由定义（相对路径，供多种父布局复用） */
 const TOOLS = [
     { key: "Sniffer", menu_name: "抓包工具", path: "tools/sniffer", component: () => import('@/views/tools/sniffer/index.vue') },
     { key: "Usbserial", menu_name: "USB调试", path: "tools/usbserial", component: () => import('@/views/tools/usbserial/index.vue') },
@@ -17,16 +17,17 @@ const TOOLS = [
 
 /**
  * 生成子路由。
- * @param win true 时用于原生新窗口的空白布局（meta.blank，无面包屑、LayoutBody 裸渲染）
+ * @param namePrefix 路由 name 前缀（保证全局唯一）
+ * @param extraMeta 追加 meta（如 blank：空白/全屏布局下 LayoutBody 裸渲染）
  */
-const buildChildren = (win: boolean) =>
+const buildChildren = (namePrefix: string, extraMeta: Record<string, unknown> = {}) =>
     TOOLS.map((t) => ({
         path: t.path,
-        name: (win ? "/win/tools" : "/tools") + t.key,
+        name: namePrefix + "tools" + t.key,
         meta: {
             auth: false,
             menu_name: t.menu_name,
-            ...(win ? { blank: true } : {}),
+            ...extraMeta,
         },
         component: t.component,
     }));
@@ -52,15 +53,15 @@ export default [{
             },
             component: () => import('@/views/index/index.vue')
         },
-        ...buildChildren(false)
+        ...buildChildren('/')
     ]
 }, {
-    // 原生新窗口专用：空白布局，无面包屑与返回栏
+    // 原生新窗口（非全屏）：空白布局，无面包屑与菜单
     path: '/win',
     name: '/win',
     meta: {
         blank: true,
     },
     component: BlankLayout,
-    children: buildChildren(true)
+    children: buildChildren('/win/', { blank: true })
 }]

@@ -64,7 +64,7 @@ export function Greet(name: string): $CancellablePromise<string> {
  * OpenToolWindow 在新的 Wails 原生窗口中打开指定前端路由（hash 路由）。
  * path 形如 "/tools/timestamp"；title 为新窗口标题；
  * single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
- * fullscreen 为 true 时新窗口以全屏启动，否则沿用默认尺寸。
+ * fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡），否则沿用默认尺寸。
  */
 export function OpenToolWindow(path: string, title: string, single: boolean, fullscreen: boolean): $CancellablePromise<void> {
     return $Call.ByID(144879371, path, title, single, fullscreen);

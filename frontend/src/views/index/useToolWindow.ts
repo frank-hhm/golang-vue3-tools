@@ -25,7 +25,7 @@ export function useToolWindow() {
             if (typeof $GoTools?.OpenToolWindow !== "function") {
                 throw new Error("OpenToolWindow 不可用");
             }
-            // 新窗口使用 /win 前缀的空白布局路由
+            // 新窗口统一用 /win 前缀的空白布局路由（菜单由原生窗口菜单提供）
             await $GoTools.OpenToolWindow("/win" + path, title, !!single, !!fullscreen);
         } catch (e) {
             console.warn("新窗口打开失败，回退到当前窗口路由:", e);

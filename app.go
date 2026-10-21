@@ -52,7 +52,7 @@ func (a *App) Greet(name string) string {
 // OpenToolWindow 在新的 Wails 原生窗口中打开指定前端路由（hash 路由）。
 // path 形如 "/tools/timestamp"；title 为新窗口标题；
 // single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
-// fullscreen 为 true 时新窗口以全屏启动，否则沿用默认尺寸。
+// fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡），否则沿用默认尺寸。
 func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen bool) error {
 	if a.app == nil {
 		return fmt.Errorf("应用尚未初始化")
@@ -68,7 +68,22 @@ func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen 
 	}
 	startState := application.WindowStateNormal
 	if fullscreen {
-		startState = application.WindowStateFullscreen
+		// 用最大化铺满显示器（而非排他全屏），保证自绘标题栏/菜单不被遮挡
+		startState = application.WindowStateMaximised
+	}
+	opts := application.WebviewWindowOptions{
+		Title:            title,
+		Width:            1000,
+		Height:           718,
+		BackgroundColour: application.NewRGB(6, 7, 15),
+		StartState:       startState,
+		// 无边框：标题栏与“视图”菜单均由前端 BlankLayout 自绘（菜单在标题右侧）
+		Frameless: true,
+		Windows: application.WindowsWindow{
+			// 启用 WebView2 非客户区支持，使 app-region: drag 自绘标题栏可拖动
+			NonClientRegionSupport: true,
+		},
+		URL: "/#" + path,
 	}
 	// 单例窗口：以路由路径作为唯一名称，已存在则聚焦复用
 	if single {
@@ -79,26 +94,9 @@ func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen 
 			w.Focus()
 			return nil
 		}
-		a.app.Window.NewWithOptions(application.WebviewWindowOptions{
-			Name:             name,
-			Title:            title,
-			Width:            1000,
-			Height:           718,
-			BackgroundColour: application.NewRGB(6, 7, 15),
-			StartState:       startState,
-			URL:              "/#" + path,
-		})
-		return nil
+		opts.Name = name
 	}
-	// 多实例窗口：不登记名称，每次新建
-	a.app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            title,
-		Width:            1000,
-		Height:           718,
-		BackgroundColour: application.NewRGB(6, 7, 15),
-		StartState:       startState,
-		URL:              "/#" + path,
-	})
+	a.app.Window.NewWithOptions(opts)
 	return nil
 }
 
