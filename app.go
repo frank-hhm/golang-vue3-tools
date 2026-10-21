@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"go-tools/tools/sniffer"
 	"go-tools/tools/usbserial"
+	"strings"
+	"sync"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -15,6 +17,10 @@ type App struct {
 	ctx      context.Context
 	engine   *sniffer.Engine
 	packetCh chan sniffer.PacketInfo
+
+	snifferMu      sync.Mutex
+	mitm           *sniffer.Mitm
+	snifferRunning bool
 }
 
 // NewApp creates a new App application struct
@@ -41,6 +47,59 @@ func (a *App) ApplicationStartup(ctx context.Context) {
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
+}
+
+// OpenToolWindow 在新的 Wails 原生窗口中打开指定前端路由（hash 路由）。
+// path 形如 "/tools/timestamp"；title 为新窗口标题；
+// single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
+// fullscreen 为 true 时新窗口以全屏启动，否则沿用默认尺寸。
+func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen bool) error {
+	if a.app == nil {
+		return fmt.Errorf("应用尚未初始化")
+	}
+	if path == "" {
+		return fmt.Errorf("path 不能为空")
+	}
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	if title == "" {
+		title = "go-tools"
+	}
+	startState := application.WindowStateNormal
+	if fullscreen {
+		startState = application.WindowStateFullscreen
+	}
+	// 单例窗口：以路由路径作为唯一名称，已存在则聚焦复用
+	if single {
+		name := "win:" + path
+		if w, ok := a.app.Window.GetByName(name); ok {
+			w.Show()
+			w.UnMinimise()
+			w.Focus()
+			return nil
+		}
+		a.app.Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:             name,
+			Title:            title,
+			Width:            1000,
+			Height:           718,
+			BackgroundColour: application.NewRGB(6, 7, 15),
+			StartState:       startState,
+			URL:              "/#" + path,
+		})
+		return nil
+	}
+	// 多实例窗口：不登记名称，每次新建
+	a.app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:            title,
+		Width:            1000,
+		Height:           718,
+		BackgroundColour: application.NewRGB(6, 7, 15),
+		StartState:       startState,
+		URL:              "/#" + path,
+	})
+	return nil
 }
 
 // GetSerialPorts 暴露给 Vue 前端的获取串口方法
@@ -107,4 +166,70 @@ func (a *App) StartCaptureSniffer(devices []string, protocols []string, ports []
 func (a *App) StopCaptureSniffer() {
 	// 3. 调用 sniffer 包的 StopCapture 函数
 	sniffer.StopCapture()
+}
+
+/* ================= MITM 代理抓包（HTTP/HTTPS 解密） ================= */
+
+// StartSnifferProxy 启动 MITM 代理：安装根证书、设置系统代理、开始捕获。
+// 每捕获一条请求/响应，通过 "sniffer:flow" 事件推送给前端。
+func (a *App) StartSnifferProxy(port int) error {
+	a.snifferMu.Lock()
+	defer a.snifferMu.Unlock()
+	if a.snifferRunning {
+		return fmt.Errorf("抓包代理已在运行")
+	}
+	if port <= 0 || port > 65535 {
+		port = 8888
+	}
+
+	m, err := sniffer.NewMitm()
+	if err != nil {
+		return fmt.Errorf("初始化代理失败: %w", err)
+	}
+	if err := m.Start(port, func(f sniffer.Flow) {
+		if a.app != nil {
+			a.app.Event.Emit("sniffer:flow", f)
+		}
+	}); err != nil {
+		return err
+	}
+
+	// 安装根证书 + 设置系统代理（失败仅告警，不影响代理本身）
+	if err := sniffer.InstallCA(m.CertPath()); err != nil {
+		fmt.Printf("[Sniffer] 安装根证书失败: %v\n", err)
+	}
+	if err := sniffer.SetSystemProxy(port); err != nil {
+		fmt.Printf("[Sniffer] 设置系统代理失败: %v\n", err)
+	}
+
+	a.mitm = m
+	a.snifferRunning = true
+	fmt.Printf("[Sniffer] MITM 代理已启动，监听 127.0.0.1:%d\n", port)
+	return nil
+}
+
+// StopSnifferProxy 停止 MITM 代理：还原系统代理并卸载根证书
+func (a *App) StopSnifferProxy() error {
+	a.snifferMu.Lock()
+	defer a.snifferMu.Unlock()
+	if !a.snifferRunning || a.mitm == nil {
+		return nil
+	}
+	sniffer.ClearSystemProxy()
+	a.mitm.Stop()
+	sniffer.UninstallCA()
+	a.mitm = nil
+	a.snifferRunning = false
+	fmt.Println("[Sniffer] MITM 代理已停止，系统代理已还原")
+	return nil
+}
+
+// SnifferProxyStatus 返回代理运行状态与端口
+func (a *App) SnifferProxyStatus() (bool, int) {
+	a.snifferMu.Lock()
+	defer a.snifferMu.Unlock()
+	if a.mitm != nil {
+		return a.snifferRunning, a.mitm.Port()
+	}
+	return a.snifferRunning, 0
 }

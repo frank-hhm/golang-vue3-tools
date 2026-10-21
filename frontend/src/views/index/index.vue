@@ -5,29 +5,18 @@
         {{ item.name }}
       </div>
     </div>
-
-    <a-modal
-      v-model:visible="toolEvents.screenshot.visible"
-      title="截图预览"
-      :width="800"
-      ok-text="下载"
-      cancel-text="关闭"
-      @ok="toolEvents.screenshot.download"
-    >
-      <div class="preview-wrap">
-        <img v-if="toolEvents.screenshot.image" :src="toolEvents.screenshot.image" class="preview-img" alt="screenshot" />
-        <div class="preview-tip">截图已自动复制到剪贴板，可直接 Ctrl+V 粘贴；点击「下载」保存为 PNG 文件。</div>
-      </div>
-    </a-modal>
   </layout-body>
 </template>
 <script setup lang="ts">
-import router from "@/router";
 import { reactive, ref } from "vue";
 import { useToolEvents, type ToolItem } from "./events";
+import { useToolWindow } from "./useToolWindow";
 
 /** 工具事件处理器集合（reactive 包裹后，模板可深层访问内部 ref） */
 const toolEvents = reactive(useToolEvents());
+
+/** 统一的工具窗口打开入口（新窗口优先，失败回退 web 路由） */
+const { openToolWindow } = useToolWindow();
 
 const toolsList = ref<ToolItem[]>([
   {
@@ -51,8 +40,25 @@ const toolsList = ref<ToolItem[]>([
     path: '/tools/hexconvert',
   },
   {
+    name: '图片base64',
+    path: '/tools/imageBase64',
+  },
+  {
+    name: '二维码生成',
+    path: '/tools/qrcode',
+  },
+  
+  {
     name: '抓包工具',
     path: '/tools/sniffer',
+    single: true,
+    fullscreen: true,
+  },
+  {
+    name: 'WebSocket调试',
+    path: '/tools/websocket',
+    single: false,
+    fullscreen: true,
   },
   {
     name: 'USB调试',
@@ -61,10 +67,10 @@ const toolsList = ref<ToolItem[]>([
   
 ]);
 
-/** 统一处理工具卡片点击：有 path 则路由跳转，有 event 则派发对应事件 */
+/** 统一处理工具卡片点击：path 用原生新窗口打开（按 single/fullscreen 配置）；event 直接派发 */
 const onToolClick = (item: ToolItem) => {
   if (item.path) {
-    router.push(item.path);
+    openToolWindow(item.path, item.name, item.single, item.fullscreen);
     return;
   }
   if (item.event) {
@@ -82,33 +88,18 @@ const onToolClick = (item: ToolItem) => {
 }
 
 .tools-item {
-  width: 200px;
-  padding: 30px 10px;
+  width: 100px;
+  padding: 20px 10px;
   margin: 10px;
   text-align: center;
   background-color: #f5f5f5;
   cursor: pointer;
   border-radius: var(--base-radius-default);
   user-select: none;
-  font-size: var(--base-size-large);
+  font-size: var(--base-size-default);
   font-weight: bold;
 }
 .tools-item:hover {
   background-color: #e5e5e5;
-}
-
-.preview-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.preview-img {
-  max-width: 100%;
-  border: 1px solid #e5e6eb;
-  border-radius: var(--base-radius-default);
-}
-.preview-tip {
-  color: #86909c;
-  font-size: 13px;
 }
 </style>

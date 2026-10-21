@@ -61,10 +61,27 @@ export function Greet(name: string): $CancellablePromise<string> {
 }
 
 /**
+ * OpenToolWindow 在新的 Wails 原生窗口中打开指定前端路由（hash 路由）。
+ * path 形如 "/tools/timestamp"；title 为新窗口标题；
+ * single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
+ * fullscreen 为 true 时新窗口以全屏启动，否则沿用默认尺寸。
+ */
+export function OpenToolWindow(path: string, title: string, single: boolean, fullscreen: boolean): $CancellablePromise<void> {
+    return $Call.ByID(144879371, path, title, single, fullscreen);
+}
+
+/**
  * SetApp 注入 Wails v3 应用实例，供事件推送使用
  */
 export function SetApp(app: application$0.App | null): $CancellablePromise<void> {
     return $Call.ByID(4256893662, app);
+}
+
+/**
+ * SnifferProxyStatus 返回代理运行状态与端口
+ */
+export function SnifferProxyStatus(): $CancellablePromise<[boolean, number]> {
+    return $Call.ByID(227489158);
 }
 
 /**
@@ -81,6 +98,14 @@ export function StartReadingSerial(portId: string): $CancellablePromise<void> {
 }
 
 /**
+ * StartSnifferProxy 启动 MITM 代理：安装根证书、设置系统代理、开始捕获。
+ * 每捕获一条请求/响应，通过 "sniffer:flow" 事件推送给前端。
+ */
+export function StartSnifferProxy(port: number): $CancellablePromise<void> {
+    return $Call.ByID(2161218578, port);
+}
+
+/**
  * StopCapture 暴露给前端：停止抓包
  */
 export function StopCaptureSniffer(): $CancellablePromise<void> {
@@ -89,4 +114,11 @@ export function StopCaptureSniffer(): $CancellablePromise<void> {
 
 export function StopReadingSerial(portId: string): $CancellablePromise<void> {
     return $Call.ByID(1325778439, portId);
+}
+
+/**
+ * StopSnifferProxy 停止 MITM 代理：还原系统代理并卸载根证书
+ */
+export function StopSnifferProxy(): $CancellablePromise<void> {
+    return $Call.ByID(392022348);
 }

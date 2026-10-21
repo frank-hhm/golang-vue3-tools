@@ -44,7 +44,7 @@ type HttpRequest struct {
 	Host        string            `json:"host,omitempty"`        // Host 头
 	ContentType string            `json:"contentType,omitempty"` // Content-Type
 	Headers     map[string]string `json:"headers,omitempty"`     // 所有请求头
-	Body        string            `json:"body,omitempty"`         // 请求体
+	Body        string            `json:"body,omitempty"`        // 请求体
 }
 
 // HttpResponse HTTP 响应信息
@@ -53,16 +53,16 @@ type HttpResponse struct {
 	Status      string            `json:"status"`                // 状态描述, e.g. "200 OK"
 	ContentType string            `json:"contentType,omitempty"` // Content-Type
 	Headers     map[string]string `json:"headers,omitempty"`     // 所有响应头
-	Body        string            `json:"body,omitempty"`         // 响应体
+	Body        string            `json:"body,omitempty"`        // 响应体
 }
 
 // PacketInfo 解析后的数据包结构
 type PacketInfo struct {
 	// --- 基础信息 ---
-	Time      string `json:"time"`     // 抓包时间 (格式化后的字符串)
-	Device    string `json:"device"`   // 网卡设备名
-	Protocol  string `json:"protocol"` // 协议类型: TCP, UDP, HTTP, HTTPS
-	Direction string `json:"direction"` // 方向: "outgoing" 或 "incoming"
+	Time      string `json:"time"`              // 抓包时间 (格式化后的字符串)
+	Device    string `json:"device"`            // 网卡设备名
+	Protocol  string `json:"protocol"`          // 协议类型: TCP, UDP, HTTP, HTTPS
+	Direction string `json:"direction"`         // 方向: "outgoing" 或 "incoming"
 	Process   string `json:"process,omitempty"` // 关联的进程名
 
 	// --- 网络层 (Layer 3) ---
@@ -82,7 +82,7 @@ type PacketInfo struct {
 
 	// --- 原始数据 ---
 	RawPayload string `json:"rawPayload,omitempty"` // 原始 payload (截断)
-	PacketSize int    `json:"packetSize"`            // 数据包大小
+	PacketSize int    `json:"packetSize"`           // 数据包大小
 }
 
 // Engine 抓包引擎
@@ -635,7 +635,6 @@ func updatePortProcessMap() {
 		return
 	}
 
-	fmt.Printf("[获取所有进程的] pids ---  %s", pids)
 	for _, pid := range pids {
 		p, err := process.NewProcess(pid)
 		if err != nil {
@@ -660,7 +659,6 @@ func updatePortProcessMap() {
 			// --- 修复开始 ---
 			// 在 gopsutil v3 中，conn.Laddr 是一个结构体，可以直接访问 Port 字段
 			localPort := uint16(conn.Laddr.Port)
-			fmt.Printf("[Sniffer] --- (%s)\n %s", localPort, name)
 			if localPort > 0 {
 				newMap[localPort] = name
 			}
