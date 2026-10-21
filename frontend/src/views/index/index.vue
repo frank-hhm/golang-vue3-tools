@@ -24,6 +24,19 @@ const toolsList = ref<ToolItem[]>([
     event: 'screenshot',
   },
   {
+    name: '颜色取色器',
+    path: '/tools/colorpicker',
+    single: true,
+    width: 480,
+    height: 560,
+  },
+  {
+    name: '视频录制',
+    path: '/tools/video',
+    single: true,
+    fullscreen: true,
+  },
+  {
     name: '时间戳转换',
     path: '/tools/timestamp',
   },
@@ -47,7 +60,7 @@ const toolsList = ref<ToolItem[]>([
     name: '二维码生成',
     path: '/tools/qrcode',
   },
-  
+
   {
     name: '抓包工具',
     path: '/tools/sniffer',
@@ -71,13 +84,15 @@ const toolsList = ref<ToolItem[]>([
     fullscreen: true,
   },
   {
-    name: '颜色取色器',
-    path: '/tools/colorpicker',
+    name: 'MySQL管理',
+    path: '/tools/mysql',
     single: true,
-    width: 480,
-    height: 560,
+    fullscreen: true,
   },
-  
+  {
+    name: 'test',
+    path: '/demo/gomessage',
+  }
 ]);
 
 /** 统一处理工具卡片点击：path 用原生新窗口打开（按 single/fullscreen/width/height 配置）；event 直接派发 */
@@ -97,7 +112,6 @@ const onToolClick = (item: ToolItem) => {
 };
 </script>
 <style scoped>
-
 .tools-list {
   padding: 20px;
   display: flex;
@@ -106,7 +120,6 @@ const onToolClick = (item: ToolItem) => {
 }
 
 .tools-item {
-  width: 100px;
   padding: 20px 10px;
   margin: 10px;
   text-align: center;
@@ -117,6 +130,7 @@ const onToolClick = (item: ToolItem) => {
   font-size: var(--base-size-default);
   font-weight: bold;
 }
+
 .tools-item:hover {
   background-color: #e5e5e5;
 }

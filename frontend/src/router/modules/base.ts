@@ -6,6 +6,7 @@ const TOOLS = [
     { key: "Sniffer", menu_name: "抓包工具", path: "tools/sniffer", component: () => import('@/views/tools/sniffer/index.vue') },
     { key: "Usbserial", menu_name: "USB调试", path: "tools/usbserial", component: () => import('@/views/tools/usbserial/index.vue') },
     { key: "Redis", menu_name: "Redis管理", path: "tools/redis", component: () => import('@/views/tools/redis/index.vue') },
+    { key: "Mysql", menu_name: "MySQL管理", path: "tools/mysql", component: () => import('@/views/tools/mysql/index.vue') },
     { key: "Timestamp", menu_name: "时间戳转换", path: "tools/timestamp", component: () => import('@/views/tools/timestamp/index.vue') },
     { key: "Strrandom", menu_name: "随机字符串生成", path: "tools/strrandom", component: () => import('@/views/tools/strrandom/index.vue') },
     { key: "Encdec", menu_name: "文字加密解密", path: "tools/encdec", component: () => import('@/views/tools/encdec/index.vue') },
@@ -14,7 +15,9 @@ const TOOLS = [
     { key: "Qrcode", menu_name: "二维码生成", path: "tools/qrcode", component: () => import('@/views/tools/qrcode/index.vue') },
     { key: "Websocket", menu_name: "WebSocket调试", path: "tools/websocket", component: () => import('@/views/tools/websocket/index.vue') },
     { key: "Screenshot", menu_name: "截图预览", path: "tools/screenshot", component: () => import('@/views/tools/screenshot/index.vue') },
+    { key: "Video", menu_name: "视频录制", path: "tools/video", component: () => import('@/views/tools/video/index.vue') },
     { key: "Colorpicker", menu_name: "颜色取色器", path: "tools/colorpicker", component: () => import('@/views/tools/colorpicker/index.vue') },
+
 ];
 
 /**
@@ -55,6 +58,16 @@ export default [{
             },
             component: () => import('@/views/index/index.vue')
         },
+        {
+            // Go → Arco Message 消息桥接 demo（未全局推广，仅供验证）
+            path: '/demo/gomessage',
+            name: '/demo/gomessage',
+            meta: {
+                auth: false,
+                menu_name: "Go消息Demo",
+            },
+            component: () => import('@/views/demo/gomessage/index.vue')
+        },
         ...buildChildren('/')
     ]
 }, {
@@ -65,5 +78,48 @@ export default [{
         blank: true,
     },
     component: BlankLayout,
-    children: buildChildren('/win/', { blank: true })
+    children: [
+        ...buildChildren('/win/', { blank: true }),
+        {
+            // Go 消息桥接 demo 的新窗口路由（首页 test 卡片经 OpenToolWindow 拼 /win 前缀）
+            path: 'demo/gomessage',
+            name: '/win/demo/gomessage',
+            meta: {
+                auth: false,
+                blank: true,
+                menu_name: "Go消息Demo",
+            },
+            component: () => import('@/views/demo/gomessage/index.vue')
+        }
+    ]
+}, {
+    // 录制悬浮小窗：独立轻量页面（无布局/面包屑），由后端 VideoOpenWidget 开窗加载
+    path: '/widget/recorder',
+    name: '/widget/recorder',
+    meta: {
+        auth: false,
+        blank: true,
+        menu_name: "屏幕录制",
+    },
+    component: () => import('@/views/widget/recorder.vue')
+}, {
+    // 原生消息通知小窗：由后端 ShowMessage 开窗加载（屏幕右上角，自动消失）
+    path: '/widget/toast',
+    name: '/widget/toast',
+    meta: {
+        auth: false,
+        blank: true,
+        menu_name: "通知",
+    },
+    component: () => import('@/views/widget/toast.vue')
+}, {
+    // 系统风格通知卡片小窗：由后端 ShowNotification 开窗加载（屏幕右下角，驻留至手动关闭）
+    path: '/widget/notify',
+    name: '/widget/notify',
+    meta: {
+        auth: false,
+        blank: true,
+        menu_name: "通知",
+    },
+    component: () => import('@/views/widget/notify.vue')
 }]

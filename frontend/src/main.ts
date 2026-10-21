@@ -9,10 +9,14 @@ import { loadPlugins } from "@/plugins"
 import "@/styles/index.scss"
 
 import * as Utils from '@/utils'
+import { setupGoMessage } from '@/utils/gomessage'
 import * as GoToolsBindings from "bindings/go-tools/index";
 import { ScreenshotService as GoScreenshot } from "bindings/go-tools/tools/screenshot/index";
 
 const app = createApp(App);
+
+/** 启用 Go → Arco Message 消息桥接（demo，监听 ui:message 事件） */
+setupGoMessage();
 
 /** 加载插件 */
 loadPlugins(app)

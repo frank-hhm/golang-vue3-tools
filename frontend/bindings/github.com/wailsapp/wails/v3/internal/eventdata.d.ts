@@ -7,6 +7,9 @@ import type { Events } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import type * as main$0 from "../../../../../go-tools/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import type * as redis$0 from "../../../../../go-tools/tools/redis/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -23,6 +26,10 @@ declare module "@wailsio/runtime" {
             "serial:status": usbserial$0.ConnStatusEvent;
             "sniffer:flow": sniffer$0.Flow;
             "time": string;
+            "ui:message": main$0.UIMessage;
+            "video:cmd": string;
+            "video:saved": string;
+            "video:status": main$0.VideoStatus;
         }
     }
 }

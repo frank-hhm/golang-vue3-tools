@@ -15,6 +15,9 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as application$0 from "../github.com/wailsapp/wails/v3/pkg/application/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as mysql$0 from "./tools/mysql/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as redis$0 from "./tools/redis/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -92,6 +95,185 @@ export function ListenTCPServer(cfg: usbserial$0.ConnConfig): $CancellablePromis
 }
 
 /**
+ * MySQLAddColumn 新增列
+ */
+export function MySQLAddColumn(id: string, database: string, table: string, col: mysql$0.ColumnDef): $CancellablePromise<void> {
+    return $Call.ByID(586456774, id, database, table, col);
+}
+
+/**
+ * MySQLBackup 生成 SQL 备份文本
+ */
+export function MySQLBackup(id: string, database: string, tables: string[]): $CancellablePromise<string> {
+    return $Call.ByID(960772607, id, database, tables);
+}
+
+/**
+ * MySQLBeginTx 开启事务，返回事务 ID
+ */
+export function MySQLBeginTx(id: string, database: string): $CancellablePromise<string> {
+    return $Call.ByID(1857938034, id, database);
+}
+
+/**
+ * MySQLClose 关闭指定连接
+ */
+export function MySQLClose(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3013301443, id);
+}
+
+/**
+ * MySQLCommitTx 提交事务
+ */
+export function MySQLCommitTx(txID: string): $CancellablePromise<void> {
+    return $Call.ByID(4039007072, txID);
+}
+
+/**
+ * MySQLDeleteRow 按主键删除一行
+ */
+export function MySQLDeleteRow(id: string, database: string, table: string, pkCol: string, pkVal: string): $CancellablePromise<void> {
+    return $Call.ByID(2761597750, id, database, table, pkCol, pkVal);
+}
+
+/**
+ * MySQLDropColumn 删除列
+ */
+export function MySQLDropColumn(id: string, database: string, table: string, col: string): $CancellablePromise<void> {
+    return $Call.ByID(293152126, id, database, table, col);
+}
+
+/**
+ * MySQLExecute 执行 SQL（查询返回结果集，其余返回受影响行）
+ */
+export function MySQLExecute(id: string, database: string, sqlText: string): $CancellablePromise<mysql$0.QueryResult> {
+    return $Call.ByID(2907278648, id, database, sqlText).then(($result: any) => {
+        return $$createType6($result);
+    });
+}
+
+/**
+ * MySQLInsertRow 插入一行
+ */
+export function MySQLInsertRow(id: string, database: string, table: string, data: { [_ in string]?: string }): $CancellablePromise<number> {
+    return $Call.ByID(2201039212, id, database, table, data);
+}
+
+/**
+ * MySQLListDatabases 列出数据库
+ */
+export function MySQLListDatabases(id: string): $CancellablePromise<string[]> {
+    return $Call.ByID(2502895709, id).then(($result: any) => {
+        return $$createType3($result);
+    });
+}
+
+/**
+ * MySQLListRoutines 列出函数/存储过程
+ */
+export function MySQLListRoutines(id: string, database: string): $CancellablePromise<mysql$0.RoutineInfo[]> {
+    return $Call.ByID(3546892372, id, database).then(($result: any) => {
+        return $$createType8($result);
+    });
+}
+
+/**
+ * MySQLListTables 列出基表
+ */
+export function MySQLListTables(id: string, database: string): $CancellablePromise<mysql$0.TableInfo[]> {
+    return $Call.ByID(3608111224, id, database).then(($result: any) => {
+        return $$createType10($result);
+    });
+}
+
+/**
+ * MySQLListViews 列出视图
+ */
+export function MySQLListViews(id: string, database: string): $CancellablePromise<mysql$0.ViewInfo[]> {
+    return $Call.ByID(2937346173, id, database).then(($result: any) => {
+        return $$createType12($result);
+    });
+}
+
+/**
+ * MySQLLoadConnections 从文件读取连接列表
+ */
+export function MySQLLoadConnections(): $CancellablePromise<mysql$0.ConnConfig[]> {
+    return $Call.ByID(2111961026).then(($result: any) => {
+        return $$createType14($result);
+    });
+}
+
+/**
+ * MySQLModifyColumn 修改/重命名列
+ */
+export function MySQLModifyColumn(id: string, database: string, table: string, oldName: string, col: mysql$0.ColumnDef): $CancellablePromise<void> {
+    return $Call.ByID(1935106313, id, database, table, oldName, col);
+}
+
+/**
+ * MySQLOpen 建立并登记一个 MySQL 连接
+ */
+export function MySQLOpen(cfg: mysql$0.ConnConfig): $CancellablePromise<void> {
+    return $Call.ByID(2125252841, cfg);
+}
+
+/**
+ * MySQLRollbackTx 回滚事务
+ */
+export function MySQLRollbackTx(txID: string): $CancellablePromise<void> {
+    return $Call.ByID(2301966825, txID);
+}
+
+/**
+ * MySQLSaveConnections 保存连接配置到文件
+ */
+export function MySQLSaveConnections(configs: mysql$0.ConnConfig[]): $CancellablePromise<string> {
+    return $Call.ByID(3750105001, configs);
+}
+
+/**
+ * MySQLTableData 分页浏览表数据
+ */
+export function MySQLTableData(id: string, database: string, table: string, filter: string, orderBy: string, desc: boolean, page: number, size: number): $CancellablePromise<mysql$0.QueryResult> {
+    return $Call.ByID(1431334087, id, database, table, filter, orderBy, desc, page, size).then(($result: any) => {
+        return $$createType6($result);
+    });
+}
+
+/**
+ * MySQLTableSchema 返回表结构（列/索引/DDL）
+ */
+export function MySQLTableSchema(id: string, database: string, table: string): $CancellablePromise<mysql$0.TableSchema> {
+    return $Call.ByID(3285355648, id, database, table).then(($result: any) => {
+        return $$createType15($result);
+    });
+}
+
+/**
+ * MySQLTxExecute 在事务中执行语句
+ */
+export function MySQLTxExecute(txID: string, sqlText: string): $CancellablePromise<mysql$0.QueryResult> {
+    return $Call.ByID(2881411876, txID, sqlText).then(($result: any) => {
+        return $$createType6($result);
+    });
+}
+
+/**
+ * MySQLUpdateCell 按主键更新单元格
+ */
+export function MySQLUpdateCell(id: string, database: string, table: string, pkCol: string, pkVal: string, col: string, val: string): $CancellablePromise<void> {
+    return $Call.ByID(3718971048, id, database, table, pkCol, pkVal, col, val);
+}
+
+/**
+ * NotifyClose 关闭通知卡片
+ */
+export function NotifyClose(): $CancellablePromise<void> {
+    return $Call.ByID(1139470008);
+}
+
+/**
  * OpenSerial 打开串口
  */
 export function OpenSerial(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
@@ -149,7 +331,7 @@ export function RedisDeleteKeys(id: string, keys: string[]): $CancellablePromise
  */
 export function RedisGetKey(id: string, key: string): $CancellablePromise<redis$0.KeyValue> {
     return $Call.ByID(3543651543, id, key).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType16($result);
     });
 }
 
@@ -158,7 +340,7 @@ export function RedisGetKey(id: string, key: string): $CancellablePromise<redis$
  */
 export function RedisLoadConnections(): $CancellablePromise<redis$0.ConnConfig[]> {
     return $Call.ByID(1426630705).then(($result: any) => {
-        return $$createType8($result);
+        return $$createType18($result);
     });
 }
 
@@ -181,7 +363,7 @@ export function RedisSaveConnections(configs: redis$0.ConnConfig[]): $Cancellabl
  */
 export function RedisScan(id: string, pattern: string, count: number, limit: number): $CancellablePromise<redis$0.ScanResult> {
     return $Call.ByID(1634125981, id, pattern, count, limit).then(($result: any) => {
-        return $$createType9($result);
+        return $$createType19($result);
     });
 }
 
@@ -204,7 +386,7 @@ export function RedisSetTTL(id: string, key: string, ttl: number): $CancellableP
  */
 export function RedisSlowlog(id: string, count: number): $CancellablePromise<redis$0.SlowlogEntry[]> {
     return $Call.ByID(2417336661, id, count).then(($result: any) => {
-        return $$createType11($result);
+        return $$createType21($result);
     });
 }
 
@@ -220,7 +402,7 @@ export function RedisStartMonitor(cfg: redis$0.ConnConfig): $CancellablePromise<
  */
 export function RedisStatus(id: string): $CancellablePromise<redis$0.ServerStatus> {
     return $Call.ByID(2999982438, id).then(($result: any) => {
-        return $$createType12($result);
+        return $$createType22($result);
     });
 }
 
@@ -250,6 +432,30 @@ export function SetApp(app: application$0.App | null): $CancellablePromise<void>
  */
 export function SetSerialControlBits(rts: boolean, dtr: boolean): $CancellablePromise<void> {
     return $Call.ByID(1884079928, rts, dtr);
+}
+
+/**
+ * ShowMessage 在 WebView 之外的桌面（屏幕右上角）弹出一个原生置顶通知小窗，
+ * 自动消失；同一时间仅保留最新一条通知。
+ */
+export function ShowMessage(level: string, text: string): $CancellablePromise<void> {
+    return $Call.ByID(605677059, level, text);
+}
+
+/**
+ * ShowNotification 在屏幕右下角弹出一张系统风格的通知卡片（仿 Windows 通知：
+ * 应用名 + 标题 + 内容 + 关闭钮），驻留直到用户点 ✕ 或代码调用 NotifyClose。
+ */
+export function ShowNotification(title: string, content: string): $CancellablePromise<void> {
+    return $Call.ByID(3229613467, title, content);
+}
+
+/**
+ * ShowSystemNotification 直接调用 Windows 系统通知中心弹原生 Toast
+ * （系统右下角渲染、自动消失、可进入操作中心/专注助手），异步执行不阻塞调用方。
+ */
+export function ShowSystemNotification(title: string, content: string): $CancellablePromise<void> {
+    return $Call.ByID(4182169678, title, content);
 }
 
 /**
@@ -290,6 +496,72 @@ export function StopSnifferProxy(): $CancellablePromise<void> {
     return $Call.ByID(392022348);
 }
 
+/**
+ * ToastClose 关闭通知小窗（通知页倒计时结束或用户点关闭时调用）
+ */
+export function ToastClose(): $CancellablePromise<void> {
+    return $Call.ByID(2466416140);
+}
+
+/**
+ * VideoCmd 悬浮小窗 → 录制工具窗的命令转发（start|pause|resume|stop|cancel）
+ */
+export function VideoCmd(command: string): $CancellablePromise<void> {
+    return $Call.ByID(2992981876, command);
+}
+
+/**
+ * VideoOpenWidget 打开录制悬浮小窗（由视频录制工具页在用户确认共享、录制器已启动后调用）。
+ * 录制期间会隐藏视频录制工具窗口，避免其入镜形成递归镜像（“无限缩小”）。
+ * mode: screen|region；fx/fy/fw/fh 为区域相对整屏的裁剪比例（screen 模式忽略）；
+ * anchorX/anchorY 为小窗锚定的屏幕右下角坐标（DIP）；filename 为建议保存文件名。
+ */
+export function VideoOpenWidget(mode: string, fps: number, fx: number, fy: number, fw: number, fh: number, anchorX: number, anchorY: number, filename: string): $CancellablePromise<void> {
+    return $Call.ByID(1683275512, mode, fps, fx, fy, fw, fh, anchorX, anchorY, filename);
+}
+
+/**
+ * VideoReport 录制工具窗 → 悬浮小窗的状态上报
+ */
+export function VideoReport(state: string, elapsed: number, note: string): $CancellablePromise<void> {
+    return $Call.ByID(1641970886, state, elapsed, note);
+}
+
+/**
+ * VideoSaveAbort 放弃一次上传会话（不写盘）
+ */
+export function VideoSaveAbort(session: string): $CancellablePromise<void> {
+    return $Call.ByID(4030314557, session);
+}
+
+/**
+ * VideoSaveBegin 开始一次视频分块上传会话，返回会话 ID
+ */
+export function VideoSaveBegin(filename: string): $CancellablePromise<string> {
+    return $Call.ByID(3157996074, filename);
+}
+
+/**
+ * VideoSaveChunk 追加一块 base64 编码的视频数据
+ */
+export function VideoSaveChunk(session: string, base64Chunk: string): $CancellablePromise<void> {
+    return $Call.ByID(3017837814, session, base64Chunk);
+}
+
+/**
+ * VideoSavePrompt 弹出原生“另存为”对话框选择目录并写盘；用户取消时返回空字符串
+ */
+export function VideoSavePrompt(session: string): $CancellablePromise<string> {
+    return $Call.ByID(2119945935, session);
+}
+
+/**
+ * VideoWidgetDone 小窗退出：重新显示工具窗口并推送退出事件（保留 recToolWin 引用供另存对话框挂父窗）
+ */
+export function VideoWidgetDone(savePath: string): $CancellablePromise<void> {
+    return $Call.ByID(3960415720, savePath);
+}
+
 // Private type creation functions
 const $$createType0 = usbserial$0.ConnStatus.createFrom;
 const $$createType1 = sniffer$0.PcapDeviceInfo.createFrom;
@@ -297,10 +569,20 @@ const $$createType2 = $Create.Array($$createType1);
 const $$createType3 = $Create.Array($Create.Any);
 const $$createType4 = usbserial$0.SerialDeviceInfo.createFrom;
 const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = redis$0.KeyValue.createFrom;
-const $$createType7 = redis$0.ConnConfig.createFrom;
+const $$createType6 = mysql$0.QueryResult.createFrom;
+const $$createType7 = mysql$0.RoutineInfo.createFrom;
 const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = redis$0.ScanResult.createFrom;
-const $$createType10 = redis$0.SlowlogEntry.createFrom;
-const $$createType11 = $Create.Array($$createType10);
-const $$createType12 = redis$0.ServerStatus.createFrom;
+const $$createType9 = mysql$0.TableInfo.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = mysql$0.ViewInfo.createFrom;
+const $$createType12 = $Create.Array($$createType11);
+const $$createType13 = mysql$0.ConnConfig.createFrom;
+const $$createType14 = $Create.Array($$createType13);
+const $$createType15 = mysql$0.TableSchema.createFrom;
+const $$createType16 = redis$0.KeyValue.createFrom;
+const $$createType17 = redis$0.ConnConfig.createFrom;
+const $$createType18 = $Create.Array($$createType17);
+const $$createType19 = redis$0.ScanResult.createFrom;
+const $$createType20 = redis$0.SlowlogEntry.createFrom;
+const $$createType21 = $Create.Array($$createType20);
+const $$createType22 = redis$0.ServerStatus.createFrom;

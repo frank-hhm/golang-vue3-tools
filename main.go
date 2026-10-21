@@ -30,7 +30,12 @@ func init() {
 	application.RegisterEvent[usbserial.SerialData]("serial:data")
 	application.RegisterEvent[usbserial.ConnStatusEvent]("serial:status")
 	application.RegisterEvent[redis.MonitorLine]("redis:monitor")
+	application.RegisterEvent[string]("video:saved")
+	application.RegisterEvent[string]("video:cmd")
+	application.RegisterEvent[VideoStatus]("video:status")
+	application.RegisterEvent[UIMessage]("ui:message")
 }
+
 func main() {
 	// Create an instance of the app structure
 	appInstance := NewApp()
@@ -49,6 +54,14 @@ func main() {
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
+		},
+		Windows: application.WindowsOptions{
+			// 录制期间工具窗口处于隐藏状态，保持其 JS 定时器/捕获回调不被后台节流
+			AdditionalBrowserArgs: []string{
+				"--disable-background-timer-throttling",
+				"--disable-backgrounding-occluded-windows",
+				"--disable-renderer-backgrounding",
+			},
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,

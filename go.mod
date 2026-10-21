@@ -3,6 +3,7 @@ module go-tools
 go 1.25.0
 
 require (
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/gopacket v1.1.19
 	github.com/kbinani/screenshot v0.0.0-20250624051815-089614a94018
 	github.com/shirou/gopsutil/v3 v3.24.5
@@ -13,6 +14,7 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/gen2brain/shm v0.1.0 // indirect

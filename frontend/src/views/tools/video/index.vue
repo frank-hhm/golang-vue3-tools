@@ -1,0 +1,911 @@
+<template>
+  <layout-body title="视频录制">
+    <a-card class="tool-card">
+      <!-- 顶部：模式 + 参数 + 操作 -->
+      <a-row justify="space-between" align="center" class="form-row" :gutter="12">
+        <a-col>
+          <a-radio-group v-model="st.mode" type="button" :disabled="isBusy" @change="onModeChange">
+            <a-radio value="screen"><icon-desktop /> 屏幕</a-radio>
+            <a-radio value="region"><icon-fullscreen /> 区域</a-radio>
+            <a-radio value="camera"><icon-camera /> 摄像头</a-radio>
+          </a-radio-group>
+          <a-space :size="12" class="ml12">
+            <span class="field-label">帧率</span>
+            <a-select v-model="st.fps" size="small" style="width: 90px" :disabled="isBusy" :options="fpsOptions" />
+
+            <!-- 屏幕模式 -->
+            <template v-if="st.mode === 'screen'">
+              <a-button size="small" v-if="st.status === 'idle'" type="primary" status="success" @click="startScreen">
+                <template #icon><icon-record /></template>开始录制
+              </a-button>
+            </template>
+
+            <!-- 区域模式 -->
+            <template v-else-if="st.mode === 'region'">
+              <template v-if="st.status === 'idle'">
+                <a-button size="small" type="primary" @click="beginRegion"><template
+                    #icon><icon-camera /></template>框选区域开始录制</a-button>
+              </template>
+              <template v-else-if="st.status === 'selecting'">
+                <a-button size="small" type="outline" @click="reshoot"><template
+                    #icon><icon-refresh /></template>重新截屏</a-button>
+                <a-button size="small" type="primary" status="success" :disabled="!st.rect" @click="startRegion">
+                  确定
+                </a-button>
+                <a-button size="small" @click="cancelSelect">取消</a-button>
+              </template>
+            </template>
+
+            <!-- 摄像头模式 -->
+            <template v-else>
+              <template v-if="st.status === 'idle' || st.status === 'stopped'">
+                <a-button size="small" type="primary" @click="openCamera"><template
+                    #icon><icon-play-arrow /></template>打开摄像头</a-button>
+              </template>
+              <template v-else-if="st.status === 'ready'">
+                <a-button size="small" type="primary" status="danger" @click="startCamera"><template
+                    #icon><icon-record /></template>开始录制</a-button>
+                <a-button size="small" @click="stopSource"><template #icon><icon-close /></template>关闭摄像头</a-button>
+              </template>
+              <template v-else>
+                <a-tag color="red" class="rec-tag"><icon-record /> {{ st.status === "paused" ? "已暂停" : "录制中" }} {{
+                  fmtTime(camElapsed) }}</a-tag>
+                <a-button size="small" v-if="st.status === 'recording'" type="outline" @click="pauseCamera"><template
+                    #icon><icon-pause /></template>暂停</a-button>
+                <a-button size="small" v-else type="outline" @click="resumeCamera"><template
+                    #icon><icon-play-arrow /></template>继续</a-button>
+                <a-button size="small" type="primary" status="danger" @click="stopCamera"><template
+                    #icon><icon-stop /></template>停止</a-button>
+              </template>
+            </template>
+          </a-space>
+        </a-col>
+      </a-row>
+
+      <!-- 已交给悬浮小窗控制的提示 -->
+      <a-alert v-if="st.status === 'delegated'" class="widget-alert" type="warning">
+        已就绪：请在{{ st.mode === "region" ? "选区右下角" : "屏幕右下角" }}的悬浮小窗点击「开始」启动录制，进行中可查看时长并点「停止」；停止后自动返回本窗口，在「结果/说明」中预览并另存。
+      </a-alert>
+
+      <!-- 预览区 -->
+      <div class="preview-wrap">
+        <!-- 区域：选区截图 + 拖拽框选 -->
+        <div v-show="st.mode === 'region' && st.status === 'selecting'" ref="snapWrap" class="snap-wrap"
+          @mousedown="onDown" @mousemove="onMove" @mouseup="onUp" @mouseleave="onUp" @click="onSnapClick">
+          <img v-if="st.snapUrl" :src="st.snapUrl" class="snap-img" alt="region" draggable="false" />
+          <div v-if="st.rect" class="sel-rect" :style="rectStyle"></div>
+          <div v-if="!st.rect" class="sel-hint">按住鼠标拖动，框选要录制的区域</div>
+          <div v-else class="sel-size">{{ st.srcW }} × {{ st.srcH }} 共享源像素 · 已选 {{ st.selPx?.w }} × {{ st.selPx?.h }} ·
+            单击选区内开始录制</div>
+          <div v-if="st.rect" class="sel-play-hint"><icon-play-circle /> 点击确认区域录制</div>
+        </div>
+
+        <!-- 摄像头：实时预览 / 结果回放 -->
+        <video
+          v-show="st.mode === 'camera' && (st.status === 'ready' || st.status === 'recording' || st.status === 'paused')"
+          ref="videoEl" class="live" muted playsinline></video>
+        <video v-show="st.mode === 'camera' && st.status === 'stopped'" :src="st.blobUrl" class="live" controls
+          autoplay></video>
+
+        <!-- 结果/说明 -->
+        <div v-if="showInfo" class="info-pane">
+          <a-empty v-if="st.mode === 'screen' && st.status === 'idle' && !st.savedPath"
+            description="点击「开始录制」→ 在系统对话框选择共享整个屏幕 → 本窗口自动隐藏，屏幕右下角出现计时/停止小窗" />
+          <a-empty v-else-if="st.mode === 'region' && st.status === 'idle' && !st.savedPath"
+            description="先在系统对话框选择共享内容（建议整个屏幕），再拖动框选录制区域，单击选区即开始录制" />
+          <!-- 停止后即可直接点击播放回放（保存前后均可） -->
+          <video v-if="st.blobUrl" :src="st.blobUrl" class="playback" controls preload="metadata"></video>
+        </div>
+      </div>
+
+      <!-- 结果操作条：另存/放弃（屏幕、区域、摄像头通用） -->
+      <div v-if="st.status === 'stopped' && st.blobUrl" class="result-bar">
+        <a-space :size="16">
+          <span class="field-label">大小：{{ fmtSize(st.size) }}</span>
+          <a-button type="primary" :loading="saving" @click="saveResult"><template
+              #icon><icon-download /></template>另存为…</a-button>
+          <a-button @click="discardResult">清空</a-button>
+
+          <div v-if="st.savedPath" class="saved-box align-center">
+            <icon-check-circle-fill class="saved-ic" />
+            <div class="saved-detail flex align-center">
+              <div class="saved-title">视频已保存（{{ st.savedExt }}）</div>
+              <div class="saved-path" :title="st.savedPath">{{ st.savedPath }}</div>
+            </div>
+          </div>
+        </a-space>
+      </div>
+
+      <div class="tip">
+        提示：区域录制按「先选共享内容 → 再框选区域 → 单击选区（或点「开始录制」按钮）」进行，共享只选一次；屏幕录制选完共享后直接就绪。
+        就绪后本窗口隐藏并弹出置顶悬浮小窗，在小窗点「开始」才真正启动录制（未开始前不计时长），进行中可暂停/停止，避免本窗口入镜导致画面「无限缩小」。
+        停止录制后自动关闭小窗返回本窗口，在「结果/说明」中可直接回放预览，点「另存为…」选择任意目录保存，优先输出 MP4（H.264），内核不支持时回退 WebM。
+        区域小窗出现在所选区域右下角，全屏小窗出现在屏幕右下角。摄像头录制在本窗口内完成、不含音频。
+      </div>
+    </a-card>
+  </layout-body>
+</template>
+
+<script setup lang="ts">
+import { computed, getCurrentInstance, onMounted, onUnmounted, reactive, ref } from "vue";
+import { Message } from "@arco-design/web-vue";
+import { Events } from "@wailsio/runtime";
+import { mimeExt, pickMime, recFilename, savePromptRetry, uploadVideoBlob } from "@/utils/videorec";
+
+const GoTools = (getCurrentInstance() as any)?.appContext.config.globalProperties.$GoTools;
+
+const videoEl = ref<HTMLVideoElement>();
+const snapWrap = ref<HTMLDivElement>();
+
+const st = reactive({
+  mode: "screen", // screen | region | camera
+  status: "idle", // idle | selecting | ready | recording | paused | stopped | delegated
+  fps: 30,
+  snapUrl: "",
+  srcW: 0,
+  srcH: 0,
+  rect: null as null | { x: number; y: number; w: number; h: number }, // 显示像素（渲染）
+  selPx: null as null | { x: number; y: number; w: number; h: number }, // 物理像素（选区）
+  blobUrl: "",
+  size: 0,
+  savedPath: "",
+  savedExt: "",
+});
+
+const fpsOptions = [15, 24, 30, 60].map((n) => ({ label: n + " fps", value: n }));
+const camElapsed = ref(0);
+const saving = ref(false);
+
+// 摄像头录制相关（非响应式）
+let camStream: MediaStream | null = null;
+let camRecorder: MediaRecorder | null = null;
+let camChunks: Blob[] = [];
+let camTimer = 0;
+let camSession = ""; // 另存取消后保留的后端会话，重试时免重传
+let offSaved: any = null;
+let dragOrigin: { x: number; y: number } | null = null;
+let drawing = false;
+let justDragged = false; // 框选松手后紧跟的 click 不触发「单击选区开始录制」
+
+const isBusy = computed(() => st.status === "recording" || st.status === "paused" || st.status === "delegated");
+const showInfo = computed(() => st.mode !== "camera" && !(st.mode === "region" && st.status === "selecting"));
+const rectStyle = computed(() => {
+  const r = st.rect;
+  if (!r) return {};
+  return { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px" };
+});
+
+function fmtTime(s: number) {
+  const m = Math.floor(s / 60);
+  return `${String(m).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+function fmtSize(b: number) {
+  if (b < 1024) return b + " B";
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + " KB";
+  return (b / 1024 / 1024).toFixed(1) + " MB";
+}
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function onModeChange() {
+  if (st.mode === "camera") {
+    if (st.status !== "idle" && st.status !== "ready" && st.status !== "recording" && st.status !== "paused") cleanupResult();
+  } else {
+    stopSource();
+  }
+  cleanupResult(); // 切模式时释放上一结果的回放地址
+  st.size = 0;
+  st.savedPath = "";
+  st.savedExt = "";
+}
+
+/** 结果条「另存为…」：按当前模式分发 */
+function saveResult() {
+  if (st.mode === "camera") saveCamera();
+  else saveUploaded();
+}
+/** 结果条「放弃」：释放数据与后端会话，回到初始 */
+function discardResult() {
+  if (st.mode === "camera") { discardCamera(); return; }
+  releaseRecData(); // 含 cleanupResult
+  st.status = "idle";
+  st.savedPath = "";
+  st.savedExt = "";
+}
+
+/* ============================ 屏幕/区域录制（本窗捕获 + 悬浮小窗控制） ============================ */
+
+let recStream: MediaStream | null = null;
+let recVideo: HTMLVideoElement | null = null;
+let recCanvas: HTMLCanvasElement | null = null;
+let recCanvasStream: MediaStream | null = null;
+let recCropTimer = 0;
+let recReportTimer = 0;
+let recRecorder: MediaRecorder | null = null;
+let recChunks: Blob[] = [];
+let recBlob: Blob | null = null;
+let recSession = "";
+let recName = "";
+let recFrac = { x: 0, y: 0, w: 0, h: 0 };
+let recStartTs = 0;
+let recPausedMs = 0;
+let recPauseStart = 0; // >0 表示当前处于暂停
+let recDiscarding = false;
+let recActive = false;
+let offCmd: any = null;
+
+function recElapsedSec() {
+  if (!recStartTs) return 0; // 尚未点「开始」
+  let ms = Date.now() - recStartTs - recPausedMs;
+  if (recPauseStart) ms -= Date.now() - recPauseStart;
+  return Math.max(0, Math.floor(ms / 1000));
+}
+function reportRec(state: string, note = "") {
+  try { GoTools?.VideoReport(state, recElapsedSec(), note); } catch { /* ignore */ }
+}
+
+async function waitVideoReady(v: HTMLVideoElement) {
+  for (let i = 0; i < 80; i++) {
+    if (v.videoWidth > 0 && v.videoHeight > 0) return;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  throw new Error("未能获取捕获画面");
+}
+
+/** 确保已有共享流：首次会弹系统「选择共享内容」对话框，已选过则直接复用（不再弹） */
+async function ensureDisplayStream() {
+  if (recStream && recVideo && recVideo.videoWidth > 0) return;
+  const md = navigator.mediaDevices as any;
+  const disp: MediaStream = await md.getDisplayMedia({ video: { frameRate: { ideal: st.fps } }, audio: false });
+  recStream = disp;
+  disp.getVideoTracks()[0]?.addEventListener("ended", onRecTrackEnded);
+  const v = document.createElement("video");
+  v.muted = true;
+  v.playsInline = true;
+  v.srcObject = disp;
+  await v.play();
+  recVideo = v;
+  await waitVideoReady(v);
+}
+
+/** 从共享流抓一帧作为选区快照（与录制像素空间一致） */
+function captureSnapshotFrame() {
+  const v = recVideo!;
+  const w = v.videoWidth, h = v.videoHeight;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  c.getContext("2d")!.drawImage(v, 0, 0, w, h);
+  st.snapUrl = c.toDataURL("image/png");
+  st.srcW = w;
+  st.srcH = h;
+  st.rect = null;
+  st.selPx = null;
+}
+
+/** 区域模式第一步：先选择共享内容 → 再拖动框选区域 */
+async function beginRegion() {
+  if (typeof GoTools?.VideoOpenWidget !== "function") {
+    Message.error("需在应用窗口中使用（后端方法不可用）");
+    return;
+  }
+  try {
+    await ensureDisplayStream();
+    captureSnapshotFrame();
+    st.status = "selecting";
+  } catch (e: any) {
+    stopRecSource();
+    st.status = "idle";
+    Message.warning("未选择共享内容：" + (e?.message || e));
+  }
+}
+
+/** 屏幕模式：选择共享内容 → 直接开始录制 */
+async function startScreen() {
+  if (typeof GoTools?.VideoOpenWidget !== "function") {
+    Message.error("需在应用窗口中使用（后端方法不可用）");
+    return;
+  }
+  try {
+    await ensureDisplayStream();
+  } catch (e: any) {
+    stopRecSource();
+    st.status = "idle";
+    Message.warning("未选择共享内容：" + (e?.message || e));
+    return;
+  }
+  await launchRecorder("screen", { x: 0, y: 0, w: 0, h: 0 }, window.screen.width, window.screen.height);
+}
+
+/** 共享流就绪 → 备好录制器 → 打开悬浮小窗（未开始状态，Go 端同时隐藏本窗口），等小窗点「开始」才真启动 */
+async function launchRecorder(mode: "screen" | "region", frac: { x: number; y: number; w: number; h: number }, anchorX: number, anchorY: number) {
+  const v = recVideo!;
+  // 清除上一次结果的回放/提示
+  cleanupResult();
+  st.savedPath = "";
+  st.savedExt = "";
+  try {
+    let stream: MediaStream = recStream!;
+    if (mode === "region") {
+      const c = document.createElement("canvas");
+      c.width = Math.max(2, Math.round(frac.w * v.videoWidth));
+      c.height = Math.max(2, Math.round(frac.h * v.videoHeight));
+      recCanvas = c;
+      recFrac = frac;
+      recCanvasStream = c.captureStream(0) as MediaStream;
+      startCropInterval();
+      stream = recCanvasStream;
+    }
+    const mime = pickMime();
+    recRecorder = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8_000_000 } : undefined);
+    recChunks = [];
+    recRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recChunks.push(e.data); };
+    recRecorder.onstop = finalizeCapture;
+    recName = recFilename(mode === "region" ? "rec-region" : "rec-screen", mimeExt(mime || "video/mp4"));
+    recSession = "";
+    recBlob = null;
+    recDiscarding = false;
+    recStartTs = 0;
+    recPausedMs = 0;
+    recPauseStart = 0;
+    await GoTools.VideoOpenWidget(mode, st.fps, frac.x, frac.y, frac.w, frac.h, Math.round(anchorX), Math.round(anchorY), recName);
+    st.status = "delegated";
+    st.snapUrl = "";
+    st.rect = null;
+    st.selPx = null;
+    startRecReport();
+    reportRec("ready"); // 小窗显示「未开始」，等用户点开始
+  } catch (e: any) {
+    stopRecSource();
+    recActive = false;
+    st.status = mode === "region" && st.snapUrl ? "selecting" : "idle";
+    Message.error("启动录制失败：" + (e?.message || e));
+  }
+}
+
+/** 小窗点「开始」→ 真正启动录制器 */
+function startPendingRec() {
+  if (recActive || !recRecorder || recRecorder.state !== "inactive") return;
+  recStartTs = Date.now();
+  recPausedMs = 0;
+  recPauseStart = 0;
+  try {
+    recRecorder.start(1000);
+  } catch (e: any) {
+    stopRecSource();
+    reportRec("closed");
+    st.status = "idle";
+    Message.error("开始录制失败：" + (e?.message || e));
+    return;
+  }
+  recActive = true;
+  reportRec("recording");
+}
+
+function startCropInterval() {
+  stopCropInterval();
+  recCropTimer = window.setInterval(() => {
+    const vv = recVideo, c = recCanvas, cs = recCanvasStream;
+    if (vv && c && cs && recFrac.w > 0) {
+      const ctx = c.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(
+          vv,
+          Math.round(recFrac.x * vv.videoWidth), Math.round(recFrac.y * vv.videoHeight),
+          c.width, c.height,
+          0, 0, c.width, c.height
+        );
+      }
+      try { (cs.getVideoTracks()[0] as any)?.requestFrame?.(); } catch { /* ignore */ }
+    }
+  }, Math.max(1, Math.round(1000 / st.fps)));
+}
+function stopCropInterval() {
+  if (recCropTimer) { clearInterval(recCropTimer); recCropTimer = 0; }
+}
+
+function startRecReport() {
+  stopRecReport();
+  recReportTimer = window.setInterval(() => {
+    if (st.status !== "delegated") return;
+    // 未开始阶段持续上报 ready，防小窗错过首次事件停在「启动中」
+    if (!recActive) { reportRec("ready"); return; }
+    if (recRecorder && recRecorder.state === "recording" && !recPauseStart) reportRec("recording");
+  }, 1000);
+}
+function stopRecReport() {
+  if (recReportTimer) { clearInterval(recReportTimer); recReportTimer = 0; }
+}
+
+function onRecTrackEnded() {
+  if (recActive && recRecorder && recRecorder.state !== "inactive") {
+    // 用户通过系统共享条停止共享 → 按「停止」处理（进入保存流程）
+    recRecorder.stop();
+  } else if (!recActive && st.status === "delegated") {
+    // 未开始前共享结束 → 关闭小窗回到初始
+    stopRecSource();
+    reportRec("closed");
+    st.status = "idle";
+    Message.info("共享已结束");
+  } else if (!recActive && st.status === "selecting") {
+    // 框选期间共享结束 → 回到初始状态
+    stopRecSource();
+    st.snapUrl = "";
+    st.rect = null;
+    st.selPx = null;
+    st.status = "idle";
+    Message.info("共享已结束");
+  }
+}
+
+function finalizeCapture() {
+  stopRecReport();
+  stopCropInterval();
+  const mime = recRecorder?.mimeType || "video/mp4";
+  recBlob = new Blob(recChunks, { type: mime });
+  recChunks = [];
+  stopRecSource();
+  recActive = false;
+  if (recDiscarding) {
+    recDiscarding = false;
+    try { GoTools?.VideoWidgetDone(""); } catch { /* ignore */ }
+    st.status = "idle";
+    return;
+  }
+  // 停止即回主窗口：关闭小窗，结果/说明里展示回放与另存操作
+  cleanupResult();
+  st.size = recBlob.size;
+  if (recBlob.size > 0) st.blobUrl = URL.createObjectURL(recBlob);
+  st.status = "stopped";
+  try { GoTools?.VideoWidgetDone(""); } catch { /* ignore */ }
+  Message.success("录制完成，请在「结果/说明」中预览并点击「另存为…」保存");
+}
+
+async function saveUploaded() {
+  if (!recBlob || recBlob.size === 0) { Message.error("录制数据为空"); return; }
+  if (saving.value) return;
+  saving.value = true;
+  try {
+    let path: string;
+    if (recSession) {
+      // 上次取消过对话框：无需重传，直接再次弹出另存为
+      path = await savePromptRetry(GoTools, recSession);
+    } else {
+      const res = await uploadVideoBlob(GoTools, recBlob, recName);
+      recSession = res.session;
+      path = res.path;
+    }
+    if (path) {
+      st.savedPath = path;
+      st.savedExt = path.toLowerCase().endsWith(".webm") ? "webm" : "mp4";
+      Message.success("已保存：" + path);
+    }
+    // 空路径 = 取消了对话框，数据保留，可再次点「另存为…」
+  } catch (e: any) {
+    recSession = "";
+    Message.error("保存失败：" + (e?.message || e));
+  } finally {
+    saving.value = false;
+  }
+}
+
+function releaseRecData() {
+  if (recSession) { try { GoTools.VideoSaveAbort(recSession); } catch { /* ignore */ } recSession = ""; }
+  recBlob = null;
+  cleanupResult(); // 释放回放地址
+}
+
+function stopRecSource() {
+  stopCropInterval();
+  stopRecReport();
+  if (recStream) { recStream.getTracks().forEach((t) => t.stop()); recStream = null; }
+  if (recCanvasStream) { recCanvasStream.getTracks().forEach((t) => t.stop()); recCanvasStream = null; }
+  if (recVideo) { recVideo.srcObject = null; recVideo.pause(); recVideo = null; }
+  recCanvas = null;
+  recRecorder = null;
+}
+
+/* ============================ 区域选区 ============================ */
+
+/** 重新从共享流抓一帧；若共享已失效则重新走「选择共享内容」流程 */
+function reshoot() {
+  if (recStream && recVideo && recVideo.videoWidth > 0) {
+    captureSnapshotFrame();
+  } else {
+    beginRegion();
+  }
+}
+
+function onDown(ev: MouseEvent) {
+  if (st.status !== "selecting") return;
+  const r = snapWrap.value!.getBoundingClientRect();
+  dragOrigin = { x: clamp(ev.clientX - r.left, 0, r.width), y: clamp(ev.clientY - r.top, 0, r.height) };
+  drawing = true;
+  st.rect = { x: dragOrigin.x, y: dragOrigin.y, w: 0, h: 0 };
+  st.selPx = null;
+}
+function onMove(ev: MouseEvent) {
+  if (!drawing || !dragOrigin) return;
+  const r = snapWrap.value!.getBoundingClientRect();
+  const cx = clamp(ev.clientX - r.left, 0, r.width);
+  const cy = clamp(ev.clientY - r.top, 0, r.height);
+  st.rect = {
+    x: Math.min(cx, dragOrigin.x),
+    y: Math.min(cy, dragOrigin.y),
+    w: Math.abs(cx - dragOrigin.x),
+    h: Math.abs(cy - dragOrigin.y),
+  };
+}
+function onUp() {
+  if (!drawing) return;
+  drawing = false;
+  justDragged = true; // 松手后紧跟的 click 不触发单击开始
+  if (st.rect && (st.rect.w < 6 || st.rect.h < 6)) { st.rect = null; st.selPx = null; return; }
+  computeSel();
+}
+
+/** 单击已框选区域内部 → 开始录制（免点工具栏按钮） */
+function onSnapClick(ev: MouseEvent) {
+  if (justDragged) { justDragged = false; return; }
+  if (st.status !== "selecting" || !st.rect || !snapWrap.value) return;
+  const r = snapWrap.value.getBoundingClientRect();
+  const x = ev.clientX - r.left;
+  const y = ev.clientY - r.top;
+  const s = st.rect;
+  if (x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h) startRegion();
+}
+
+/** 把框选的显示像素换算成快照物理像素选区 */
+function computeSel() {
+  const wrap = snapWrap.value;
+  if (!wrap || !st.rect || !st.srcW) return;
+  const sx = st.srcW / wrap.clientWidth;
+  const sy = st.srcH / wrap.clientHeight;
+  st.selPx = {
+    x: Math.round(st.rect.x * sx),
+    y: Math.round(st.rect.y * sy),
+    w: Math.max(2, Math.round(st.rect.w * sx)),
+    h: Math.max(2, Math.round(st.rect.h * sy)),
+  };
+}
+
+/** 区域模式第二步：框选完成后点开始录制（共享已选过，不再弹选择框） */
+async function startRegion() {
+  if (!st.rect) { Message.warning("请先框选区域"); return; }
+  if (!recStream || !recVideo || recVideo.videoWidth === 0) {
+    Message.warning("共享已失效，请重新框选");
+    st.status = "idle";
+    return;
+  }
+  computeSel();
+  const sel = st.selPx!;
+  const frac = { x: sel.x / st.srcW, y: sel.y / st.srcH, w: sel.w / st.srcW, h: sel.h / st.srcH };
+  // 小窗锚点：选区右下角（DIP）
+  const anchorX = (sel.x + sel.w) * (window.screen.width / st.srcW);
+  const anchorY = (sel.y + sel.h) * (window.screen.height / st.srcH);
+  await launchRecorder("region", frac, anchorX, anchorY);
+}
+
+function cancelSelect() {
+  if (!recActive) stopRecSource(); // 结束已选共享
+  st.snapUrl = "";
+  st.rect = null;
+  st.selPx = null;
+  st.status = "idle";
+}
+
+/* ============================ 摄像头（本窗口录制） ============================ */
+
+async function openCamera() {
+  cleanupResult();
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false,
+    });
+    const v = videoEl.value!;
+    v.srcObject = camStream;
+    await v.play();
+    st.status = "ready";
+  } catch (e: any) {
+    Message.error("打开摄像头失败：" + (e?.message || e));
+    stopSource();
+  }
+}
+
+function startCamera() {
+  if (!camStream) return;
+  camChunks = [];
+  camSession = "";
+  const mime = pickMime();
+  try {
+    camRecorder = new MediaRecorder(camStream, mime ? { mimeType: mime, videoBitsPerSecond: 6_000_000 } : undefined);
+  } catch (e: any) {
+    Message.error("初始化录制器失败：" + (e?.message || e));
+    return;
+  }
+  camRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) camChunks.push(e.data); };
+  camRecorder.onstop = () => {
+    stopCamTimer();
+    const blob = new Blob(camChunks, { type: camRecorder?.mimeType || "video/mp4" });
+    st.size = blob.size;
+    cleanupResult();
+    st.blobUrl = URL.createObjectURL(blob);
+    st.status = "stopped";
+    Message.success("录制完成，请点击「另存为…」选择保存目录");
+  };
+  camRecorder.start(1000);
+  camElapsed.value = 0;
+  startCamTimer();
+  st.status = "recording";
+}
+function pauseCamera() {
+  if (camRecorder && camRecorder.state === "recording") { camRecorder.pause(); stopCamTimer(); st.status = "paused"; }
+}
+function resumeCamera() {
+  if (camRecorder && camRecorder.state === "paused") { camRecorder.resume(); startCamTimer(); st.status = "recording"; }
+}
+function stopCamera() {
+  if (camRecorder && camRecorder.state !== "inactive") camRecorder.stop();
+}
+function startCamTimer() {
+  stopCamTimer();
+  camTimer = window.setInterval(() => { camElapsed.value++; }, 1000);
+}
+function stopCamTimer() {
+  if (camTimer) { clearInterval(camTimer); camTimer = 0; }
+}
+
+async function saveCamera() {
+  if (!st.blobUrl || saving.value) return;
+  saving.value = true;
+  try {
+    let path: string;
+    if (camSession) {
+      path = await savePromptRetry(GoTools, camSession);
+    } else {
+      const blob = await fetch(st.blobUrl).then((r) => r.blob());
+      const name = recFilename("rec-camera", mimeExt(blob.type || ""));
+      const res = await uploadVideoBlob(GoTools, blob, name);
+      camSession = res.session;
+      path = res.path;
+    }
+    if (path) {
+      st.savedPath = path;
+      st.savedExt = path.toLowerCase().endsWith(".webm") ? "webm" : "mp4";
+      Message.success("已保存：" + path);
+    }
+  } catch (e: any) {
+    camSession = "";
+    Message.error("保存失败：" + (e?.message || e));
+  } finally {
+    saving.value = false;
+  }
+}
+
+function discardCamera() {
+  if (camSession) { try { GoTools.VideoSaveAbort(camSession); } catch { /* ignore */ } camSession = ""; }
+  cleanupResult();
+  stopSource();
+}
+
+/* ============================ 停止 / 清理 ============================ */
+
+function stopSource() {
+  stopCamTimer();
+  if (camRecorder && camRecorder.state !== "inactive") { try { camRecorder.stop(); } catch { /* ignore */ } }
+  camRecorder = null;
+  if (camStream) { camStream.getTracks().forEach((t) => t.stop()); camStream = null; }
+  const v = videoEl.value;
+  if (v) v.srcObject = null;
+  cancelSelect();
+  if (st.status !== "stopped" && st.status !== "delegated" && st.status !== "ready") st.status = "idle";
+}
+
+function cleanupResult() {
+  if (st.blobUrl) { URL.revokeObjectURL(st.blobUrl); st.blobUrl = ""; }
+  st.size = 0;
+}
+
+onMounted(() => {
+  // 小窗保存完成后推送：{ video:saved } 路径（空串=放弃）
+  offSaved = Events.On("video:saved", (ev: any) => {
+    const p = ev?.data ?? ev;
+    if (st.status === "delegated") st.status = "idle";
+    if (p) {
+      st.savedPath = String(p);
+      st.savedExt = String(p).toLowerCase().endsWith(".webm") ? "webm" : "mp4";
+    }
+  });
+  // 悬浮小窗 → 本窗的录制控制命令
+  offCmd = Events.On("video:cmd", (ev: any) => {
+    const c = String(ev?.data ?? ev ?? "");
+    if (c === "start") {
+      startPendingRec();
+    } else if (c === "pause") {
+      if (recRecorder && recRecorder.state === "recording") { recRecorder.pause(); recPauseStart = Date.now(); reportRec("paused"); }
+    } else if (c === "resume") {
+      if (recRecorder && recRecorder.state === "paused") {
+        recRecorder.resume();
+        if (recPauseStart) { recPausedMs += Date.now() - recPauseStart; recPauseStart = 0; }
+        reportRec("recording");
+      }
+    } else if (c === "stop") {
+      if (recRecorder && recRecorder.state !== "inactive") recRecorder.stop();
+    } else if (c === "cancel") {
+      recDiscarding = true;
+      if (recActive && recRecorder && recRecorder.state !== "inactive") {
+        try { recRecorder.stop(); } catch { /* ignore */ } // finalizeCapture 会走放弃分支
+      } else {
+        stopRecSource(); // 未开始也直接释放共享流/裁剪循环
+        releaseRecData();
+        recDiscarding = false;
+        try { GoTools?.VideoWidgetDone(""); } catch { /* ignore */ }
+        st.status = "idle";
+      }
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (offSaved) { try { offSaved(); } catch { /* ignore */ } }
+  if (offCmd) { try { offCmd(); } catch { /* ignore */ } }
+  stopRecSource();
+  stopSource();
+  cleanupResult();
+});
+</script>
+
+<style scoped>
+.tool-card {
+  margin-bottom: 16px;
+}
+
+.form-row {
+  margin-bottom: 12px;
+}
+
+.field-label {
+  color: #4e5969;
+  font-size: 13px;
+}
+
+.rec-tag {
+  font-variant-numeric: tabular-nums;
+}
+
+.widget-alert {
+  margin-bottom: 12px;
+}
+
+.preview-wrap {
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-fill-1);
+  overflow: hidden;
+  position: relative;
+}
+
+.live {
+  max-width: 100%;
+  max-height: 60vh;
+  background: #000;
+  border-radius: 4px;
+}
+
+.snap-wrap {
+  position: relative;
+  max-width: 100%;
+  cursor: crosshair;
+  user-select: none;
+}
+
+.snap-img {
+  max-width: 100%;
+  max-height: 60vh;
+  display: block;
+}
+
+.sel-rect {
+  position: absolute;
+  border: 2px dashed rgb(var(--red-6));
+  background: rgba(245, 63, 63, 0.12);
+  pointer-events: none;
+}
+
+.sel-hint {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.sel-size {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.sel-play-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.playback {
+  width: 640px;
+  max-width: 100%;
+  max-height: 45vh;
+  background: #000;
+  border-radius: 6px;
+}
+
+.saved-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--color-success-light-1);
+  border: 1px solid rgb(var(--green-3));
+  border-radius: 6px;
+  padding: 10px 14px;
+  max-width: 640px;
+}
+
+.saved-ic {
+  color: rgb(var(--green-6));
+  margin-top: 2px;
+}
+
+.saved-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.saved-path {
+  font-size: 12px;
+  color: #4e5969;
+  word-break: break-all;
+}
+
+.result-bar {
+  margin-top: 12px;
+}
+
+.tip {
+  margin-top: 10px;
+  color: #86909c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+</style>
