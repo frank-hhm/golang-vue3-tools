@@ -237,7 +237,7 @@ const copyText = async (text: string) => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: var(--base-space-lg)$3
+    margin-bottom: var(--base-space-lg);
 }
 
 .field-label {
@@ -246,7 +246,7 @@ const copyText = async (text: string) => {
 }
 
 .bin-opts {
-    margin-top: var(--base-space-md)$3
+    margin-top: var(--base-space-md);
 }
 
 .intro {
