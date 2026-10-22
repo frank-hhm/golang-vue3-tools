@@ -142,23 +142,23 @@ const copyText = async (text: string) => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: 16px;
+    margin-bottom: var(--base-margin);
 }
 
 .form-row {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
 }
 
 .field-label {
     color: #4e5969;
-    font-size: 13px;
-    margin-bottom: 6px;
+    font-size: var(--base-size-small);
+    margin-bottom: var(--base-radius-default);
 }
 
 .dropzone {
     border: 1px dashed #c9cdd4;
-    border-radius: 8px;
-    padding: 60px 20px;
+    border-radius: var(--base-radius-large);
+    padding: var(--base-padding);
     text-align: center;
     cursor: pointer;
     transition: border-color 0.2s, background-color 0.2s;
@@ -172,7 +172,7 @@ const copyText = async (text: string) => {
 
 .drop-text {
     color: #4e5969;
-    font-size: 14px;
+    font-size: var(--base-size-default);
 }
 
 .drop-link {
@@ -182,13 +182,13 @@ const copyText = async (text: string) => {
 .preview {
     max-width: 100%;
     border: 1px solid #e5e6eb;
-    border-radius: 8px;
+    border-radius: var(--base-radius-large);
 }
 
 .meta {
-    margin-top: 12px;
+    margin-top: var(--base-margin);
     color: #4e5969;
-    font-size: 13px;
+    font-size: var(--base-size-small);
     line-height: 1.9;
 }
 

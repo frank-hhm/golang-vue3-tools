@@ -182,11 +182,11 @@ const copyText = async (text: string) => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: var(--base-space-lg)$3
+    margin-bottom: var(--base-margin);
 }
 
 .form-row {
-    margin-bottom: var(--base-margin)$3
+    margin-bottom: var(--base-margin);
 }
 
 .lbl {
@@ -201,7 +201,7 @@ const copyText = async (text: string) => {
 
 .field-label {
     color: var(--color-text-2);
-    font-size: var(--base-size-medium);
-    margin-bottom: var(--base-space-sm)$3
+    font-size: var(--base-size-small);
+    margin-bottom: var(--base-radius-default);
 }
 </style>

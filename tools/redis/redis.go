@@ -367,6 +367,44 @@ func SetString(id, key, value string, ttl int) error {
 	return nil
 }
 
+// BatchSetString 批量生成 string 键：以 keyPrefix+序号为键、valuePrefix+序号为值，
+// 序号从 start 到 end（含两端），ttl 秒（<=0 表示不设置过期）。使用管道分块写入以减少往返，
+// 返回成功写入的键数量。
+func BatchSetString(id, keyPrefix, valuePrefix string, start, end, ttl int) (int64, error) {
+	c, err := getConn(id)
+	if err != nil {
+		return 0, err
+	}
+	if end < start {
+		return 0, fmt.Errorf("结束序号不能小于起始序号")
+	}
+	if end-start+1 > 100000 {
+		return 0, fmt.Errorf("单次批量生成数量过大（上限 100000）")
+	}
+	var written int64
+	const chunk = 500
+	for i := start; i <= end; i += chunk {
+		hi := i + chunk - 1
+		if hi > end {
+			hi = end
+		}
+		cmds := make([][]string, 0, (hi-i+1)*2)
+		for j := i; j <= hi; j++ {
+			key := keyPrefix + strconv.Itoa(j)
+			val := valuePrefix + strconv.Itoa(j)
+			cmds = append(cmds, []string{"SET", key, val})
+			if ttl > 0 {
+				cmds = append(cmds, []string{"EXPIRE", key, strconv.Itoa(ttl)})
+			}
+		}
+		if _, err := c.Pipeline(cmds); err != nil {
+			return written, err
+		}
+		written += int64(hi - i + 1)
+	}
+	return written, nil
+}
+
 // DeleteKeys 删除若干键，返回实际删除数量。
 func DeleteKeys(id string, keys []string) (int64, error) {
 	c, err := getConn(id)

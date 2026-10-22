@@ -485,7 +485,7 @@ onUnmounted(() => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
 }
 
 .led {
@@ -505,30 +505,30 @@ onUnmounted(() => {
 
 .field-label {
     color: #4e5969;
-    font-size: 13px;
+    font-size: var(--base-size-small);
     font-weight: 500;
 }
 
 .sub-row {
-    margin-top: 6px;
+    margin-top: var(--base-radius-default);
 }
 
 .unit {
     color: #86909c;
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .conn-tip {
     color: #86909c;
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .recv-card :deep(.arco-card-body) {
-    padding: 8px 12px;
+    padding: var(--base-padding);
 }
 
 .recv-head {
-    margin-bottom: 6px;
+    margin-bottom: var(--base-radius-default);
 }
 
 .recv-body {
@@ -536,9 +536,9 @@ onUnmounted(() => {
     overflow-y: auto;
     background: #1d2129;
     color: #e6e6e6;
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 13px;
+    border-radius: var(--base-radius-default);
+    padding: var(--base-padding) var(--base-radius-large);
+    font-size: var(--base-size-small);
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-all;
@@ -550,15 +550,15 @@ onUnmounted(() => {
 }
 
 .send-bar {
-    margin-top: 10px;
+    margin-top: var(--base-radius-large);
 }
 
 .history-item {
-    padding: 8px 10px;
+    padding: var(--base-padding) var(--base-radius-large);
     border-bottom: 1px solid #f2f3f5;
     cursor: pointer;
     font-family: Consolas, Monaco, monospace;
-    font-size: 13px;
+    font-size: var(--base-size-small);
     word-break: break-all;
 }
 

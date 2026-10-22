@@ -396,18 +396,18 @@ const copyText = async (text: string) => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
 }
 
 .toolbar .count-tip {
     color: var(--color-text-3);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 .ca-tip {
-    margin-top: 8px;
+    margin-top: var(--base-padding);
     color: var(--color-text-3);
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .main-area {
@@ -422,14 +422,14 @@ const copyText = async (text: string) => {
     width: 200px;
     flex: 0 0 200px;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
-    padding: 8px;
+    border-radius: var(--base-radius-large);
+    padding: var(--base-padding);
     overflow-y: auto;
     background: var(--color-bg-2);
 }
 
 .side-search {
-    margin-bottom: 8px;
+    margin-bottom: var(--base-padding);
 }
 
 .side-title {
@@ -437,10 +437,10 @@ const copyText = async (text: string) => {
     align-items: center;
     gap: 4px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: var(--base-size-small);
     color: var(--color-text-1);
     cursor: pointer;
-    margin: 6px 0;
+    margin: var(--base-radius-default) 0;
 }
 
 .side-title .collapsed {
@@ -457,10 +457,10 @@ const copyText = async (text: string) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: var(--base-radius-default) var(--base-padding);
+    border-radius: var(--base-radius-default);
     cursor: pointer;
-    font-size: 13px;
+    font-size: var(--base-size-small);
     color: var(--color-text-2);
 }
 
@@ -482,7 +482,7 @@ const copyText = async (text: string) => {
 
 .side-list .cnt {
     color: var(--color-text-3);
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 /* 中间 */
@@ -491,7 +491,7 @@ const copyText = async (text: string) => {
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
+    border-radius: var(--base-radius-large);
     overflow: hidden;
 }
 
@@ -499,16 +499,16 @@ const copyText = async (text: string) => {
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 6px 10px;
+    padding: var(--base-radius-default) var(--base-radius-large);
     border-bottom: 1px solid var(--color-border-2);
     flex-wrap: wrap;
 }
 
 .proto-tab {
-    padding: 3px 10px;
-    border-radius: 4px;
+    padding: var(--base-radius-small) var(--base-radius-large);
+    border-radius: var(--base-radius-default);
     cursor: pointer;
-    font-size: 13px;
+    font-size: var(--base-size-small);
     color: var(--color-text-2);
 }
 
@@ -522,9 +522,9 @@ const copyText = async (text: string) => {
 }
 
 .proto-tab .pcnt {
-    margin-left: 4px;
+    margin-left: var(--base-radius-default);
     opacity: 0.85;
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .flow-table {
@@ -533,7 +533,7 @@ const copyText = async (text: string) => {
 }
 
 .pager {
-    padding: 6px 10px;
+    padding: var(--base-radius-default) var(--base-radius-large);
     border-top: 1px solid var(--color-border-2);
     display: flex;
     justify-content: flex-end;
@@ -547,8 +547,8 @@ const copyText = async (text: string) => {
 .detail {
     flex: 1 1 40%;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: var(--base-radius-large);
+    padding: var(--base-radius-large) var(--base-padding);
     overflow-y: auto;
     background: var(--color-bg-2);
 }
@@ -557,7 +557,7 @@ const copyText = async (text: string) => {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: var(--base-padding);
 }
 
 .detail-url {
@@ -565,16 +565,16 @@ const copyText = async (text: string) => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 13px;
+    font-size: var(--base-size-small);
     color: var(--color-text-1);
 }
 
 .body-pre {
     background: #1d2129;
     color: #e6e6e6;
-    padding: 10px 12px;
-    border-radius: 6px;
-    font-size: 12px;
+    padding: var(--base-radius-large) var(--base-padding);
+    border-radius: var(--base-radius-default);
+    font-size: var(--base-size-small);
     white-space: pre-wrap;
     word-break: break-all;
     max-height: 360px;
@@ -585,7 +585,7 @@ const copyText = async (text: string) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 6px;
+    margin-bottom: var(--base-radius-default);
 }
 
 .hdr-val {

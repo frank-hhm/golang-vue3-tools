@@ -98,22 +98,22 @@ const copyImage = async () => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: 16px;
+    margin-bottom: var(--base-padding);
 }
 
 .form-row {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
 }
 
 .field-label {
     color: var(--color-text-2);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 .preview-wrap {
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: var(--base-radius-large);
+    padding: var(--base-padding);
     min-height: 240px;
     display: flex;
     align-items: center;
@@ -123,12 +123,12 @@ const copyImage = async () => {
 
 .preview-img {
     max-width: 100%;
-    border-radius: 4px;
+    border-radius: var(--base-radius-default);
 }
 
 .tip {
-    margin-top: 10px;
+    margin-top: var(--base-radius-large);
     color: var(--color-text-3);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 </style>

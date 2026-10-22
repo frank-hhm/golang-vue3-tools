@@ -766,16 +766,16 @@ onUnmounted(() => {
 
 <style scoped>
 .tool-card {
-  margin-bottom: 16px;
+  margin-bottom: var(--base-padding);
 }
 
 .form-row {
-  margin-bottom: 12px;
+  margin-bottom: var(--base-margin);
 }
 
 .field-label {
   color: var(--color-text-2);
-  font-size: 13px;
+  font-size: var(--base-size-small);
 }
 
 .rec-tag {
@@ -783,12 +783,12 @@ onUnmounted(() => {
 }
 
 .widget-alert {
-  margin-bottom: 12px;
+  margin-bottom: var(--base-margin);
 }
 
 .preview-wrap {
   border: 1px solid var(--color-border-2);
-  border-radius: 8px;
+  border-radius: var(--base-radius-large);
   min-height: 320px;
   display: flex;
   align-items: center;
@@ -802,7 +802,7 @@ onUnmounted(() => {
   max-width: 100%;
   max-height: 60vh;
   background: #000;
-  border-radius: 4px;
+  border-radius: var(--base-radius-default);
 }
 
 .snap-wrap {
@@ -831,9 +831,9 @@ onUnmounted(() => {
   left: 10px;
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 13px;
+  padding: var(--base-radius-default) var(--base-radius-large);
+  border-radius: var(--base-radius-default);
+  font-size: var(--base-size-small);
 }
 
 .sel-size {
@@ -842,9 +842,9 @@ onUnmounted(() => {
   right: 10px;
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: var(--base-radius-default) var(--base-radius-large);
+  border-radius: var(--base-radius-default);
+  font-size: var(--base-size-small);
 }
 
 .sel-play-hint {
@@ -854,9 +854,9 @@ onUnmounted(() => {
   transform: translate(-50%, -50%);
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  padding: 6px 14px;
-  border-radius: 16px;
-  font-size: 13px;
+  padding: var(--base-radius-default) var(--base-padding);
+  border-radius: var(--base-radius-large-x);
+  font-size: var(--base-size-small);
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -875,7 +875,7 @@ onUnmounted(() => {
   max-width: 100%;
   max-height: 45vh;
   background: #000;
-  border-radius: 6px;
+  border-radius: var(--base-radius-default);
 }
 
 .saved-box {
@@ -884,35 +884,35 @@ onUnmounted(() => {
   gap: 8px;
   background: var(--color-success-light-1);
   border: 1px solid rgb(var(--green-3));
-  border-radius: 6px;
-  padding: 10px 14px;
+  border-radius: var(--base-radius-default);
+  padding: var(--base-radius-large) var(--base-padding);
   max-width: 640px;
 }
 
 .saved-ic {
   color: rgb(var(--green-6));
-  margin-top: 2px;
+  margin-top: var(--base-radius-small);
 }
 
 .saved-title {
-  font-size: 13px;
+  font-size: var(--base-size-small);
   font-weight: 600;
 }
 
 .saved-path {
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: var(--color-text-2);
   word-break: break-all;
 }
 
 .result-bar {
-  margin-top: 12px;
+  margin-top: var(--base-margin);
 }
 
 .tip {
-  margin-top: 10px;
+  margin-top: var(--base-radius-large);
   color: var(--color-text-3);
-  font-size: 13px;
+  font-size: var(--base-size-small);
   line-height: 1.6;
 }
 </style>

@@ -1,5 +1,5 @@
 ﻿<template>
-    <layout-body title="二维码生成">
+    <a-card title="二维码生成">
         <a-tabs default-active-key="normal" type="rounded" class="tool-card">
             <!-- ============ 普通二维码 ============ -->
             <a-tab-pane key="normal" title="普通二维码">
@@ -73,7 +73,7 @@
                         <div class="preview-box">
                             <canvas v-show="normalHasResult" ref="normalCanvas" class="qr-canvas"></canvas>
                             <div v-if="!normalHasResult" class="preview-empty">
-                                <icon-qrcode style="font-size: 64px; color: var(--color-fill-3)" />
+                                <icon-qrcode style="font-size: var(--base-size-large-xx); color: var(--color-fill-3)" />
                             </div>
                         </div>
                         <div class="tip">生成结果，可下载保存为 PNG</div>
@@ -218,7 +218,7 @@
             <input ref="decodeInput" type="file" accept="image/*" @change="onDecode" />
             <div v-if="decodeMsg" :class="['decode-msg', decodeOk ? 'ok' : 'err']">{{ decodeMsg }}</div>
         </a-modal>
-    </layout-body>
+    </a-card>
 </template>
 
 <script setup lang="ts">
@@ -545,28 +545,28 @@ function downloadDataUrl(dataUrl: string, name: string) {
 
 <style scoped>
 .tool-card {
-    margin-bottom: 16px;
+    margin-bottom: var(--base-margin);
 }
 
 .form-row {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
 }
 
 .field-label {
     color: var(--color-text-2);
-    font-size: 13px;
-    margin-bottom: 6px;
+    font-size: var(--base-size-small);
+    margin-bottom: var(--base-radius-default);
 }
 
 .opt-label {
     color: var(--color-text-2);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 .unit {
     color: var(--color-text-3);
-    font-size: 12px;
-    margin-left: 4px;
+    font-size: var(--base-size-small);
+    margin-left: var(--base-radius-small);
 }
 
 .quick-bar {
@@ -574,9 +574,9 @@ function downloadDataUrl(dataUrl: string, name: string) {
     flex-wrap: wrap;
     gap: 4px;
     background-color: var(--color-fill-2);
-    border-radius: 6px;
-    padding: 2px 6px;
-    margin-bottom: 8px;
+    border-radius: var(--base-radius-default);
+    padding: var(--base-radius-small) var(--base-radius-default);
+    margin-bottom: var(--base-margin);
 }
 
 .preview-box {
@@ -585,7 +585,7 @@ function downloadDataUrl(dataUrl: string, name: string) {
     justify-content: center;
     min-height: 260px;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
+    border-radius: var(--base-radius-large);
     background: repeating-conic-gradient(var(--color-fill-2) 0% 25%, var(--color-bg-2) 0% 50%) 50% / 20px 20px;
 }
 
@@ -597,22 +597,22 @@ function downloadDataUrl(dataUrl: string, name: string) {
 .logo-thumb {
     width: 28px;
     height: 28px;
-    margin-left: 8px;
+    margin-left: var(--base-margin);
     vertical-align: middle;
     border: 1px solid var(--color-border-2);
-    border-radius: 4px;
+    border-radius: var(--base-radius-small);
 }
 
 .tip {
     color: var(--color-text-3);
-    font-size: 12px;
-    margin: 8px 0;
+    font-size: var(--base-size-small);
+    margin: var(--base-margin) 0;
 }
 
 .stage {
     position: relative;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
+    border-radius: var(--base-radius-large);
     overflow: hidden;
 }
 
@@ -630,13 +630,13 @@ function downloadDataUrl(dataUrl: string, name: string) {
 .result-img {
     max-width: 100%;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
-    margin-bottom: 8px;
+    border-radius: var(--base-radius-large);
+    margin-bottom: var(--base-margin);
 }
 
 .decode-msg {
-    margin-top: 12px;
-    font-size: 13px;
+    margin-top: var(--base-margin);
+    font-size: var(--base-size-small);
 }
 
 .decode-msg.ok {

@@ -102,8 +102,9 @@ const styles = computed<StyleValue>(() => {
     /* font-size: var(--s); */
 }
 
-.layout-body-main.nohas {
+.layout-body-main.has-bg {
     .layout-body-main-content {
+        background: var(--color-bg-1);
         padding: var(--base-padding);
     }
 }

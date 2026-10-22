@@ -1,5 +1,5 @@
 ﻿<template>
-  <layout-body>
+  <a-card>
     <div class="mysql-page">
       <!-- 左侧：连接 + 对象树 -->
       <div class="left-panel">
@@ -512,7 +512,7 @@
         </a-button>
       </div>
     </a-modal>
-  </layout-body>
+  </a-card>
 </template>
 
 <script setup lang="ts">
@@ -1305,7 +1305,7 @@ async function openLogs(inst: SrvInstanceConfig) {
 }
 
 .lp-block {
-  padding: 8px;
+  padding: var(--base-padding);
   border-bottom: 1px solid var(--color-border-2);
 }
 
@@ -1326,12 +1326,12 @@ async function openLogs(inst: SrvInstanceConfig) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: var(--base-radius-default);
 }
 
 .lp-title {
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--base-size-small);
 }
 
 .conn-list {
@@ -1343,10 +1343,10 @@ async function openLogs(inst: SrvInstanceConfig) {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
-  border-radius: 4px;
+  padding: var(--base-radius-default) var(--base-padding);
+  border-radius: var(--base-radius-default);
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--base-size-small);
 }
 
 .conn-item:hover {
@@ -1384,14 +1384,14 @@ async function openLogs(inst: SrvInstanceConfig) {
 .quick-actions {
   display: flex;
   gap: 4px;
-  margin-top: 8px;
+  margin-top: var(--base-padding);
 }
 
 .empty-tip {
   color: var(--color-text-3);
   text-align: center;
-  font-size: 12px;
-  padding: 12px;
+  font-size: var(--base-size-small);
+  padding: var(--base-padding);
 }
 
 .main-panel {
@@ -1417,9 +1417,9 @@ async function openLogs(inst: SrvInstanceConfig) {
 }
 
 .crumb {
-  padding: 8px 12px;
+  padding: var(--base-padding);
   border-bottom: 1px solid var(--color-border-2);
-  font-size: 13px;
+  font-size: var(--base-size-small);
   color: var(--color-text-2);
   background: var(--color-bg-2);
 }
@@ -1428,7 +1428,7 @@ async function openLogs(inst: SrvInstanceConfig) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: var(--base-padding);
   border-bottom: 1px solid var(--color-border-2);
   background: var(--color-bg-2);
 }
@@ -1440,25 +1440,25 @@ async function openLogs(inst: SrvInstanceConfig) {
 .content {
   flex: 1;
   overflow: auto;
-  padding: 10px 12px;
+  padding: var(--base-padding);
 }
 
 .grid-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: var(--base-margin);
   flex-wrap: wrap;
 }
 
 .grid-note {
   color: var(--color-text-3);
-  font-size: 12px;
+  font-size: var(--base-size-small);
 }
 
 .grid-warn {
   color: rgb(var(--orange-6));
-  font-size: 12px;
+  font-size: var(--base-size-small);
 }
 
 .obj-title {
@@ -1467,7 +1467,7 @@ async function openLogs(inst: SrvInstanceConfig) {
 
 .grid-wrap {
   border: 1px solid var(--color-border-2);
-  border-radius: 4px;
+  border-radius: var(--base-radius-default);
   overflow: auto;
   max-height: 520px;
 }
@@ -1476,13 +1476,13 @@ async function openLogs(inst: SrvInstanceConfig) {
   border-collapse: collapse;
   width: max-content;
   min-width: 100%;
-  font-size: 13px;
+  font-size: var(--base-size-small);
 }
 
 .data-grid th,
 .data-grid td {
   border: 1px solid var(--color-border-2);
-  padding: 4px 10px;
+  padding: var(--base-radius-default) var(--base-radius-large);
   white-space: nowrap;
   max-width: 320px;
   overflow: hidden;
@@ -1517,8 +1517,8 @@ async function openLogs(inst: SrvInstanceConfig) {
   width: 100%;
   border: 2px solid rgb(var(--blue-6));
   outline: none;
-  padding: 3px 8px;
-  font-size: 13px;
+  padding: var(--base-radius-small) var(--base-padding);
+  font-size: var(--base-size-small);
 }
 
 .data-grid .nullv {
@@ -1539,11 +1539,11 @@ async function openLogs(inst: SrvInstanceConfig) {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: var(--base-padding);
 }
 
 .pager-info {
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: var(--color-text-2);
   display: flex;
   align-items: center;
@@ -1553,14 +1553,14 @@ async function openLogs(inst: SrvInstanceConfig) {
 .info-grid {
   border-collapse: collapse;
   width: 100%;
-  font-size: 13px;
-  margin-bottom: 12px;
+  font-size: var(--base-size-small);
+  margin-bottom: var(--base-margin);
 }
 
 .info-grid th,
 .info-grid td {
   border: 1px solid var(--color-border-2);
-  padding: 4px 10px;
+  padding: var(--base-radius-default) var(--base-radius-large);
   text-align: left;
 }
 
@@ -1575,17 +1575,17 @@ async function openLogs(inst: SrvInstanceConfig) {
 
 .struct-title {
   font-weight: 600;
-  margin: 10px 0 6px;
-  font-size: 13px;
+  margin: var(--base-radius-large) 0 var(--base-radius-default);
+  font-size: var(--base-size-small);
 }
 
 .ddl-box {
   background: var(--color-fill-1);
   border: 1px solid var(--color-border-2);
-  border-radius: 4px;
-  padding: 10px;
+  border-radius: var(--base-radius-default);
+  padding: var(--base-radius-large);
   font-family: Consolas, monospace;
-  font-size: 13px;
+  font-size: var(--base-size-small);
   white-space: pre-wrap;
   word-break: break-all;
   max-height: 460px;
@@ -1605,8 +1605,8 @@ async function openLogs(inst: SrvInstanceConfig) {
 /* ---- 版本管理弹窗 ---- */
 .ver-title {
   font-weight: 600;
-  font-size: 13px;
-  margin: 8px 0 4px;
+  font-size: var(--base-size-small);
+  margin: var(--base-padding) 0 var(--base-radius-default);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1619,9 +1619,9 @@ async function openLogs(inst: SrvInstanceConfig) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 13px;
+  padding: var(--base-radius-default) var(--base-padding);
+  border-radius: var(--base-radius-default);
+  font-size: var(--base-size-small);
 }
 .ver-item:hover {
   background: var(--color-fill-2);
@@ -1636,29 +1636,29 @@ async function openLogs(inst: SrvInstanceConfig) {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--color-text-3);
-  font-size: 12px;
+  font-size: var(--base-size-small);
 }
 .ver-actions {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-top: 8px;
+  margin-top: var(--base-padding);
 }
 .ver-hint {
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: var(--color-text-3);
-  margin-top: 6px;
+  margin-top: var(--base-radius-default);
 }
 .mono {
   font-family: Consolas, monospace;
   background: var(--color-fill-2);
-  padding: 1px 4px;
-  border-radius: 3px;
+  padding: var(--base-radius-small) var(--base-radius-default);
+  border-radius: var(--base-radius-small);
 }
 
 /* 安装进度 */
 .inst-prog {
-  margin-top: 8px;
+  margin-top: var(--base-padding);
 }
 .inst-prog-row {
   display: flex;
@@ -1666,14 +1666,14 @@ async function openLogs(inst: SrvInstanceConfig) {
   gap: 8px;
 }
 .inst-stage {
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: var(--color-text-2);
   min-width: 80px;
 }
 .inst-err {
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: rgb(var(--red-6));
-  padding: 4px 0 0 0;
+  padding: var(--base-radius-default) 0 0 0;
   word-break: break-all;
   white-space: pre-wrap;
 }
@@ -1682,12 +1682,12 @@ async function openLogs(inst: SrvInstanceConfig) {
 .inst-log {
   max-height: 130px;
   background: #1d2129;
-  border-radius: 4px;
-  padding: 6px 10px;
+  border-radius: var(--base-radius-default);
+  padding: var(--base-radius-default) var(--base-radius-large);
 }
 .inst-log-line {
   font-family: Consolas, monospace;
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: #c9cdd4;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -1699,32 +1699,32 @@ async function openLogs(inst: SrvInstanceConfig) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: var(--base-margin);
 }
 .ls-item {
   background: var(--color-fill-1);
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-size: 12px;
+  border-radius: var(--base-radius-default);
+  padding: var(--base-radius-default) var(--base-radius-large);
+  font-size: var(--base-size-small);
 }
 .ls-item span {
   color: var(--color-text-3);
   display: block;
 }
 .ls-item b {
-  font-size: 13px;
+  font-size: var(--base-size-small);
 }
 .ls-item b.ok {
   color: rgb(var(--green-6));
 }
 .ls-log {
   background: #1d2129;
-  border-radius: 4px;
-  padding: 8px 10px;
+  border-radius: var(--base-radius-default);
+  padding: var(--base-padding) var(--base-radius-large);
   max-height: 320px;
   overflow-y: auto;
   font-family: Consolas, monospace;
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: #c9cdd4;
   line-height: 1.5;
 }
@@ -1735,5 +1735,5 @@ async function openLogs(inst: SrvInstanceConfig) {
 .ls-actions {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: var(--base-radius-large);
 }</style>

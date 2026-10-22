@@ -8,6 +8,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type Conn struct {
 	nc net.Conn
 	r  *bufio.Reader
 	w  *bufio.Writer
+	mu sync.Mutex // 序列化同一连接上的命令读写，避免并发使用 bufio 破坏 RESP 流
 }
 
 // dial 建立到 Redis 的 TCP 连接，按需执行 AUTH 与 SELECT。
@@ -54,15 +56,49 @@ func (c *Conn) SetDeadline(t time.Time) error {
 	return c.nc.SetDeadline(t)
 }
 
-// Command 发送一条命令并读取一条回复。
+// Command 发送一条命令并读取一条回复。同一连接上的调用通过互斥锁串行化。
 func (c *Conn) Command(args ...string) (any, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if err := c.writeCommand(args...); err != nil {
 		return nil, err
 	}
 	return c.readReply()
 }
 
+// Pipeline 一次性写入多条命令、单次 Flush，再依次读取全部回复，减少网络往返。
+// 与 Command 共用连接锁，保证同一连接上的调用串行执行。
+func (c *Conn) Pipeline(cmds [][]string) ([]any, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, args := range cmds {
+		if err := c.encodeCommand(args...); err != nil {
+			return nil, err
+		}
+	}
+	if err := c.w.Flush(); err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(cmds))
+	for range cmds {
+		v, err := c.readReply()
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, nil
+}
+
 func (c *Conn) writeCommand(args ...string) error {
+	if err := c.encodeCommand(args...); err != nil {
+		return err
+	}
+	return c.w.Flush()
+}
+
+// encodeCommand 仅向缓冲写入 RESP 字节，不刷新；供 Pipeline 批量写入后统一 Flush。
+func (c *Conn) encodeCommand(args ...string) error {
 	if _, err := c.w.WriteString("*" + strconv.Itoa(len(args)) + "\r\n"); err != nil {
 		return err
 	}
@@ -74,7 +110,7 @@ func (c *Conn) writeCommand(args ...string) error {
 			return err
 		}
 	}
-	return c.w.Flush()
+	return nil
 }
 
 func (c *Conn) readReply() (any, error) {

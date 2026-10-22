@@ -10,10 +10,10 @@
 
               <template #title>
                 <!-- 欢迎栏 -->
-                <span class="right-card-title">欢迎回来！</span>
+                <span>欢迎回来！</span>
               </template>
               <template #extra>
-                <a-button size="mini" type="text" :loading="sysLoading" @click="refreshSysInfo">
+                <a-button size="mini" :loading="sysLoading" @click="refreshSysInfo">
                   <template #icon><icon-refresh /></template>
                 </a-button>
               </template>
@@ -34,7 +34,8 @@
                   <div class="stat-info">
                     <div class="stat-head">
                       <div class="stat-label">内存</div>
-                      <div class="stat-sub">{{ sysInfo ? fmtBytes(sysInfo.memUsed) + ' / ' + fmtBytes(sysInfo.memTotal) :
+                      <div class="stat-sub">{{ sysInfo ? fmtBytes(sysInfo.memUsed) + ' / ' + fmtBytes(sysInfo.memTotal)
+                        :
                         ''
                       }}
                       </div>
@@ -68,63 +69,60 @@
           <a-col :span="24">
             <a-card>
               <!-- 本地服务实例卡片 -->
-              <div class="svc-section">
-                <div class="svc-header">
-                  <span class="svc-title">本地服务实例</span>
-                  <a-radio-group v-model="svcFilter" type="button" size="mini">
-                    <a-radio value="all">全部</a-radio>
-                    <a-radio value="redis">Redis</a-radio>
-                    <a-radio value="mysql">MySQL</a-radio>
-                  </a-radio-group>
-                </div>
-                <div class="svc-cards" v-if="filteredServices.length">
-                  <div v-for="(s, i) in filteredServices" :key="i" class="svc-card"
-                    :class="{ 'svc-card-active': s.running }">
-                    <div class="svc-card-top">
-                      <div class="svc-logo" :class="s.type === 'redis' ? 'logo-redis' : 'logo-mysql'">
-                        <icon-one-to-one v-if="s.type === 'redis'" />
-                        <icon-code v-else />
-                      </div>
-                      <div class="svc-meta">
-                        <div class="svc-name">{{ s.name }}</div>
-                        <div class="svc-desc">{{ s.type === 'redis' ? 'Redis' : 'MySQL' }} · v{{ s.version }} · :{{
-                          s.port
-                        }}
-                        </div>
-                      </div>
+              <template #title>
+                <span class="svc-title">本地服务实例</span>
+              </template>
+              <template #extra>
+                <a-radio-group v-model="svcFilter" type="button">
+                  <a-radio value="all">全部</a-radio>
+                  <a-radio value="redis">Redis</a-radio>
+                  <a-radio value="mysql">MySQL</a-radio>
+                </a-radio-group>
+              </template>
+              <div class="svc-cards" v-if="filteredServices.length">
+                <div v-for="(s, i) in filteredServices" :key="i" class="svc-card">
+                  <div class="svc-card-top">
+                    <div class="svc-logo" :class="s.type === 'redis' ? 'logo-redis' : 'logo-mysql'">
+                      <span v-if="s.type === 'redis'" class="icon icon-icon-redis" />
+                      <span v-else class="icon icon-MySQL" />
                     </div>
-                    <div class="svc-card-bottom">
-                      <a-tag :color="s.running ? 'green' : 'gray'" size="small">
-                        <template #icon>
-                          <icon-check-circle-fill v-if="s.running" />
-                          <icon-exclamation-circle-fill v-else />
-                        </template>
-                        {{ s.running ? '已启用' : '已停止' }}
-                      </a-tag>
-                      <a-switch :model-value="s.running" :loading="svcToggling === s.id" size="small"
-                        @change="toggleService(s)" />
+                    <div class="svc-meta">
+                      <div class="svc-name">{{ s.name }}</div>
+                      <div class="svc-desc">{{ s.type === 'redis' ? 'Redis' : 'MySQL' }} · v{{ s.version }} · :{{
+                        s.port
+                      }}
+                      </div>
                     </div>
                   </div>
+                  <div class="svc-card-bottom">
+                    <a-tag :color="s.running ? 'green' : 'gray'" size="small">
+                      <template #icon>
+                        <icon-check-circle-fill v-if="s.running" />
+                        <icon-exclamation-circle-fill v-else />
+                      </template>
+                      {{ s.running ? '已启用' : '已停止' }}
+                    </a-tag>
+                    <a-switch :model-value="s.running" :loading="svcToggling === s.id" size="small" type="round"
+                      @change="toggleService(s)" />
+                  </div>
                 </div>
-                <a-empty v-else description="暂无服务实例" />
               </div>
+              <a-empty v-else description="暂无服务实例" />
             </a-card>
           </a-col>
           <a-col :span="24">
-            <a-card>
+            <a-card v-if="sysInfo?.listeners?.length">
               <!-- 端口列表 -->
-              <div class="svc-section" v-if="sysInfo?.listeners?.length">
-                <div class="svc-header">
-                  <span class="svc-title">TCP 监听端口 ({{ sysInfo.listeners.length }})</span>
-                </div>
-                <a-list v-if="sysInfo?.listeners?.length" class="port-list" :border="false" :split="false">
-                  <a-list-item v-for="(p, i) in sysInfo.listeners.slice(0, 30)" :key="i" class="port-row">
-                    <span class="port-num">{{ p.port }}</span>
-                    <span class="port-proc">{{ p.process || '-' }}</span>
-                    <span class="port-pid">PID {{ p.pid }}</span>
-                  </a-list-item>
-                </a-list>
-              </div>
+              <template #title>
+                <span class="svc-title">TCP 监听端口 ({{ sysInfo.listeners.length }})</span>
+              </template>
+              <a-list class="port-list" :border="false" :split="false">
+                <a-list-item v-for="(p, i) in sysInfo.listeners.slice(0, 30)" :key="i" class="port-row">
+                  <span class="port-num">{{ p.port }}</span>
+                  <span class="port-proc">{{ p.process || '-' }}</span>
+                  <span class="port-pid">PID {{ p.pid }}</span>
+                </a-list-item>
+              </a-list>
             </a-card>
           </a-col>
         </a-row>
@@ -135,12 +133,12 @@
         <!-- ========== 右侧：快捷操作 ========== -->
         <a-card>
           <template #title>
-            <span class="right-card-title">快捷操作</span>
+            <span>快捷操作</span>
           </template>
           <template #extra>
             <a-tooltip content="设置">
-              <a-button size="mini" type="text" @click="openSettings">
-                <template #icon><icon-settings /></template>
+              <a-button @click="openSettings">
+                <template #icon><span class="icon icon-shezhi"></span></template>
               </a-button>
             </a-tooltip>
           </template>
@@ -292,25 +290,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* ---- 左侧卡片 ---- */
-.home-welcome {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: var(--base-padding);
-}
-
-.home-welcome-title {
-  font-size: var(--base-size-large);
-  font-weight: 600;
-}
-
 /* 统计卡片 - 浅色圆形图标风格 */
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--base-padding);
-  margin-bottom:var(--base-padding);
+  margin-bottom: var(--base-padding);
 }
 
 .stat-card {
@@ -331,7 +316,7 @@ onUnmounted(() => {
 .stat-circle {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--base-radius-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -399,17 +384,6 @@ onUnmounted(() => {
 }
 
 /* 服务实例卡片 */
-.svc-section {
-  margin-bottom: var(--base-size-large-x);
-}
-
-.svc-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--base-padding);
-}
-
 .svc-title {
   font-size: var(--base-size-default);
   font-weight: 600;
@@ -431,19 +405,15 @@ onUnmounted(() => {
 }
 
 .svc-card:hover {
-  border-color: rgb(var(--primary-3));
   box-shadow: 0 4px 16px rgba(var(--primary-6), 0.08);
   transform: translateY(-1px);
 }
 
-.svc-card-active {
-  border-left: 3px solid rgb(var(--green-6));
-}
 
 .svc-card-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--base-margin);
   margin-bottom: var(--base-margin);
 }
 
@@ -539,8 +509,8 @@ onUnmounted(() => {
 
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--base-padding);
 }
 
 .tool-cell {
@@ -549,35 +519,24 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: var(--base-padding);
-  border-radius: var(--base-radius-large);
+  border-radius: var(--base-radius-default);
   cursor: pointer;
-  transition: all 0.15s;
-  background: transparent;
   border: none;
+  background: var(--color-fill-2);
+  color: rgb(var(--color-text-1));
 }
 
 .tool-cell:hover {
-  background: var(--color-fill-2);
+  background: rgba(var(--primary-6), 0.12);
 }
 
 .tool-cell:active {
   transform: scale(0.95);
 }
 
-.tool-icon-wrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(var(--primary-6), 0.12);
-  color: rgb(var(--primary-6));
-  font-size: var(--base-size-large);
-}
 
 .tool-icon {
-  font-size: var(--base-size-large);
+  font-size: var(--base-size-large-x);
   color: inherit;
 }
 </style>

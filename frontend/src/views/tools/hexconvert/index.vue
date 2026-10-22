@@ -237,21 +237,21 @@ const copyText = async (text: string) => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: var(--base-space-lg);
+    margin-bottom: var(--base-margin);
 }
 
 .field-label {
     color: var(--color-text-2);
-    font-size: var(--base-size-medium);
+    font-size: var(--base-size-small);
 }
 
 .bin-opts {
-    margin-top: var(--base-space-md);
+    margin-top: var(--base-margin);
 }
 
 .intro {
     color: var(--color-text-2);
-    font-size: var(--base-size-medium);
+    font-size: var(--base-size-small);
     line-height: 1.8;
     margin: 0;
 }

@@ -427,20 +427,20 @@ onUnmounted(() => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: 16px;
+    margin-bottom: var(--base-padding);
 }
 
 .form-row {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
 }
 
 .status-row {
-    margin-top: 4px;
+    margin-top: var(--base-radius-default);
 }
 
 .stat {
     color: var(--color-text-2);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 .stat b {
@@ -461,7 +461,7 @@ onUnmounted(() => {
     align-items: center;
     gap: 6px;
     color: var(--color-text-2);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 
@@ -480,7 +480,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
+    border-radius: var(--base-radius-large);
     overflow: hidden;
     min-width: 0;
 }
@@ -489,7 +489,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px;
+    padding: var(--base-padding);
     border-bottom: 1px solid var(--color-border-2);
 }
 
@@ -507,10 +507,10 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
+    padding: var(--base-padding) var(--base-radius-large);
     cursor: pointer;
     border-bottom: 1px solid var(--color-border-1);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 .msg-row:hover {
@@ -523,7 +523,7 @@ onUnmounted(() => {
 
 .row-icon {
     flex: 0 0 auto;
-    font-size: 15px;
+    font-size: var(--base-size-default);
 }
 
 .row-text {
@@ -538,7 +538,7 @@ onUnmounted(() => {
 .row-time {
     flex: 0 0 auto;
     color: var(--color-text-3);
-    font-size: 12px;
+    font-size: var(--base-size-small);
     font-variant-numeric: tabular-nums;
 }
 
@@ -546,7 +546,7 @@ onUnmounted(() => {
     color: var(--color-text-3);
     text-align: center;
     padding: 40px 0;
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 .detail-pane {
@@ -554,7 +554,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border-2);
-    border-radius: 8px;
+    border-radius: var(--base-radius-large);
     overflow: hidden;
     min-width: 0;
 }
@@ -563,22 +563,22 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 10px;
+    padding: var(--base-padding) var(--base-radius-large);
     border-bottom: 1px solid var(--color-border-2);
 }
 
 .detail-time {
     color: var(--color-text-3);
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .detail-body {
     flex: 1;
     overflow: auto;
     background: #1d2129;
-    padding: 8px 0;
+    padding: var(--base-padding) 0;
     font-family: Consolas, Monaco, "Courier New", monospace;
-    font-size: 12px;
+    font-size: var(--base-size-small);
     line-height: 1.6;
 }
 
@@ -589,7 +589,7 @@ onUnmounted(() => {
 .ln {
     flex: 0 0 44px;
     text-align: right;
-    padding-right: 12px;
+    padding-right: var(--base-padding);
     color: var(--color-text-3);
     user-select: none;
 }
@@ -599,7 +599,7 @@ onUnmounted(() => {
     color: #e6e6e6;
     white-space: pre-wrap;
     word-break: break-all;
-    padding-right: 12px;
+    padding-right: var(--base-padding);
 }
 
 .detail-empty {
@@ -607,6 +607,6 @@ onUnmounted(() => {
 }
 
 .send-bar {
-    margin-top: 10px;
+    margin-top: var(--base-radius-large);
 }
 </style>

@@ -1,13 +1,18 @@
 ﻿<template>
-    <layout-body title="颜色取色器">
+    <a-card title="颜色取色器">
+        <template #extra>
+            <a-space>
+                自动将所选颜色复制到剪贴板<a-checkbox v-model="autoCopy"></a-checkbox>
+                <a-button type="primary" @click="pickFromScreen">
+                    屏幕取色
+                </a-button>
+            </a-space>
+        </template>
         <div class="cp">
             <!-- 顶部：从屏幕取色 + 选项 -->
             <div class="cp-top">
-                <a-button type="outline" @click="pickFromScreen">
-                    <template #icon><icon-eye /></template>从屏幕取色
-                </a-button>
                 <div class="cp-opts">
-                    <a-checkbox v-model="autoCopy">自动将所选颜色复制到剪贴板</a-checkbox>
+
                 </div>
             </div>
 
@@ -96,7 +101,7 @@
                 </div>
             </div>
         </div>
-    </layout-body>
+    </a-card>
 </template>
 
 <script setup lang="ts">
@@ -307,8 +312,6 @@ async function pickFromScreen() {
 .cp {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 4px;
 }
 
 .cp-top {
@@ -316,18 +319,18 @@ async function pickFromScreen() {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--base-padding);
 }
 
 .cp-opts {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--base-padding);
 }
 
 .cp-main {
     display: flex;
-    gap: 12px;
+    gap: var(--base-padding);
     align-items: stretch;
 }
 
@@ -340,7 +343,7 @@ async function pickFromScreen() {
     position: relative;
     width: 100%;
     height: 260px;
-    border-radius: 6px;
+    border-radius: var(--base-radius-default);
     border: 1px solid var(--color-border-2);
     cursor: crosshair;
     touch-action: none;
@@ -350,7 +353,7 @@ async function pickFromScreen() {
     position: absolute;
     width: 14px;
     height: 14px;
-    border: 2px solid #fff;
+    border: 2px solid var(--color-border-2);
     border-radius: 50%;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
     transform: translate(-50%, -50%);
@@ -361,7 +364,7 @@ async function pickFromScreen() {
     position: relative;
     width: 18px;
     height: 260px;
-    border-radius: 6px;
+    border-radius: var(--base-radius-default);
     cursor: pointer;
     touch-action: none;
     background: linear-gradient(to bottom,
@@ -375,8 +378,8 @@ async function pickFromScreen() {
     right: -3px;
     height: 4px;
     background: #fff;
-    border: 1px solid #999;
-    border-radius: 2px;
+    border: 1px solid var(--color-border-2);
+    border-radius: var(--base-radius-default);
     transform: translateY(-50%);
     pointer-events: none;
 }
@@ -385,14 +388,14 @@ async function pickFromScreen() {
     width: 210px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--base-padding);
 }
 
 .cp-swatches {
     display: flex;
     gap: 0;
     border: 1px solid var(--color-border-2);
-    border-radius: 4px;
+    border-radius: var(--base-radius-default);
     overflow: hidden;
     height: 40px;
 }
@@ -404,20 +407,20 @@ async function pickFromScreen() {
 .cp-grid {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--base-padding);
 }
 
 .cp-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--base-padding);
 }
 
 .cp-row label {
     width: 34px;
     text-align: right;
     color: var(--color-text-2);
-    font-size: 13px;
+    font-size: var(--base-size-small);
 }
 
 .cp-tag {
@@ -426,7 +429,7 @@ async function pickFromScreen() {
 
 .cp-pct {
     color: var(--color-text-3);
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .cp-ro :deep(.arco-input-element) {
@@ -434,7 +437,7 @@ async function pickFromScreen() {
 }
 
 .cp-modes {
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .cp-mode-active {
@@ -449,9 +452,9 @@ async function pickFromScreen() {
 .cp-out {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--base-padding);
     border-top: 1px dashed var(--color-border-2);
-    padding-top: 8px;
+    padding-top: var(--base-padding);
 }
 
 .cp-out .cp-row label {

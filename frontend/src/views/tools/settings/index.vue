@@ -1,7 +1,7 @@
 ﻿<template>
-    <layout-body title="设置" height="full">
+    <a-card title="设置" class="settings-card">
         <div class="settings-wrap">
-            <a-tabs v-model:active-key="activeTab" type="rounded" class="settings-tabs">
+            <a-tabs v-model:active-key="activeTab" class="settings-tabs">
                 <!-- ===================== 日志设置 ===================== -->
                 <a-tab-pane key="log" title="日志">
                     <a-form :model="form" :style="{ maxWidth: '640px' }" layout="vertical" auto-focus>
@@ -255,7 +255,7 @@
                 </a-form-item>
             </a-form>
         </a-modal>
-    </layout-body>
+    </a-card>
 </template>
 
 <script setup lang="ts">
@@ -606,18 +606,33 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* 卡片填满窗口内容区，body 作为弹性容器让 settings-wrap 继承高度 */
+.settings-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
 .settings-wrap {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 16px 20px;
+    padding: var(--base-padding);
     box-sizing: border-box;
 }
 
 .settings-tabs {
     background: var(--color-bg-2);
-    border-radius: 8px;
-    padding: 8px 16px 16px;
+    border-radius: var(--base-radius-large);
+    padding: var(--base-padding);
     flex: 1;
     min-height: 0;
     display: flex;
@@ -656,15 +671,15 @@ onBeforeUnmount(() => {
 
 .hint {
     color: var(--color-text-3);
-    font-size: 12px;
-    margin-left: 12px;
+    font-size: var(--base-size-small);
+    margin-left: var(--base-margin);
 }
 
 .tools-toolbar {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
     flex-wrap: wrap;
     flex: none;
 }
@@ -695,7 +710,7 @@ onBeforeUnmount(() => {
 
 .save-bar {
     flex: none;
-    margin-top: 16px;
+    margin-top: var(--base-padding);
     text-align: right;
 }
 
@@ -708,18 +723,18 @@ onBeforeUnmount(() => {
 
 .icon-cell .arco-preview,
 .icon-cell .iconfont-preview {
-    font-size: 16px;
+    font-size: var(--base-size-default);
     color: var(--color-text-1);
 }
 
 .icon-cell .icon-text {
     color: var(--color-text-3);
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 /* 快捷键录制提示 */
 .rec-tip {
-    font-size: 12px;
+    font-size: var(--base-size-small);
     color: rgb(var(--primary-6));
 }
 
@@ -732,7 +747,7 @@ onBeforeUnmount(() => {
 .logo-preview {
     width: 48px;
     height: 48px;
-    border-radius: 8px;
+    border-radius: var(--base-radius-large);
     border: 1px dashed var(--color-border-3);
     display: flex;
     align-items: center;
@@ -746,7 +761,7 @@ onBeforeUnmount(() => {
     object-fit: contain;
 }
 .logo-placeholder {
-    font-size: 12px;
+    font-size: var(--base-size-small);
     color: var(--color-text-4);
 }
 </style>

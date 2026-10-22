@@ -544,6 +544,11 @@ func (a *App) RedisSetString(id, key, value string, ttl int) error {
 	return redis.SetString(id, key, value, ttl)
 }
 
+// RedisBatchSetString 批量生成 string 键：keyPrefix+序号 / valuePrefix+序号，序号 [start,end]（含），ttl 秒（<=0 不过期）。返回写入数量
+func (a *App) RedisBatchSetString(id, keyPrefix, valuePrefix string, start, end, ttl int) (int64, error) {
+	return redis.BatchSetString(id, keyPrefix, valuePrefix, start, end, ttl)
+}
+
 // RedisDeleteKeys 删除若干键，返回删除数量
 func (a *App) RedisDeleteKeys(id string, keys []string) (int64, error) {
 	return redis.DeleteKeys(id, keys)

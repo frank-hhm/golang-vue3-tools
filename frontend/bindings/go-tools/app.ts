@@ -466,6 +466,13 @@ export function RealQuit(): $CancellablePromise<void> {
 }
 
 /**
+ * RedisBatchSetString 批量生成 string 键：keyPrefix+序号 / valuePrefix+序号，序号 [start,end]（含），ttl 秒（<=0 不过期）。返回写入数量
+ */
+export function RedisBatchSetString(id: string, keyPrefix: string, valuePrefix: string, start: number, end: number, ttl: number): $CancellablePromise<number> {
+    return $Call.ByID(3974718029, id, keyPrefix, valuePrefix, start, end, ttl);
+}
+
+/**
  * RedisClose 关闭指定 Redis 连接
  */
 export function RedisClose(id: string): $CancellablePromise<void> {

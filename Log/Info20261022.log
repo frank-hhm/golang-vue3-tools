@@ -661,3 +661,130 @@
 2026-10-22 18:21:40.950 [INFO] [window] 复用单例窗口: /win/tools/settings (设置)
 2026-10-22 18:21:43.072 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
 2026-10-22 18:22:57.688 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 18:36:21.438 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-22 18:36:46.645 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 18:36:46.707 [INFO] [ball] BallOpen 调用
+2026-10-22 18:36:46.708 [INFO] [tray] 系统托盘已创建
+2026-10-22 18:36:46.709 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 18:36:46.710 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 18:39:18.217 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:40:32.599 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:46:17.857 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 18:48:45.536 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:50:04.018 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:50:08.040 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:50:42.976 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:50:52.752 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:51:13.555 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:51:18.777 [INFO] [window] 复用单例窗口: /win/tools/colorpicker (颜色取色器)
+2026-10-22 18:51:19.804 [INFO] [window] 复用单例窗口: /win/tools/colorpicker (颜色取色器)
+2026-10-22 18:51:20.525 [INFO] [window] 复用单例窗口: /win/tools/colorpicker (颜色取色器)
+2026-10-22 18:51:31.249 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:52:32.080 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 18:52:34.241 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:53:05.050 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:53:07.377 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:53:15.576 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:53:17.665 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 18:58:25.049 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 18:59:21.864 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 18:59:42.929 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 18:59:46.818 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:01:25.413 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 19:01:25.463 [INFO] [ball] BallOpen 调用
+2026-10-22 19:01:25.464 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 19:01:25.464 [INFO] [tray] 系统托盘已创建
+2026-10-22 19:01:25.465 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 19:04:22.809 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 19:04:25.769 [INFO] [window] 新建窗口: /win/tools/video (视频录制) single=true fullscreen=true 1000x718
+2026-10-22 19:04:31.506 [INFO] [window] 新建窗口: /win/tools/qrcode (二维码生成) single=false fullscreen=false 1000x718
+2026-10-22 19:04:34.249 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 19:04:36.090 [INFO] [window] 新建窗口: /win/tools/strrandom (随机字符串生成) single=false fullscreen=false 1000x718
+2026-10-22 19:04:39.194 [INFO] [window] 新建窗口: /win/tools/hexconvert (进制转换) single=false fullscreen=false 1000x718
+2026-10-22 19:04:42.075 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-22 19:06:32.689 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:06:36.691 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 19:06:36.691 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 19:06:36.691 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 19:06:36.691 [INFO] [ball] BallOpen 调用
+2026-10-22 19:06:54.159 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 19:06:56.165 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 19:06:58.863 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 19:07:04.685 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 19:07:51.681 [INFO] [window] 新建窗口: /win/tools/sniffer (抓包工具) single=true fullscreen=true 1000x718
+2026-10-22 19:09:22.697 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 19:09:54.514 [INFO] [window] 新建窗口: /win/tools/usbserial (USB调试) single=false fullscreen=false 1000x718
+2026-10-22 19:10:30.937 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:11:05.873 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 19:13:01.137 [INFO] [window] 新建窗口: /win/tools/video (视频录制) single=true fullscreen=true 1000x718
+2026-10-22 19:13:08.034 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:13:24.473 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:13:30.650 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 19:13:37.058 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:16:14.297 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 19:16:27.786 [INFO] [window] 新建窗口: /win/tools/imageBase64 (图片base64) single=false fullscreen=false 1000x718
+2026-10-22 19:16:54.234 [INFO] [window] 新建窗口: /win/tools/hexconvert (进制转换) single=false fullscreen=false 1000x718
+2026-10-22 19:17:04.425 [INFO] [window] 新建窗口: /win/tools/timestamp (时间戳转换) single=false fullscreen=false 1000x718
+2026-10-22 19:17:59.209 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:18:36.673 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:18:43.130 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 19:18:43.130 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 19:18:43.131 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 19:18:43.131 [INFO] [ball] BallOpen 调用
+2026-10-22 19:18:45.241 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:18:47.226 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:18:49.218 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:18:56.170 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:18:59.930 [INFO] [window] 新建窗口: /win/tools/websocket (WebSocket调试) single=false fullscreen=true 1000x718
+2026-10-22 19:19:29.186 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:19:35.195 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 19:19:35.195 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 19:19:35.196 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 19:19:35.196 [INFO] [ball] BallOpen 调用
+2026-10-22 19:20:33.170 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:21:09.002 [INFO] [window] 新建窗口: /win/tools/websocket (WebSocket调试) single=false fullscreen=true 1000x718
+2026-10-22 19:21:14.228 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 19:23:14.034 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:23:39.673 [INFO] [window] 新建窗口: /win/tools/sniffer (抓包工具) single=true fullscreen=true 1000x718
+2026-10-22 19:23:42.657 [INFO] [window] 新建窗口: /win/tools/qrcode (二维码生成) single=false fullscreen=false 1000x718
+2026-10-22 19:23:49.307 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 19:24:21.090 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:24:43.129 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:38:21.371 [INFO] [window] 复用单例窗口: /win/tools/redis (Redis管理)
+2026-10-22 19:38:49.314 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:39:59.506 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 19:40:04.171 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 19:40:04.171 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 19:40:04.173 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 19:40:04.173 [INFO] [ball] BallOpen 调用
+2026-10-22 19:40:06.194 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:47:19.442 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:47:50.890 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:48:03.386 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 19:48:33.075 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 20:04:44.396 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 20:45:29.895 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 20:45:29.927 [INFO] [ball] BallOpen 调用
+2026-10-22 20:45:29.927 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 20:45:29.928 [INFO] [tray] 系统托盘已创建
+2026-10-22 20:45:29.929 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 20:45:48.069 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 20:45:48.093 [INFO] [ball] BallOpen 调用
+2026-10-22 20:45:48.094 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 20:45:48.094 [INFO] [tray] 系统托盘已创建
+2026-10-22 20:45:48.095 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 20:46:07.249 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 20:46:07.272 [INFO] [ball] BallOpen 调用
+2026-10-22 20:46:07.272 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 20:46:07.273 [INFO] [tray] 系统托盘已创建
+2026-10-22 20:46:07.273 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 20:46:53.068 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 20:48:19.132 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 20:49:00.126 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 20:50:18.604 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 20:58:50.072 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 20:58:50.138 [INFO] [ball] BallOpen 调用
+2026-10-22 20:58:50.139 [INFO] [tray] 系统托盘已创建
+2026-10-22 20:58:50.140 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 20:58:50.140 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 20:58:52.588 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718

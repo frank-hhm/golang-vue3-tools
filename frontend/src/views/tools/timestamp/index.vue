@@ -312,24 +312,24 @@ const batchConvert = () => {
 
 <style scoped>
 .page-title {
-    margin: 0 0 16px;
-    font-size: 20px;
+    margin: 0 0 var(--base-padding);
+    font-size: var(--base-size-large-x);
     font-weight: 600;
     color: #1d2129;
 }
 
 .tool-card {
-    margin-bottom: 16px;
+    margin-bottom: var(--base-padding);
 }
 
 .form-row {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin);
 }
 
 .now-label {
     color: #86909c;
-    font-size: 13px;
-    margin-bottom: 6px;
+    font-size: var(--base-size-small);
+    margin-bottom: var(--base-radius-default);
 }
 
 .now-value {
@@ -339,7 +339,7 @@ const batchConvert = () => {
 }
 
 .now-num {
-    font-size: 30px;
+    font-size: var(--base-size-large-xx);
     font-weight: 700;
     color: #1d2129;
     font-variant-numeric: tabular-nums;
@@ -349,15 +349,15 @@ const batchConvert = () => {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 16px;
+    font-size: var(--base-size-default);
     font-weight: 600;
     color: #1d2129;
-    margin: 6px 0 16px;
+    margin: var(--base-radius-default) 0 var(--base-padding);
 }
 
 .field-label {
     color: #4e5969;
-    font-size: 13px;
-    margin-bottom: 6px;
+    font-size: var(--base-size-small);
+    margin-bottom: var(--base-radius-default);
 }
 </style>
