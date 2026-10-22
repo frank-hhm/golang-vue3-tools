@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <layout-body title="截图预览">
         <a-card class="tool-card">
             <a-row justify="space-between" align="center" class="form-row">
@@ -13,8 +13,8 @@
                         <a-button :disabled="!image" @click="copyImage">
                             <template #icon><icon-copy /></template>复制图片
                         </a-button>
-                        <a-button :disabled="!image" @click="download">
-                            <template #icon><icon-download /></template>下载 PNG
+                        <a-button :disabled="!image" :loading="saving" @click="download">
+                            <template #icon><icon-download /></template>保存 PNG
                         </a-button>
                     </a-space>
                 </a-col>
@@ -24,7 +24,7 @@
                 <img v-if="image" :src="image" class="preview-img" alt="screenshot" />
                 <a-empty v-else description="暂无截图，点击「重新截图」进行区域捕获" />
             </div>
-            <div class="tip">截图会先复制到系统剪贴板，可直接 Ctrl+V 粘贴；也可「复制图片」或「下载 PNG」。</div>
+            <div class="tip">截图会先复制到系统剪贴板，可直接 Ctrl+V 粘贴；「保存 PNG」会存到程序目录 data/screenshots 下。</div>
         </a-card>
     </layout-body>
 </template>
@@ -67,13 +67,20 @@ const recapture = async () => {
     }
 };
 
-/** 下载为 PNG 文件 */
-const download = () => {
+/** 保存 PNG 到程序目录下 data/screenshots */
+const saving = ref(false);
+const download = async () => {
     if (!image.value) return;
-    const a = document.createElement("a");
-    a.href = image.value;
-    a.download = `screenshot-${Date.now()}.png`;
-    a.click();
+    saving.value = true;
+    try {
+        const dir = await $GoTools.AppDataDir("screenshots");
+        const path = dir.replace(/[\\/]+$/, "") + "\\screenshot-" + Date.now() + ".png";
+        await $GoTools.SaveImage(path, image.value);
+        Message.success("已保存：" + path);
+    } catch (e: any) {
+        Message.error("保存失败：" + (e?.message || e));
+    }
+    saving.value = false;
 };
 
 /** 将图片本身写入剪贴板 */
@@ -99,12 +106,12 @@ const copyImage = async () => {
 }
 
 .field-label {
-    color: #4e5969;
+    color: var(--color-text-2);
     font-size: 13px;
 }
 
 .preview-wrap {
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     padding: 12px;
     min-height: 240px;
@@ -121,7 +128,7 @@ const copyImage = async () => {
 
 .tip {
     margin-top: 10px;
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 13px;
 }
 </style>

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <layout-body title="抓包工具">
         <!-- 顶部工具栏 -->
         <a-card class="tool-card toolbar">
@@ -347,11 +347,11 @@ const formatSize = (n: number) => {
 const protoColor = (p: string) => (p === "HTTPS" ? "green" : p === "WS" ? "purple" : "arcoblue");
 
 const statusColor = (code: number) => {
-    if (!code) return "#86909c";
-    if (code < 300) return "#00b42a";
-    if (code < 400) return "#165dff";
-    if (code < 500) return "#ff7d00";
-    return "#f53f3f";
+    if (!code) return "var(--color-text-3)";
+    if (code < 300) return "rgb(var(--green-6))";
+    if (code < 400) return "rgb(var(--arcoblue-6))";
+    if (code < 500) return "rgb(var(--orange-6))";
+    return "rgb(var(--red-6))";
 };
 
 /* ============ 详情美化辅助 ============ */
@@ -400,13 +400,13 @@ const copyText = async (text: string) => {
 }
 
 .toolbar .count-tip {
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 13px;
 }
 
 .ca-tip {
     margin-top: 8px;
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 12px;
 }
 
@@ -421,7 +421,7 @@ const copyText = async (text: string) => {
 .sidebar {
     width: 200px;
     flex: 0 0 200px;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     padding: 8px;
     overflow-y: auto;
@@ -438,7 +438,7 @@ const copyText = async (text: string) => {
     gap: 4px;
     font-weight: 600;
     font-size: 13px;
-    color: #1d2129;
+    color: var(--color-text-1);
     cursor: pointer;
     margin: 6px 0;
 }
@@ -461,7 +461,7 @@ const copyText = async (text: string) => {
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
-    color: #4e5969;
+    color: var(--color-text-2);
 }
 
 .side-list .item:hover {
@@ -481,7 +481,7 @@ const copyText = async (text: string) => {
 }
 
 .side-list .cnt {
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 12px;
 }
 
@@ -490,7 +490,7 @@ const copyText = async (text: string) => {
     flex: 1 1 46%;
     display: flex;
     flex-direction: column;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -500,7 +500,7 @@ const copyText = async (text: string) => {
     align-items: center;
     gap: 4px;
     padding: 6px 10px;
-    border-bottom: 1px solid #e5e6eb;
+    border-bottom: 1px solid var(--color-border-2);
     flex-wrap: wrap;
 }
 
@@ -509,7 +509,7 @@ const copyText = async (text: string) => {
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
-    color: #4e5969;
+    color: var(--color-text-2);
 }
 
 .proto-tab:hover {
@@ -534,7 +534,7 @@ const copyText = async (text: string) => {
 
 .pager {
     padding: 6px 10px;
-    border-top: 1px solid #e5e6eb;
+    border-top: 1px solid var(--color-border-2);
     display: flex;
     justify-content: flex-end;
 }
@@ -546,7 +546,7 @@ const copyText = async (text: string) => {
 /* 右侧详情 */
 .detail {
     flex: 1 1 40%;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     padding: 10px 12px;
     overflow-y: auto;
@@ -566,7 +566,7 @@ const copyText = async (text: string) => {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 13px;
-    color: #1d2129;
+    color: var(--color-text-1);
 }
 
 .body-pre {

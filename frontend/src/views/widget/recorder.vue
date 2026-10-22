@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="rec-widget">
     <!-- 等待录制状态同步 -->
     <div v-if="phase === 'starting'" class="row">
@@ -106,7 +106,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
+  padding: 0 var(--base-padding);
   width: 100%;
 }
 
@@ -118,14 +118,14 @@ onUnmounted(() => {
 
 .time {
   font-family: Consolas, monospace;
-  font-size: 18px;
+  font-size: var(--base-size-large);
   font-weight: 600;
   color: #ff7a7a;
   font-variant-numeric: tabular-nums;
 }
 
 .state {
-  font-size: 12px;
+  font-size: var(--base-size-small);
   color: #d0d0d6;
   white-space: nowrap;
 }

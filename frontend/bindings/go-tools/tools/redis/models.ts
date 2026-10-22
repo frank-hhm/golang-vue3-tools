@@ -14,6 +14,62 @@ export interface ConnConfig {
 }
 
 /**
+ * InstallProgress 版本安装进度事件负载
+ */
+export interface InstallProgress {
+    "version": string;
+
+    /**
+     * downloading|extracting|done|error
+     */
+    "stage": string;
+    "percent": number;
+    "note": string;
+}
+
+/**
+ * InstanceConfig 一个本地 Redis 实例配置
+ */
+export interface InstanceConfig {
+    "id": string;
+    "name": string;
+    "version": string;
+    "port": number;
+    "password": string;
+    "appendOnly": boolean;
+
+    /**
+     * <=0 表示不限制
+     */
+    "maxMemoryMB": number;
+
+    /**
+     * 空 = 默认（程序数据目录下按 ID 分配）
+     */
+    "dataDir": string;
+}
+
+/**
+ * InstanceStatus 实例运行状态（网络探测 + INFO 聚合）
+ */
+export interface InstanceStatus {
+    "id": string;
+    "name": string;
+    "version": string;
+    "port": number;
+    "running": boolean;
+
+    /**
+     * 本进程拉起的才有；孤儿进程为 0
+     */
+    "pid": number;
+    "uptimeSeconds": number;
+    "usedMemoryHuman": string;
+    "connectedClients": number;
+    "totalKeys": number;
+}
+
+/**
  * KeyInfo 键列表条目。
  */
 export interface KeyInfo {
@@ -64,6 +120,15 @@ export interface MonitorLine {
 }
 
 /**
+ * RemoteVersion 线上（GitHub redis-windows 发行版）可安装版本
+ */
+export interface RemoteVersion {
+    "version": string;
+    "url": string;
+    "size": number;
+}
+
+/**
  * ScanResult 一次 SCAN 的结果。
  */
 export interface ScanResult {
@@ -72,6 +137,15 @@ export interface ScanResult {
      */
     "cursor": string;
     "keys": KeyInfo[] | null;
+}
+
+/**
+ * ServerLogLine 实例日志行事件负载
+ */
+export interface ServerLogLine {
+    "id": string;
+    "time": string;
+    "line": string;
 }
 
 /**
@@ -93,6 +167,26 @@ export interface ServerStatus {
      */
     "redisMemory": string;
     "host": string;
+}
+
+/**
+ * ServerVersion 本地可用的一个 redis-server 版本
+ */
+export interface ServerVersion {
+    /**
+     * 如 7.4.4
+     */
+    "version": string;
+
+    /**
+     * redis-server.exe 完整路径
+     */
+    "path": string;
+
+    /**
+     * bundled | downloaded | local
+     */
+    "source": string;
 }
 
 /**

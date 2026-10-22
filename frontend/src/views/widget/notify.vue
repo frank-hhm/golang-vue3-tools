@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="notify-wrap">
     <div class="notify-card" :class="level">
       <!-- 头部：应用图标 + 名称 + ⋯ +  -->
@@ -41,7 +41,7 @@ function close() {
   width: 100vw;
   height: 100vh;
   box-sizing: border-box;
-  padding: 6px;
+  padding: var(--base-padding);
   background: transparent;
   /* 背景可拖动通知卡 */
   app-region: drag;
@@ -53,11 +53,11 @@ function close() {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  background: #fff;
-  border: 1px solid #e5e6eb;
-  border-radius: 10px;
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-border-2);
+  border-radius: var(--base-radius-large);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
-  padding: 12px 14px;
+  padding: var(--base-padding);
   display: flex;
   flex-direction: column;
 }
@@ -65,15 +65,15 @@ function close() {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 8px;
+  margin-bottom: var(--base-margin);
 }
 .nc-app-ic {
   width: 18px;
   height: 18px;
-  border-radius: 5px;
-  background: linear-gradient(135deg, #165dff, #4080ff);
+  border-radius: var(--base-radius-default);
+  background: linear-gradient(135deg, rgb(var(--arcoblue-6)), rgb(var(--blue-6)));
   color: #fff;
-  font-size: 11px;
+  font-size: var(--base-size-small);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -81,8 +81,8 @@ function close() {
   flex: none;
 }
 .nc-app {
-  font-size: 12px;
-  color: #4e5969;
+  font-size: var(--base-size-small);
+  color: var(--color-text-2);
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -91,29 +91,29 @@ function close() {
 .nc-more,
 .nc-close {
   flex: none;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 13px;
-  color: #4e5969;
+  padding: var(--base-radius-small);
+  border-radius: var(--base-radius-default);
+  font-size: var(--base-size-small);
+  color: var(--color-text-2);
   cursor: pointer;
 }
 .nc-more:hover,
 .nc-close:hover {
-  background: #f2f3f5;
-  color: #1d2129;
+  background: var(--color-fill-2);
+  color: var(--color-text-1);
 }
 .nc-title {
-  font-size: 14px;
+  font-size: var(--base-size-default);
   font-weight: 600;
-  color: #1d2129;
-  margin-bottom: 4px;
+  color: var(--color-text-1);
+  margin-bottom: var(--base-margin);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .nc-content {
-  font-size: 13px;
-  color: #4e5969;
+  font-size: var(--base-size-small);
+  color: var(--color-text-2);
   line-height: 1.5;
   flex: 1;
   display: -webkit-box;

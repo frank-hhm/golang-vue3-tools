@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <layout-body title="视频录制">
     <a-card class="tool-card">
       <!-- 顶部：模式 + 参数 + 操作 -->
@@ -774,7 +774,7 @@ onUnmounted(() => {
 }
 
 .field-label {
-  color: #4e5969;
+  color: var(--color-text-2);
   font-size: 13px;
 }
 
@@ -787,7 +787,7 @@ onUnmounted(() => {
 }
 
 .preview-wrap {
-  border: 1px solid #e5e6eb;
+  border: 1px solid var(--color-border-2);
   border-radius: 8px;
   min-height: 320px;
   display: flex;
@@ -901,7 +901,7 @@ onUnmounted(() => {
 
 .saved-path {
   font-size: 12px;
-  color: #4e5969;
+  color: var(--color-text-2);
   word-break: break-all;
 }
 
@@ -911,7 +911,7 @@ onUnmounted(() => {
 
 .tip {
   margin-top: 10px;
-  color: #86909c;
+  color: var(--color-text-3);
   font-size: 13px;
   line-height: 1.6;
 }

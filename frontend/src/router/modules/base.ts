@@ -17,6 +17,7 @@ const TOOLS = [
     { key: "Screenshot", menu_name: "截图预览", path: "tools/screenshot", component: () => import('@/views/tools/screenshot/index.vue') },
     { key: "Video", menu_name: "视频录制", path: "tools/video", component: () => import('@/views/tools/video/index.vue') },
     { key: "Colorpicker", menu_name: "颜色取色器", path: "tools/colorpicker", component: () => import('@/views/tools/colorpicker/index.vue') },
+    { key: "Settings", menu_name: "设置", path: "tools/settings", component: () => import('@/views/tools/settings/index.vue') },
 
 ];
 

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <layout-body title="二维码生成">
         <a-tabs default-active-key="normal" type="rounded" class="tool-card">
             <!-- ============ 普通二维码 ============ -->
@@ -73,7 +73,7 @@
                         <div class="preview-box">
                             <canvas v-show="normalHasResult" ref="normalCanvas" class="qr-canvas"></canvas>
                             <div v-if="!normalHasResult" class="preview-empty">
-                                <icon-qrcode style="font-size: 64px; color: #e5e6eb" />
+                                <icon-qrcode style="font-size: 64px; color: var(--color-fill-3)" />
                             </div>
                         </div>
                         <div class="tip">生成结果，可下载保存为 PNG</div>
@@ -553,18 +553,18 @@ function downloadDataUrl(dataUrl: string, name: string) {
 }
 
 .field-label {
-    color: #4e5969;
+    color: var(--color-text-2);
     font-size: 13px;
     margin-bottom: 6px;
 }
 
 .opt-label {
-    color: #4e5969;
+    color: var(--color-text-2);
     font-size: 13px;
 }
 
 .unit {
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 12px;
     margin-left: 4px;
 }
@@ -584,9 +584,9 @@ function downloadDataUrl(dataUrl: string, name: string) {
     align-items: center;
     justify-content: center;
     min-height: 260px;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
-    background: repeating-conic-gradient(#f2f3f5 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+    background: repeating-conic-gradient(var(--color-fill-2) 0% 25%, var(--color-bg-2) 0% 50%) 50% / 20px 20px;
 }
 
 .qr-canvas {
@@ -599,19 +599,19 @@ function downloadDataUrl(dataUrl: string, name: string) {
     height: 28px;
     margin-left: 8px;
     vertical-align: middle;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 4px;
 }
 
 .tip {
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 12px;
     margin: 8px 0;
 }
 
 .stage {
     position: relative;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -629,7 +629,7 @@ function downloadDataUrl(dataUrl: string, name: string) {
 
 .result-img {
     max-width: 100%;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     margin-bottom: 8px;
 }

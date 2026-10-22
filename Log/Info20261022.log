@@ -1,0 +1,546 @@
+2026-10-22 11:16:02.659 [INFO] [app] === go-tools 启动 === 日志文件: E:\go-tools-bak\Log (enabled=true level=debug)
+2026-10-22 11:16:09.860 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 11:16:21.126 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=debug)
+2026-10-22 11:16:25.844 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 11:16:39.244 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=debug)
+2026-10-22 11:16:53.580 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 11:16:57.972 [INFO] [window] 新建窗口: /win/tools/qrcode (二维码生成) single=false fullscreen=false 1000x718
+2026-10-22 11:17:07.772 [INFO] [ball] BallOpen 调用
+2026-10-22 11:17:16.972 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 11:18:52.797 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=debug, ball=true）
+2026-10-22 11:18:52.797 [INFO] [ball] BallOpen 调用
+2026-10-22 11:18:58.118 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=debug, ball=true）
+2026-10-22 11:18:58.118 [INFO] [ball] BallOpen 调用
+2026-10-22 11:19:01.157 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=debug, ball=true）
+2026-10-22 11:19:01.158 [INFO] [ball] BallOpen 调用
+2026-10-22 11:19:19.558 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true）
+2026-10-22 11:19:19.558 [INFO] [ball] BallOpen 调用
+2026-10-22 11:21:15.022 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 11:21:20.044 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 11:49:02.734 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:01:47.550 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:12:22.765 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:29:19.624 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true）
+2026-10-22 12:29:19.624 [INFO] [ball] BallOpen 调用
+2026-10-22 12:30:30.095 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:30:33.998 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:36:55.728 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:37:39.853 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:38:13.006 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:41:07.150 [INFO] [window] 新建窗口: /win/tools/strrandom (随机字符串生成) single=false fullscreen=false 1000x718
+2026-10-22 12:41:59.164 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:41:59.187 [INFO] [ball] BallOpen 调用
+2026-10-22 12:41:59.188 [INFO] [tray] 系统托盘已创建
+2026-10-22 12:41:59.189 [INFO] [hotkey] 已注册 0 个全局热键
+2026-10-22 12:42:06.183 [INFO] [window] 新建窗口: /tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:42:14.738 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:42:14.758 [INFO] [ball] BallOpen 调用
+2026-10-22 12:42:14.759 [INFO] [tray] 系统托盘已创建
+2026-10-22 12:42:14.760 [INFO] [hotkey] 已注册 0 个全局热键
+2026-10-22 12:42:22.104 [INFO] [window] 新建窗口: /tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:43:12.167 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:43:26.146 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true）
+2026-10-22 12:43:26.146 [INFO] [ball] BallOpen 调用
+2026-10-22 12:43:26.146 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 12:43:28.077 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 12:43:30.884 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 12:44:00.103 [INFO] [window] 复用单例窗口: /win/tools/settings (设置)
+2026-10-22 12:44:07.063 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=false）
+2026-10-22 12:44:07.064 [INFO] [ball] BallClose 调用
+2026-10-22 12:44:07.064 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 12:45:45.143 [INFO] [window] 新建窗口: /tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:46:02.270 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:46:21.513 [INFO] [window] 新建窗口: /tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:47:23.106 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:47:23.132 [INFO] [tray] 系统托盘已创建
+2026-10-22 12:47:23.133 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 12:58:00.974 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 12:58:01.001 [INFO] [tray] 系统托盘已创建
+2026-10-22 12:58:01.002 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 12:58:08.273 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 12:58:11.749 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-22 12:58:23.335 [INFO] [window] 新建窗口: /win/tools/qrcode (二维码生成) single=false fullscreen=false 1000x718
+2026-10-22 12:58:25.687 [INFO] [window] 新建窗口: /win/tools/timestamp (时间戳转换) single=false fullscreen=false 1000x718
+2026-10-22 12:58:28.056 [INFO] [window] 新建窗口: /win/tools/websocket (WebSocket调试) single=false fullscreen=true 1000x718
+2026-10-22 12:58:32.231 [INFO] [window] 新建窗口: /win/tools/usbserial (USB调试) single=false fullscreen=false 1000x718
+2026-10-22 12:58:44.935 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 13:14:53.067 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:14:53.092 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:14:53.092 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:14:59.081 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:14:59.108 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:14:59.110 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:15:51.255 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:15:51.298 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:15:51.300 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:16:07.186 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:16:07.206 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:16:07.207 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:20:33.316 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:20:33.341 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:20:33.342 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:22:32.848 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 13:31:41.271 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:31:41.292 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:31:41.293 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:31:52.711 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:31:52.735 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:31:52.736 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:32:19.573 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:32:19.642 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:32:19.644 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:32:38.686 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:32:38.709 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:32:38.710 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:33:37.436 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:33:37.457 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:33:37.457 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:37:52.009 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 13:45:43.559 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:45:43.585 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:45:43.586 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:45:47.103 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:45:47.124 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:45:47.125 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:45:56.239 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:45:56.267 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:45:56.267 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:46:40.169 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:46:40.190 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:46:40.191 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:50:54.149 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 13:50:54.170 [INFO] [tray] 系统托盘已创建
+2026-10-22 13:50:54.170 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 13:50:58.369 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:11:44.202 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 14:11:44.231 [INFO] [tray] 系统托盘已创建
+2026-10-22 14:11:44.232 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 14:11:48.441 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 14:11:54.073 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 14:11:56.889 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:12:01.550 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 14:12:01.565 [INFO] [tray] 系统托盘已创建
+2026-10-22 14:12:01.571 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 14:12:03.041 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:13:18.898 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:13:24.089 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:13:30.873 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:13:36.049 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:14:51.898 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:43:31.807 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 14:43:31.833 [INFO] [tray] 系统托盘已创建
+2026-10-22 14:43:31.834 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 14:43:37.366 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 14:43:37.391 [INFO] [tray] 系统托盘已创建
+2026-10-22 14:43:37.392 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 14:45:28.388 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 14:45:28.409 [INFO] [tray] 系统托盘已创建
+2026-10-22 14:45:28.409 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 14:46:19.533 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 14:46:19.560 [INFO] [tray] 系统托盘已创建
+2026-10-22 14:46:19.561 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 14:46:22.796 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 14:46:22.816 [INFO] [tray] 系统托盘已创建
+2026-10-22 14:46:22.817 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 14:46:39.874 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 14:46:43.314 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:47:22.761 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 14:50:21.204 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 15:04:30.868 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:06:43.521 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:06:43.544 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:06:43.545 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:06:45.418 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:06:58.415 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:06:58.434 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:06:58.434 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:07:00.010 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:09:06.758 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:09:06.783 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:09:06.784 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:09:08.811 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:09:09.074 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:09:09.106 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:09:09.107 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:09:10.610 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:10:49.640 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 15:10:51.965 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 15:11:21.659 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 15:11:29.244 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:11:29.267 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:11:29.267 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:11:54.610 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 15:12:03.433 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 15:12:08.738 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 15:12:17.603 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 15:12:20.821 [INFO] [window] 复用单例窗口: /win/tools/screenshot (截图预览)
+2026-10-22 15:12:26.265 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 15:12:29.039 [INFO] [window] 复用单例窗口: /win/tools/screenshot (截图预览)
+2026-10-22 15:12:39.241 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-22 15:12:41.360 [INFO] [window] 复用单例窗口: /win/tools/screenshot (截图预览)
+2026-10-22 15:13:08.441 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:13:08.462 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:13:08.462 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:13:23.467 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:14:40.578 [INFO] [window] 新建窗口: /win/tools/sniffer (抓包工具) single=true fullscreen=true 1000x718
+2026-10-22 15:15:09.063 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:15:09.087 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:15:09.087 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:15:11.463 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:15:11.483 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:15:11.484 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:15:13.474 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:18:05.148 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 15:18:08.779 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=false）
+2026-10-22 15:18:08.779 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:18:08.780 [INFO] [config] 开机自启已同步: enabled=false
+2026-10-22 15:18:08.780 [INFO] [ball] BallOpen 调用
+2026-10-22 15:18:10.876 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 15:18:10.876 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:18:10.877 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:18:10.877 [INFO] [ball] BallOpen 调用
+2026-10-22 15:18:35.899 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:18:35.926 [INFO] [ball] BallOpen 调用
+2026-10-22 15:18:35.926 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:18:35.927 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:18:35.929 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:18:40.799 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:18:40.833 [INFO] [ball] BallOpen 调用
+2026-10-22 15:18:40.833 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:18:40.834 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:18:40.836 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:18:42.644 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:18:44.309 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:18:44.331 [INFO] [ball] BallOpen 调用
+2026-10-22 15:18:44.331 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:18:44.332 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:18:44.332 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:18:45.963 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:21:18.395 [INFO] [ball] 菜单选择: colorpicker
+2026-10-22 15:21:18.397 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560
+2026-10-22 15:24:59.685 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:24:59.707 [INFO] [ball] BallOpen 调用
+2026-10-22 15:24:59.707 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:24:59.708 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:24:59.708 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:25:16.628 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:25:16.650 [INFO] [ball] BallOpen 调用
+2026-10-22 15:25:16.650 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:25:16.651 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:25:16.651 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:25:36.203 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:25:36.228 [INFO] [ball] BallOpen 调用
+2026-10-22 15:25:36.228 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:25:36.229 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:25:36.230 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:27:36.283 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:28:32.394 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:28:32.415 [INFO] [ball] BallOpen 调用
+2026-10-22 15:28:32.416 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:28:32.416 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:28:32.416 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:29:00.716 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 15:32:28.490 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:32:28.510 [INFO] [ball] BallOpen 调用
+2026-10-22 15:32:28.510 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:32:28.511 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:32:28.511 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:33:19.821 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:33:19.844 [INFO] [ball] BallOpen 调用
+2026-10-22 15:33:19.844 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:33:19.844 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:33:19.844 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:33:22.835 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:33:22.856 [INFO] [ball] BallOpen 调用
+2026-10-22 15:33:22.856 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:33:22.856 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:33:22.857 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:33:34.681 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:33:34.705 [INFO] [ball] BallOpen 调用
+2026-10-22 15:33:34.705 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:33:34.706 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:33:34.707 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:33:37.292 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:33:37.314 [INFO] [ball] BallOpen 调用
+2026-10-22 15:33:37.314 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:33:37.314 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:33:37.316 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:33:50.403 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:33:50.424 [INFO] [ball] BallOpen 调用
+2026-10-22 15:33:50.424 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:33:50.424 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:33:50.424 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:34:27.684 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-22 15:35:18.184 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:35:18.205 [INFO] [ball] BallOpen 调用
+2026-10-22 15:35:18.205 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:35:18.206 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:35:18.206 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:35:27.263 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:35:27.288 [INFO] [ball] BallOpen 调用
+2026-10-22 15:35:27.288 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:35:27.288 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:35:27.289 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:42:21.169 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 15:42:21.194 [INFO] [ball] BallOpen 调用
+2026-10-22 15:42:21.194 [INFO] [tray] 系统托盘已创建
+2026-10-22 15:42:21.194 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 15:42:21.195 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 15:42:22.820 [INFO] [window] 新建窗口: /win/tools/redis (Redis管理) single=true fullscreen=true 1000x718
+2026-10-22 15:43:31.564 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 15:48:12.668 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:02:46.855 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:02:46.878 [INFO] [ball] BallOpen 调用
+2026-10-22 16:02:46.878 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:02:46.879 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:02:46.879 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:03:03.295 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:03:03.312 [INFO] [ball] BallOpen 调用
+2026-10-22 16:03:03.312 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:03:03.312 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:03:03.312 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:07:15.684 [INFO] [window] 新建窗口: /win/tools/screenshot (截图预览) single=true fullscreen=false 1000x718
+2026-10-22 16:12:50.487 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:12:50.512 [INFO] [ball] BallOpen 调用
+2026-10-22 16:12:50.513 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:12:50.513 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:12:50.515 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:13:01.668 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:13:09.386 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:13:09.413 [INFO] [ball] BallOpen 调用
+2026-10-22 16:13:09.413 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:13:09.414 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:13:09.415 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:13:12.460 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:13:12.494 [INFO] [ball] BallOpen 调用
+2026-10-22 16:13:12.494 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:13:12.495 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:13:12.497 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:13:15.635 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:13:15.659 [INFO] [ball] BallOpen 调用
+2026-10-22 16:13:15.659 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:13:15.660 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:13:15.661 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:13:19.630 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:13:29.609 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:13:29.629 [INFO] [ball] BallOpen 调用
+2026-10-22 16:13:29.629 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:13:29.630 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:13:29.630 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:13:57.767 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:13:57.792 [INFO] [ball] BallOpen 调用
+2026-10-22 16:13:57.794 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:13:57.797 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:13:57.797 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:14:02.604 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:14:16.040 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:14:16.064 [INFO] [ball] BallOpen 调用
+2026-10-22 16:14:16.064 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:14:16.065 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:14:16.065 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:14:21.517 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:14:21.556 [INFO] [ball] BallOpen 调用
+2026-10-22 16:14:21.558 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:14:21.560 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:14:21.560 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:14:26.436 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:14:40.200 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:14:40.223 [INFO] [ball] BallOpen 调用
+2026-10-22 16:14:40.223 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:14:40.223 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:14:40.223 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:15:03.333 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:15:03.369 [INFO] [ball] BallOpen 调用
+2026-10-22 16:15:03.369 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:15:03.369 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:15:03.373 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:15:06.255 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:15:06.275 [INFO] [ball] BallOpen 调用
+2026-10-22 16:15:06.275 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:15:06.277 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:15:06.278 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:15:08.428 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:15:19.805 [INFO] [window] 新建窗口: /win/tools/encdec (文字加密解密) single=false fullscreen=false 1000x718
+2026-10-22 16:15:24.803 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:15:24.817 [INFO] [ball] BallOpen 调用
+2026-10-22 16:15:24.817 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:15:24.823 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:15:24.823 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:15:30.256 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:15:30.277 [INFO] [ball] BallOpen 调用
+2026-10-22 16:15:30.277 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:15:30.279 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:15:30.279 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:15:45.699 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:15:45.723 [INFO] [ball] BallOpen 调用
+2026-10-22 16:15:45.723 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:15:45.724 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:15:45.724 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:15:47.983 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:15:48.002 [INFO] [ball] BallOpen 调用
+2026-10-22 16:15:48.002 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:15:48.002 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:15:48.003 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:15:58.276 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:15:58.302 [INFO] [ball] BallOpen 调用
+2026-10-22 16:15:58.302 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:15:58.302 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:15:58.303 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:16:00.558 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:16:00.581 [INFO] [ball] BallOpen 调用
+2026-10-22 16:16:00.581 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:16:00.582 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:16:00.582 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:16:36.795 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:16:36.836 [INFO] [ball] BallOpen 调用
+2026-10-22 16:16:36.836 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:16:36.837 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:16:36.838 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:16:39.116 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:16:39.136 [INFO] [ball] BallOpen 调用
+2026-10-22 16:16:39.136 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:16:39.136 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:16:39.137 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:16:43.573 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:17:26.284 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:18:20.457 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-22 16:18:43.774 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:18:43.774 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:18:43.775 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:18:43.775 [INFO] [ball] BallOpen 调用
+2026-10-22 16:18:50.118 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:18:50.119 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:18:50.119 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:18:50.119 [INFO] [ball] BallOpen 调用
+2026-10-22 16:18:56.870 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=false, autoStart=true）
+2026-10-22 16:18:56.870 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:18:56.871 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:18:56.871 [INFO] [ball] BallClose 调用
+2026-10-22 16:18:57.966 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:18:57.966 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:18:57.967 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:18:57.967 [INFO] [ball] BallOpen 调用
+2026-10-22 16:21:48.374 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:21:48.397 [INFO] [ball] BallOpen 调用
+2026-10-22 16:21:48.398 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:21:48.398 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:21:48.399 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:02.625 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:22:06.707 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:22:06.729 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:06.730 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:22:06.730 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:06.730 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:09.626 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:22:09.646 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:09.646 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:22:09.646 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:09.646 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:13.677 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:22:23.246 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:22:23.246 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:23.247 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:23.247 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:25.222 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:22:25.222 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:25.222 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:25.223 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:26.567 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=false, autoStart=true）
+2026-10-22 16:22:26.567 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:26.568 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:26.568 [INFO] [ball] BallClose 调用
+2026-10-22 16:22:27.525 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:22:27.526 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:27.526 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:27.526 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:36.771 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:22:36.794 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:36.795 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:36.948 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:22:36.948 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:39.038 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:22:41.838 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:22:41.862 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:41.863 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:22:42.033 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:22:42.034 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:22:59.952 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:22:59.974 [INFO] [ball] BallOpen 调用
+2026-10-22 16:22:59.976 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:23:00.130 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:23:00.130 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:23:05.629 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:23:17.321 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:23:17.340 [INFO] [ball] BallOpen 调用
+2026-10-22 16:23:17.340 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:23:17.469 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:23:17.470 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:23:20.029 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:24:11.887 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:24:11.887 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:11.888 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:11.888 [INFO] [ball] BallOpen 调用
+2026-10-22 16:24:17.079 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=false, autoStart=true）
+2026-10-22 16:24:17.079 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:17.079 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:17.079 [INFO] [ball] BallClose 调用
+2026-10-22 16:24:18.285 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:24:18.285 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:18.285 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:18.285 [INFO] [ball] BallOpen 调用
+2026-10-22 16:24:47.310 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:24:47.310 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:47.311 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:47.311 [INFO] [ball] BallOpen 调用
+2026-10-22 16:24:48.141 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=false, autoStart=true）
+2026-10-22 16:24:48.142 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:48.142 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:48.142 [INFO] [ball] BallClose 调用
+2026-10-22 16:24:49.005 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:24:49.005 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:49.005 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:49.005 [INFO] [ball] BallOpen 调用
+2026-10-22 16:24:50.151 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=false, autoStart=true）
+2026-10-22 16:24:50.151 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:50.152 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:50.152 [INFO] [ball] BallClose 调用
+2026-10-22 16:24:51.046 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:24:51.046 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:51.047 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:51.047 [INFO] [ball] BallOpen 调用
+2026-10-22 16:24:55.925 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:24:55.926 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:55.926 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:55.926 [INFO] [ball] BallOpen 调用
+2026-10-22 16:24:58.350 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=false, autoStart=true）
+2026-10-22 16:24:58.350 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:58.350 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:58.351 [INFO] [ball] BallClose 调用
+2026-10-22 16:24:59.487 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 16:24:59.487 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:24:59.488 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:24:59.488 [INFO] [ball] BallOpen 调用
+2026-10-22 16:25:18.951 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-22 16:25:58.825 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 16:25:59.897 [INFO] [ball] BallOpen 调用
+2026-10-22 16:25:59.897 [INFO] [tray] 系统托盘已创建
+2026-10-22 16:25:59.898 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 16:25:59.898 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 16:35:51.588 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-22 16:54:39.117 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 16:54:57.214 [INFO] [window] 新建窗口: /win/tools/timestamp (时间戳转换) single=false fullscreen=false 1000x718
+2026-10-22 16:55:04.301 [INFO] [window] 新建窗口: /win/tools/imageBase64 (图片base64) single=false fullscreen=false 1000x718
+2026-10-22 16:55:07.701 [INFO] [window] 新建窗口: /win/tools/sniffer (抓包工具) single=true fullscreen=true 1000x718
+2026-10-22 17:01:01.569 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-22 17:01:01.591 [INFO] [ball] BallOpen 调用
+2026-10-22 17:01:01.592 [INFO] [tray] 系统托盘已创建
+2026-10-22 17:01:01.593 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 17:01:01.593 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 17:02:01.063 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 17:02:08.614 [INFO] [config] 配置已保存: C:\Users\Administrator\AppData\Roaming\go-tools\config.json（日志目录: E:\go-tools-bak\Log, enabled=true level=info, ball=true, autoStart=true）
+2026-10-22 17:02:08.615 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-22 17:02:08.615 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-22 17:02:08.615 [INFO] [ball] BallOpen 调用
+2026-10-22 17:02:19.806 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 17:04:57.575 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
+2026-10-22 17:11:39.958 [INFO] [window] 新建窗口: /win/tools/colorpicker (颜色取色器) single=true fullscreen=false 480x560

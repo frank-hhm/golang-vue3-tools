@@ -26,11 +26,50 @@ import * as sniffer$0 from "./tools/sniffer/models.js";
 // @ts-ignore: Unused imports
 import * as usbserial$0 from "./tools/usbserial/models.js";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as $models from "./models.js";
+
 /**
- * ApplicationStartup 标记 App 为 Wails v3 服务，并在应用启动时注入上下文
+ * AppDataDir 返回程序目录下的数据子目录（不存在则创建），如 "videos" → <exedir>/data/videos；用作各类另存默认位置
  */
-export function ApplicationStartup(): $CancellablePromise<void> {
-    return $Call.ByID(328487970);
+export function AppDataDir(sub: string): $CancellablePromise<string> {
+    return $Call.ByID(3857306371, sub);
+}
+
+/**
+ * ApplyAppName 将当前配置的应用名应用到主窗口标题和托盘提示
+ */
+export function ApplyAppName(): $CancellablePromise<void> {
+    return $Call.ByID(1568084325);
+}
+
+/**
+ * BallClose 关闭桌面浮动球。
+ */
+export function BallClose(): $CancellablePromise<void> {
+    return $Call.ByID(1570563024);
+}
+
+/**
+ * BallOpen 打开桌面浮动球（Go 原生 Win32 分层窗口：真透明、置顶、可拖动、点击弹原生菜单）。幂等。
+ */
+export function BallOpen(): $CancellablePromise<void> {
+    return $Call.ByID(1871346252);
+}
+
+/**
+ * ChooseAppLogo 弹出文件选择器让用户选取 logo 图片，返回绝对路径
+ */
+export function ChooseAppLogo(): $CancellablePromise<string> {
+    return $Call.ByID(4251936116);
+}
+
+/**
+ * ChooseLogDir 弹出原生目录选择框，返回所选目录（取消返回空串）。
+ */
+export function ChooseLogDir(): $CancellablePromise<string> {
+    return $Call.ByID(3643058833);
 }
 
 /**
@@ -45,6 +84,20 @@ export function CloseConnection(): $CancellablePromise<void> {
  */
 export function ConnectionStatus(): $CancellablePromise<usbserial$0.ConnStatus> {
     return $Call.ByID(1883682691);
+}
+
+/**
+ * GetAppLogo 返回当前应用 logo 的 base64 PNG 字符串（自定义路径优先，否则内置默认）
+ */
+export function GetAppLogo(): $CancellablePromise<string> {
+    return $Call.ByID(1824660589);
+}
+
+/**
+ * GetConfig 返回当前应用配置（日志设置 + 工具列表）。
+ */
+export function GetConfig(): $CancellablePromise<$models.AppConfig> {
+    return $Call.ByID(1200034045);
 }
 
 /**
@@ -66,10 +119,24 @@ export function GetLocalIPs(): $CancellablePromise<string[] | null> {
 }
 
 /**
+ * GetLogDir 返回当前实际使用的日志目录。
+ */
+export function GetLogDir(): $CancellablePromise<string> {
+    return $Call.ByID(239023774);
+}
+
+/**
  * GetSerialPorts 获取系统串口列表
  */
 export function GetSerialPorts(): $CancellablePromise<usbserial$0.SerialDeviceInfo[] | null> {
     return $Call.ByID(2103145165);
+}
+
+/**
+ * GetSystemInfo 采集系统快照
+ */
+export function GetSystemInfo(): $CancellablePromise<$models.SystemInfo | null> {
+    return $Call.ByID(1347250254);
 }
 
 /**
@@ -213,6 +280,111 @@ export function MySQLSaveConnections(configs: mysql$0.ConnConfig[] | null): $Can
 }
 
 /**
+ * MySQLSrvAddLocal 注册本机已有的 MySQL 目录
+ */
+export function MySQLSrvAddLocal(dir: string): $CancellablePromise<void> {
+    return $Call.ByID(3342602428, dir);
+}
+
+/**
+ * MySQLSrvChooseDir 弹原生目录选择框（供添加本机 MySQL 目录），取消返回空串
+ */
+export function MySQLSrvChooseDir(): $CancellablePromise<string> {
+    return $Call.ByID(2319204130);
+}
+
+/**
+ * MySQLSrvInstall 异步下载安装 MySQL 版本
+ */
+export function MySQLSrvInstall(version: string): $CancellablePromise<void> {
+    return $Call.ByID(2347679393, version);
+}
+
+/**
+ * MySQLSrvListInstances 列出全部实例配置
+ */
+export function MySQLSrvListInstances(): $CancellablePromise<mysql$0.InstanceConfig[] | null> {
+    return $Call.ByID(1609957374);
+}
+
+/**
+ * MySQLSrvListVersions 聚合三渠道本地可用版本
+ */
+export function MySQLSrvListVersions(): $CancellablePromise<mysql$0.ServerVersion[] | null> {
+    return $Call.ByID(283692787);
+}
+
+/**
+ * MySQLSrvLogs 返回实例 mysql.err 尾部 n 行
+ */
+export function MySQLSrvLogs(id: string, lines: number): $CancellablePromise<string[] | null> {
+    return $Call.ByID(3816342449, id, lines);
+}
+
+/**
+ * MySQLSrvPluginsDir 返回插件目录 <exedir>/plugins/mysql，供前端展示指引
+ */
+export function MySQLSrvPluginsDir(): $CancellablePromise<string> {
+    return $Call.ByID(209295265);
+}
+
+/**
+ * MySQLSrvRemoteVersions 拉取线上可安装版本（dev.mysql.com 官方 zip）
+ */
+export function MySQLSrvRemoteVersions(): $CancellablePromise<mysql$0.RemoteVersion[] | null> {
+    return $Call.ByID(637129381);
+}
+
+/**
+ * MySQLSrvRemoveInstance 删除实例配置（运行中先停止）
+ */
+export function MySQLSrvRemoveInstance(id: string): $CancellablePromise<void> {
+    return $Call.ByID(1475106929, id);
+}
+
+/**
+ * MySQLSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+ */
+export function MySQLSrvRemoveVersion(version: string): $CancellablePromise<void> {
+    return $Call.ByID(4235695002, version);
+}
+
+/**
+ * MySQLSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+ */
+export function MySQLSrvSaveInstance(cfg: mysql$0.InstanceConfig): $CancellablePromise<void> {
+    return $Call.ByID(2607755196, cfg);
+}
+
+/**
+ * MySQLSrvStart 启动实例
+ */
+export function MySQLSrvStart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3582412490, id);
+}
+
+/**
+ * MySQLSrvStatus 实例运行状态
+ */
+export function MySQLSrvStatus(id: string): $CancellablePromise<mysql$0.InstanceStatus> {
+    return $Call.ByID(1195382044, id);
+}
+
+/**
+ * MySQLSrvStop 停止实例（SHUTDOWN + 兆底 Kill）
+ */
+export function MySQLSrvStop(id: string): $CancellablePromise<void> {
+    return $Call.ByID(786207210, id);
+}
+
+/**
+ * MySQLSrvSuggestPort 从 from 起探测可用端口
+ */
+export function MySQLSrvSuggestPort($from: number): $CancellablePromise<number> {
+    return $Call.ByID(2598097411, $from);
+}
+
+/**
  * MySQLTableData 分页浏览表数据
  */
 export function MySQLTableData(id: string, database: string, table: string, filter: string, orderBy: string, desc: boolean, page: number, size: number): $CancellablePromise<mysql$0.QueryResult> {
@@ -248,6 +420,13 @@ export function NotifyClose(): $CancellablePromise<void> {
 }
 
 /**
+ * OpenLogDir 在系统资源管理器中打开当前日志目录（Windows: explorer）。
+ */
+export function OpenLogDir(): $CancellablePromise<void> {
+    return $Call.ByID(743906492);
+}
+
+/**
  * OpenSerial 打开串口
  */
 export function OpenSerial(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
@@ -277,6 +456,13 @@ export function OpenToolWindow(path: string, title: string, single: boolean, ful
  */
 export function OpenUDP(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
     return $Call.ByID(91747768, cfg);
+}
+
+/**
+ * RealQuit 真正退出程序：置退出标志（使关闭钩子不再拦截）、销毁托盘，再终止应用。
+ */
+export function RealQuit(): $CancellablePromise<void> {
+    return $Call.ByID(1948158982);
 }
 
 /**
@@ -357,6 +543,111 @@ export function RedisSlowlog(id: string, count: number): $CancellablePromise<red
 }
 
 /**
+ * RedisSrvAddLocal 注册本机已有的 redis-server 目录
+ */
+export function RedisSrvAddLocal(dir: string): $CancellablePromise<void> {
+    return $Call.ByID(3532636163, dir);
+}
+
+/**
+ * RedisSrvChooseDir 弹原生目录选择框（供添加本机 Redis 目录），取消返回空串
+ */
+export function RedisSrvChooseDir(): $CancellablePromise<string> {
+    return $Call.ByID(1568752507);
+}
+
+/**
+ * RedisSrvInstall 异步安装版本，进度经 redis:install 事件推送
+ */
+export function RedisSrvInstall(version: string): $CancellablePromise<void> {
+    return $Call.ByID(1336020036, version);
+}
+
+/**
+ * RedisSrvListInstances 列出全部实例配置
+ */
+export function RedisSrvListInstances(): $CancellablePromise<redis$0.InstanceConfig[] | null> {
+    return $Call.ByID(1277741739);
+}
+
+/**
+ * RedisSrvListVersions 列出本地可用版本（内置/已下载/本机登记，按版本降序）
+ */
+export function RedisSrvListVersions(): $CancellablePromise<redis$0.ServerVersion[] | null> {
+    return $Call.ByID(3225526292);
+}
+
+/**
+ * RedisSrvLogs 返回实例最近 n 行日志
+ */
+export function RedisSrvLogs(id: string, lines: number): $CancellablePromise<string[] | null> {
+    return $Call.ByID(1820314170, id, lines);
+}
+
+/**
+ * RedisSrvRemoteVersions 拉取线上可安装版本（GitHub redis-windows，>=7.0）
+ */
+export function RedisSrvRemoteVersions(): $CancellablePromise<redis$0.RemoteVersion[] | null> {
+    return $Call.ByID(1540113966);
+}
+
+/**
+ * RedisSrvRemoveInstance 删除实例配置（运行中先停止）
+ */
+export function RedisSrvRemoveInstance(id: string): $CancellablePromise<void> {
+    return $Call.ByID(1307571134, id);
+}
+
+/**
+ * RedisSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+ */
+export function RedisSrvRemoveVersion(version: string): $CancellablePromise<void> {
+    return $Call.ByID(2046293835, version);
+}
+
+/**
+ * RedisSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+ */
+export function RedisSrvSaveInstance(cfg: redis$0.InstanceConfig): $CancellablePromise<void> {
+    return $Call.ByID(2275910527, cfg);
+}
+
+/**
+ * RedisSrvServersDir 返回离线/插件目录 <exedir>/plugins/redis（内置版本与离线 zip 放置位置），供前端展示指引
+ */
+export function RedisSrvServersDir(): $CancellablePromise<string> {
+    return $Call.ByID(4231935166);
+}
+
+/**
+ * RedisSrvStart 启动实例（隐藏窗口拉起 redis-server，日志经 redis:serverlog 事件推送）
+ */
+export function RedisSrvStart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(742057347, id);
+}
+
+/**
+ * RedisSrvStatus 实例运行状态（PING+INFO 实时探测）
+ */
+export function RedisSrvStatus(id: string): $CancellablePromise<redis$0.InstanceStatus> {
+    return $Call.ByID(51461331, id);
+}
+
+/**
+ * RedisSrvStop 停止实例（优雅 SHUTDOWN NOSAVE，兑底 Kill）
+ */
+export function RedisSrvStop(id: string): $CancellablePromise<void> {
+    return $Call.ByID(1903709969, id);
+}
+
+/**
+ * RedisSrvSuggestPort 从 from 起探测可用端口
+ */
+export function RedisSrvSuggestPort($from: number): $CancellablePromise<number> {
+    return $Call.ByID(3132540882, $from);
+}
+
+/**
  * RedisStartMonitor 开始监控命令（逐条通过 redis:monitor 事件推送）
  */
 export function RedisStartMonitor(cfg: redis$0.ConnConfig): $CancellablePromise<void> {
@@ -378,6 +669,13 @@ export function RedisStopMonitor(): $CancellablePromise<void> {
 }
 
 /**
+ * SaveConfig 保存配置：写入用户配置目录 JSON + 重新初始化日志器 + 热键重载 + 浮动球显隐；返回日志目录。
+ */
+export function SaveConfig(cfg: $models.AppConfig): $CancellablePromise<string> {
+    return $Call.ByID(3442292638, cfg);
+}
+
+/**
  * SendSerialHex 以 hex 字符串发送数据到当前连接对端，返回发送字节数
  */
 export function SendSerialHex(hexData: string): $CancellablePromise<number> {
@@ -392,10 +690,31 @@ export function SetApp(app: application$0.App | null): $CancellablePromise<void>
 }
 
 /**
+ * SetDefaultLogo 注入内置默认 logo 字节
+ */
+export function SetDefaultLogo(b: string | null): $CancellablePromise<void> {
+    return $Call.ByID(194857043, b);
+}
+
+/**
+ * SetMainWindow 注入主窗口句柄，供托盘“打开主界面”及关闭到托盘使用
+ */
+export function SetMainWindow(w: application$0.Window): $CancellablePromise<void> {
+    return $Call.ByID(843697430, w);
+}
+
+/**
  * SetSerialControlBits 实时切换串口 RTS / DTR 电平
  */
 export function SetSerialControlBits(rts: boolean, dtr: boolean): $CancellablePromise<void> {
     return $Call.ByID(1884079928, rts, dtr);
+}
+
+/**
+ * SetTrayIcon 注入托盘图标字节（PNG/ICO）
+ */
+export function SetTrayIcon(b: string | null): $CancellablePromise<void> {
+    return $Call.ByID(1374527510, b);
 }
 
 /**

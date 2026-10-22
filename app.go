@@ -15,11 +15,13 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 	"unsafe"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 	"golang.org/x/sys/windows"
 )
 
@@ -44,6 +46,13 @@ type App struct {
 
 	notifyMu  sync.Mutex
 	notifyWin application.Window // 系统风格通知卡片（屏幕右下角，驻留至手动关闭）
+
+	// 主窗口 + 系统托盘：关闭主窗口时隐藏到托盘，托盘右键提供“打开主界面/设置/退出”
+	mainWindow  application.Window // 主窗口句柄（由 main 注入）
+	trayIcon    []byte             // 托盘图标字节（PNG/ICO）
+	tray        *application.SystemTray
+	defaultLogo []byte      // 内置默认 logo PNG 字节
+	quitting    atomic.Bool // 为 true 时表示真正退出，关闭钩子不再拦截隐藏
 }
 
 // videoSaveSession 录制完成后分块上传的视频缓冲（用于原生“另存为”写盘）
@@ -69,15 +78,205 @@ func (a *App) SetApp(app *application.App) {
 	a.app = app
 }
 
+// SetMainWindow 注入主窗口句柄，供托盘“打开主界面”及关闭到托盘使用
+func (a *App) SetMainWindow(w application.Window) {
+	a.mainWindow = w
+}
+
+// SetTrayIcon 注入托盘图标字节（PNG/ICO）
+func (a *App) SetTrayIcon(b []byte) {
+	a.trayIcon = b
+}
+
+// SetDefaultLogo 注入内置默认 logo 字节
+func (a *App) SetDefaultLogo(b []byte) {
+	a.defaultLogo = b
+}
+
+// GetAppLogo 返回当前应用 logo 的 base64 PNG 字符串（自定义路径优先，否则内置默认）
+func (a *App) GetAppLogo() string {
+	cfg := CurrentConfig()
+	if cfg.General.AppLogo != "" {
+		if data, err := os.ReadFile(cfg.General.AppLogo); err == nil && len(data) > 0 {
+			return "data:image/png;base64," + base64.StdEncoding.EncodeToString(data)
+		}
+	}
+	if len(a.defaultLogo) > 0 {
+		return "data:image/png;base64," + base64.StdEncoding.EncodeToString(a.defaultLogo)
+	}
+	return ""
+}
+
+// ChooseAppLogo 弹出文件选择器让用户选取 logo 图片，返回绝对路径
+func (a *App) ChooseAppLogo() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	path, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(true).
+		CanChooseDirectories(false).
+		AllowsOtherFileTypes(true).
+		SetTitle("选择 Logo 图片").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+// ApplyAppName 将当前配置的应用名应用到主窗口标题和托盘提示
+func (a *App) ApplyAppName() {
+	cfg := CurrentConfig()
+	if a.mainWindow != nil {
+		a.mainWindow.SetTitle(cfg.General.AppName)
+	}
+	if a.tray != nil {
+		a.tray.SetTooltip(cfg.General.AppName)
+		// 更新托盘图标为当前 logo
+		logoData := a.getLogoBytes()
+		if len(logoData) > 0 {
+			a.tray.SetIcon(logoData)
+		}
+	}
+}
+
+// getLogoBytes 返回当前生效的 logo 字节（自定义路径优先，否则内置默认）
+func (a *App) getLogoBytes() []byte {
+	cfg := CurrentConfig()
+	if cfg.General.AppLogo != "" {
+		if data, err := os.ReadFile(cfg.General.AppLogo); err == nil && len(data) > 0 {
+			return data
+		}
+	}
+	return a.defaultLogo
+}
+
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// ApplicationStartup 标记 App 为 Wails v3 服务，并在应用启动时注入上下文
-func (a *App) ApplicationStartup(ctx context.Context) {
+// ServiceStartup Wails v3 (beta.12) 服务生命周期钩子：应用启动时由框架自动调用。
+// 注意：旧版 ApplicationStartup(ctx) 在 beta.12 中已不被识别，只有
+// ServiceStartup(ctx, options) error 会被 services.go 中的 ServiceStartup 接口断言命中；
+// 写错名字不会报错但永远不会被调用（热键/浮动球/托盘均依赖此入口）。
+func (a *App) ServiceStartup(ctx context.Context, options application.ServiceOptions) error {
 	a.startup(ctx)
+	// 启动全局热键（从 config 读取工具 Shortcut），a.app 已由 SetApp 注入
+	startHotKeys(a)
+	// 启动时按设置显示浮动球
+	if CurrentConfig().Ball.Enabled {
+		if err := a.BallOpen(); err != nil {
+			warnLogf("ball", "启动时显示浮动球失败: %v", err)
+		}
+	}
+	// 关闭主窗口时隐藏到托盘（不退出），并提供托盘右键菜单
+	a.setupCloseToTray()
+	a.setupTray()
+	// 开机自启：按配置同步注册（Enable 幂等，程序移动后也能修正旧路径）
+	if CurrentConfig().General.AutoStart {
+		a.applyAutoStart(true)
+	}
+	return nil
+}
+
+// ServiceShutdown 应用退出时停止所有由本程序拉起的本地服务实例（Redis + MySQL）。
+func (a *App) ServiceShutdown() error {
+	redis.StopAll()
+	mysql.StopAll()
+	return nil
+}
+
+// applyAutoStart 按设置同步开机自启注册（Windows：HKCU\...\Run 注册表键）。
+func (a *App) applyAutoStart(enabled bool) {
+	if a.app == nil {
+		return
+	}
+	var err error
+	if enabled {
+		err = a.app.Autostart.Enable()
+	} else {
+		err = a.app.Autostart.Disable()
+	}
+	if err != nil {
+		warnLogf("config", "设置开机自启失败(enabled=%v): %v", enabled, err)
+	} else {
+		opLogf("config", "开机自启已同步: enabled=%v", enabled)
+	}
+}
+
+/* ============================ 系统托盘 / 关闭到托盘 ============================ */
+
+// setupCloseToTray 为主窗口注册关闭钩子：非真正退出时，点“关闭”仅隐藏窗口到托盘。
+func (a *App) setupCloseToTray() {
+	if a.mainWindow == nil {
+		return
+	}
+	a.mainWindow.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
+		if a.quitting.Load() {
+			return // 真正退出：不拦截，走默认销毁
+		}
+		e.Cancel() // 取消默认关闭，仅隐藏到托盘
+		a.mainWindow.Hide()
+		opLogf("tray", "主窗口关闭请求已拦截：隐藏到托盘")
+	})
+}
+
+// setupTray 创建系统托盘图标及右键菜单（打开主界面 / 基本设置 / 退出）。
+func (a *App) setupTray() {
+	if a.app == nil {
+		return
+	}
+	tray := a.app.SystemTray.New()
+	if len(a.trayIcon) > 0 {
+		tray.SetIcon(a.trayIcon)
+	}
+	tray.SetTooltip(CurrentConfig().General.AppName)
+
+	menu := application.NewMenu()
+	menu.Add("打开主界面").OnClick(func(*application.Context) { a.showMainWindow() })
+	menu.Add("基本设置").OnClick(func(*application.Context) { a.openSettingsFromTray() })
+	menu.AddSeparator()
+	menu.Add("退出").OnClick(func(*application.Context) { a.RealQuit() })
+	tray.SetMenu(menu)
+
+	// 单击托盘图标：显示主窗口；保留右键菜单
+	tray.OnClick(func() { a.showMainWindow() })
+	a.tray = tray
+	opLogf("tray", "系统托盘已创建")
+}
+
+// showMainWindow 显示并聚焦主窗口（从托盘唤起）。
+func (a *App) showMainWindow() {
+	if a.mainWindow == nil {
+		return
+	}
+	a.mainWindow.Show()
+	a.mainWindow.UnMinimise()
+	a.mainWindow.Focus()
+}
+
+// openSettingsFromTray 从托盘打开“设置”（单例工具窗口）。
+// 注意：需走 /win 前缀的空白布局路由（BlankLayout 自绘标题栏+菜单栏），
+// 与前端 useToolWindow 的 "/win"+path 约定保持一致，否则新窗口没有原有菜单栏。
+func (a *App) openSettingsFromTray() {
+	if err := a.OpenToolWindow("/win/tools/settings", "设置", true, false, 0, 0); err != nil {
+		warnLogf("tray", "打开设置失败: %v", err)
+	}
+}
+
+// RealQuit 真正退出程序：置退出标志（使关闭钩子不再拦截）、销毁托盘，再终止应用。
+func (a *App) RealQuit() {
+	opLogf("tray", "托盘菜单：真正退出")
+	a.quitting.Store(true)
+	if a.tray != nil {
+		a.tray.Destroy()
+		a.tray = nil
+	}
+	if a.app != nil {
+		a.app.Quit()
+	}
 }
 
 // Greet returns a greeting for the given name
@@ -136,10 +335,12 @@ func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen 
 			w.Show()
 			w.UnMinimise()
 			w.Focus()
+			opLogf("window", "复用单例窗口: %s (%s)", path, title)
 			return nil
 		}
 		opts.Name = name
 	}
+	opLogf("window", "新建窗口: %s (%s) single=%v fullscreen=%v %dx%d", path, title, single, fullscreen, width, height)
 	a.app.Window.NewWithOptions(opts)
 	return nil
 }
@@ -381,6 +582,165 @@ func (a *App) RedisLoadConnections() ([]redis.ConnConfig, error) {
 // RedisConnectionsFilePath 返回配置文件路径
 func (a *App) RedisConnectionsFilePath() string {
 	return redis.ConnectionsFilePath()
+}
+
+/* ============================ Redis 本地服务管理 ============================ */
+
+// RedisSrvListVersions 列出本地可用版本（内置/已下载/本机登记，按版本降序）
+func (a *App) RedisSrvListVersions() ([]redis.ServerVersion, error) { return redis.ListVersions() }
+
+// RedisSrvRemoteVersions 拉取线上可安装版本（GitHub redis-windows，>=7.0）
+func (a *App) RedisSrvRemoteVersions() ([]redis.RemoteVersion, error) {
+	return redis.FetchRemoteVersions()
+}
+
+// RedisSrvInstall 异步安装版本，进度经 redis:install 事件推送
+func (a *App) RedisSrvInstall(version string) error { return redis.InstallVersion(version) }
+
+// RedisSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+func (a *App) RedisSrvRemoveVersion(version string) error { return redis.RemoveVersion(version) }
+
+// RedisSrvAddLocal 注册本机已有的 redis-server 目录
+func (a *App) RedisSrvAddLocal(dir string) error { return redis.AddLocalVersion(dir) }
+
+// RedisSrvChooseDir 弹原生目录选择框（供添加本机 Redis 目录），取消返回空串
+func (a *App) RedisSrvChooseDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	dir, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		AllowsOtherFileTypes(false).
+		SetTitle("选择 redis-server 所在目录").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// RedisSrvListInstances 列出全部实例配置
+func (a *App) RedisSrvListInstances() ([]redis.InstanceConfig, error) { return redis.ListInstances() }
+
+// RedisSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+func (a *App) RedisSrvSaveInstance(cfg redis.InstanceConfig) error { return redis.SaveInstance(cfg) }
+
+// RedisSrvRemoveInstance 删除实例配置（运行中先停止）
+func (a *App) RedisSrvRemoveInstance(id string) error { return redis.RemoveInstance(id) }
+
+// RedisSrvStart 启动实例（隐藏窗口拉起 redis-server，日志经 redis:serverlog 事件推送）
+func (a *App) RedisSrvStart(id string) error { return redis.StartInstance(id) }
+
+// RedisSrvStop 停止实例（优雅 SHUTDOWN NOSAVE，兑底 Kill）
+func (a *App) RedisSrvStop(id string) error { return redis.StopInstance(id) }
+
+// RedisSrvStatus 实例运行状态（PING+INFO 实时探测）
+func (a *App) RedisSrvStatus(id string) (redis.InstanceStatus, error) {
+	return redis.GetInstanceStatus(id)
+}
+
+// RedisSrvLogs 返回实例最近 n 行日志
+func (a *App) RedisSrvLogs(id string, lines int) ([]string, error) { return redis.Logs(id, lines) }
+
+// RedisSrvSuggestPort 从 from 起探测可用端口
+func (a *App) RedisSrvSuggestPort(from int) int { return redis.SuggestPort(from) }
+
+// RedisSrvServersDir 返回离线/插件目录 <exedir>/plugins/redis（内置版本与离线 zip 放置位置），供前端展示指引
+func (a *App) RedisSrvServersDir() string {
+	dir, err := redis.OfflineDir()
+	if err != nil {
+		return ""
+	}
+	return dir
+}
+
+/* ======================== MySQL 本地服务管理 ======================== */
+
+// MySQLSrvListVersions 聚合三渠道本地可用版本
+func (a *App) MySQLSrvListVersions() ([]mysql.ServerVersion, error) { return mysql.ListVersions() }
+
+// MySQLSrvRemoteVersions 拉取线上可安装版本（dev.mysql.com 官方 zip）
+func (a *App) MySQLSrvRemoteVersions() ([]mysql.RemoteVersion, error) {
+	return mysql.FetchRemoteVersions()
+}
+
+// MySQLSrvInstall 异步下载安装 MySQL 版本
+func (a *App) MySQLSrvInstall(version string) error { return mysql.InstallVersion(version) }
+
+// MySQLSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+func (a *App) MySQLSrvRemoveVersion(version string) error { return mysql.RemoveVersion(version) }
+
+// MySQLSrvAddLocal 注册本机已有的 MySQL 目录
+func (a *App) MySQLSrvAddLocal(dir string) error { return mysql.AddLocalVersion(dir) }
+
+// MySQLSrvChooseDir 弹原生目录选择框（供添加本机 MySQL 目录），取消返回空串
+func (a *App) MySQLSrvChooseDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	dir, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		AllowsOtherFileTypes(false).
+		SetTitle("选择 mysqld.exe 所在目录").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// MySQLSrvListInstances 列出全部实例配置
+func (a *App) MySQLSrvListInstances() ([]mysql.InstanceConfig, error) { return mysql.ListInstances() }
+
+// MySQLSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+func (a *App) MySQLSrvSaveInstance(cfg mysql.InstanceConfig) error { return mysql.SaveInstance(cfg) }
+
+// MySQLSrvRemoveInstance 删除实例配置（运行中先停止）
+func (a *App) MySQLSrvRemoveInstance(id string) error { return mysql.RemoveInstance(id) }
+
+// MySQLSrvStart 启动实例
+func (a *App) MySQLSrvStart(id string) error { return mysql.StartInstance(id) }
+
+// MySQLSrvStop 停止实例（SHUTDOWN + 兆底 Kill）
+func (a *App) MySQLSrvStop(id string) error { return mysql.StopInstance(id) }
+
+// MySQLSrvStatus 实例运行状态
+func (a *App) MySQLSrvStatus(id string) (mysql.InstanceStatus, error) {
+	return mysql.GetInstanceStatus(id)
+}
+
+// MySQLSrvLogs 返回实例 mysql.err 尾部 n 行
+func (a *App) MySQLSrvLogs(id string, lines int) ([]string, error) { return mysql.Logs(id, lines) }
+
+// MySQLSrvSuggestPort 从 from 起探测可用端口
+func (a *App) MySQLSrvSuggestPort(from int) int { return mysql.SuggestPort(from) }
+
+// MySQLSrvPluginsDir 返回插件目录 <exedir>/plugins/mysql，供前端展示指引
+func (a *App) MySQLSrvPluginsDir() string {
+	dir, err := mysql.PluginsDir()
+	if err != nil {
+		return ""
+	}
+	return dir
+}
+
+// AppDataDir 返回程序目录下的数据子目录（不存在则创建），如 "videos" → <exedir>/data/videos；用作各类另存默认位置
+func (a *App) AppDataDir(sub string) (string, error) {
+	exe, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("获取程序目录失败: %w", err)
+	}
+	sub = filepath.Base(filepath.FromSlash(strings.TrimSpace(sub)))
+	if sub == "" || sub == "." || sub == ".." {
+		return "", fmt.Errorf("非法数据子目录名")
+	}
+	dir := filepath.Join(filepath.Dir(exe), "data", sub)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	return dir, nil
 }
 
 /* ============================ MySQL 管理 ============================ */
@@ -734,6 +1094,115 @@ func (a *App) NotifyClose() {
 	a.notifyMu.Unlock()
 }
 
+/* ============================ 桌面浮动球（Go 原生 Win32 分层窗口） ============================ */
+
+// 浮动球原生菜单项动态来自 config 中标记为 Quick 的工具（见 ball_windows.go: ballQuickItems）。
+// 点击后由 handleBallAction 派发：工具类以 "ball:action" 事件交回主窗口，"close" 直接关窗。
+
+// BallOpen 打开桌面浮动球（Go 原生 Win32 分层窗口：真透明、置顶、可拖动、点击弹原生菜单）。幂等。
+func (a *App) BallOpen() error {
+	if a.app == nil {
+		return fmt.Errorf("应用尚未初始化")
+	}
+	opLogf("ball", "BallOpen 调用")
+	return errErr("ball", startNativeBall(a), "启动浮动球失败")
+}
+
+// BallClose 关闭桌面浮动球。
+func (a *App) BallClose() {
+	opLogf("ball", "BallClose 调用")
+	stopNativeBall()
+}
+
+// handleBallAction 处理浮动球菜单选择：close 直接关窗，其余以 "ball:action" 事件交回主窗口。
+func (a *App) handleBallAction(id string) {
+	opLogf("ball", "菜单选择: %s", id)
+	if id == "close" {
+		stopNativeBall()
+		return
+	}
+	if a.app == nil {
+		errLogf("ball", "处理菜单动作时 app 未初始化: %s", id)
+		return
+	}
+	a.app.Event.Emit("ball:action", id)
+}
+
+/* ============================ 配置与日志（供设置页调用） ============================ */
+
+// GetConfig 返回当前应用配置（日志设置 + 工具列表）。
+func (a *App) GetConfig() AppConfig {
+	return CurrentConfig()
+}
+
+// SaveConfig 保存配置：写入用户配置目录 JSON + 重新初始化日志器 + 热键重载 + 浮动球显隐；返回日志目录。
+func (a *App) SaveConfig(cfg AppConfig) (string, error) {
+	path, err := SaveAppConfig(cfg)
+	if err != nil {
+		errLogf("config", "保存配置失败: %v", err)
+		return "", err
+	}
+	logDir := InitLogger(cfg.Log)
+	opLogf("config", "配置已保存: %s（日志目录: %s, enabled=%v level=%s, ball=%v, autoStart=%v）", path, logDir, cfg.Log.Enabled, cfg.Log.Level, cfg.Ball.Enabled, cfg.General.AutoStart)
+	// 热键可能变更：请求热键线程按新配置重载
+	reloadHotKeys()
+	// 开机自启随设置即时生效（Enable/Disable 均幂等）
+	a.applyAutoStart(cfg.General.AutoStart)
+	// 浮动球显隐随设置变更即时生效
+	if cfg.Ball.Enabled {
+		if err := a.BallOpen(); err != nil {
+			warnLogf("ball", "按设置显示浮动球失败: %v", err)
+		}
+	} else {
+		a.BallClose()
+	}
+	return logDir, nil
+}
+
+// ChooseLogDir 弹出原生目录选择框，返回所选目录（取消返回空串）。
+func (a *App) ChooseLogDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	dir, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		AllowsOtherFileTypes(false).
+		SetTitle("选择日志目录").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// GetLogDir 返回当前实际使用的日志目录。
+func (a *App) GetLogDir() string {
+	cfg := CurrentConfig()
+	if p := strings.TrimSpace(cfg.Log.Path); p != "" {
+		if st, err := os.Stat(p); err == nil && !st.IsDir() {
+			return filepath.Dir(p)
+		}
+		return p
+	}
+	return defaultLogDir()
+}
+
+// OpenLogDir 在系统资源管理器中打开当前日志目录（Windows: explorer）。
+func (a *App) OpenLogDir() error {
+	dir := a.GetLogDir()
+	if _, err := os.Stat(dir); err != nil {
+		_ = os.MkdirAll(dir, 0o755)
+	}
+	cmd := exec.Command("explorer.exe", dir)
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	if err := cmd.Start(); err != nil {
+		errLogf("log", "打开日志目录失败: %v", err)
+		return err
+	}
+	return nil
+}
+
 /* ---------------- 系统通知中心（Windows 原生 Toast） ---------------- */
 
 // toastPSScript 通过环境变量 TOAST_TITLE / TOAST_CONTENT 发送 WinRT Toast 的
@@ -825,6 +1294,10 @@ func (a *App) VideoSavePrompt(session string) (string, error) {
 		SetMessage("另存录制视频").
 		AddFilter("视频文件 (*."+ext+")", "*."+ext).
 		AddFilter("所有文件 (*.*)", "*.*")
+	// 默认落在程序目录下 data/videos（创建失败则不设定，退回系统默认位置）
+	if dir, derr := a.AppDataDir("videos"); derr == nil {
+		dlg = dlg.SetDirectory(dir)
+	}
 	a.recMu.Lock()
 	parent := a.recToolWin // 小窗停止后已关闭，另存对话框挂在工具窗上
 	a.recMu.Unlock()

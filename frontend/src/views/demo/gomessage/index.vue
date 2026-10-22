@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <layout-body title="Go 消息提示 Demo">
     <a-card class="demo-card">
       <a-space direction="vertical" fill :size="16" style="max-width: 640px">
@@ -96,7 +96,7 @@ function fromWeb(level: string) {
 .demo-card {
   min-width: 820px;
   min-height: 400px;
-  background: #fff;
+  background: var(--color-bg-2);
   margin-bottom: 16px;
 }
 

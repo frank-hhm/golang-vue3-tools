@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <layout-body title="WebSocket调试">
         <!-- 连接配置 -->
         <a-card class="tool-card">
@@ -264,7 +264,7 @@ const detailLines = computed(() => {
 const dirIcon = (d: MsgDir) =>
     ({ in: "icon-arrow-down", out: "icon-arrow-up", sys: "icon-check-circle", err: "icon-close-circle" }[d]);
 const dirIconColor = (d: MsgDir) =>
-    ({ in: "rgb(var(--primary-6))", out: "#00b42a", sys: "#00b42a", err: "#f53f3f" }[d]);
+    ({ in: "rgb(var(--primary-6))", out: "rgb(var(--green-6))", sys: "rgb(var(--green-6))", err: "rgb(var(--red-6))" }[d]);
 
 /** 列表行预览：单行摘要 */
 const preview = (m: WsMsg) => {
@@ -439,12 +439,12 @@ onUnmounted(() => {
 }
 
 .stat {
-    color: #4e5969;
+    color: var(--color-text-2);
     font-size: 13px;
 }
 
 .stat b {
-    color: #1d2129;
+    color: var(--color-text-1);
     font-variant-numeric: tabular-nums;
 }
 
@@ -453,14 +453,14 @@ onUnmounted(() => {
 }
 
 .stat b.out {
-    color: #00b42a;
+    color: rgb(var(--green-6));
 }
 
 .switch-item {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: #4e5969;
+    color: var(--color-text-2);
     font-size: 13px;
 }
 
@@ -479,7 +479,7 @@ onUnmounted(() => {
     flex: 0 0 46%;
     display: flex;
     flex-direction: column;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     overflow: hidden;
     min-width: 0;
@@ -490,7 +490,7 @@ onUnmounted(() => {
     align-items: center;
     gap: 8px;
     padding: 8px;
-    border-bottom: 1px solid #e5e6eb;
+    border-bottom: 1px solid var(--color-border-2);
 }
 
 .search-input {
@@ -509,7 +509,7 @@ onUnmounted(() => {
     gap: 8px;
     padding: 8px 10px;
     cursor: pointer;
-    border-bottom: 1px solid #f2f3f5;
+    border-bottom: 1px solid var(--color-border-1);
     font-size: 13px;
 }
 
@@ -529,7 +529,7 @@ onUnmounted(() => {
 .row-text {
     flex: 1;
     min-width: 0;
-    color: #1d2129;
+    color: var(--color-text-1);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -537,13 +537,13 @@ onUnmounted(() => {
 
 .row-time {
     flex: 0 0 auto;
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 12px;
     font-variant-numeric: tabular-nums;
 }
 
 .msg-empty {
-    color: #86909c;
+    color: var(--color-text-3);
     text-align: center;
     padding: 40px 0;
     font-size: 13px;
@@ -553,7 +553,7 @@ onUnmounted(() => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--color-border-2);
     border-radius: 8px;
     overflow: hidden;
     min-width: 0;
@@ -564,11 +564,11 @@ onUnmounted(() => {
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    border-bottom: 1px solid #e5e6eb;
+    border-bottom: 1px solid var(--color-border-2);
 }
 
 .detail-time {
-    color: #86909c;
+    color: var(--color-text-3);
     font-size: 12px;
 }
 
@@ -590,7 +590,7 @@ onUnmounted(() => {
     flex: 0 0 44px;
     text-align: right;
     padding-right: 12px;
-    color: #6b7280;
+    color: var(--color-text-3);
     user-select: none;
 }
 

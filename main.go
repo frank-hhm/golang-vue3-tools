@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"go-tools/tools/mysql"
 	"go-tools/tools/redis"
 	"go-tools/tools/screenshot"
 	"go-tools/tools/sniffer"
@@ -21,6 +22,16 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// 默认应用 logo
+//
+//go:embed logo.png
+var defaultLogoPNG []byte
+
+// 托盘图标（Windows 支持 PNG/ICO 字节）
+//
+//go:embed build/windows/icon.ico
+var trayIconData []byte
+
 func init() {
 	// Register a custom event whose associated data type is string.
 	// This is not required, but the binding generator will pick up registered events
@@ -30,13 +41,23 @@ func init() {
 	application.RegisterEvent[usbserial.SerialData]("serial:data")
 	application.RegisterEvent[usbserial.ConnStatusEvent]("serial:status")
 	application.RegisterEvent[redis.MonitorLine]("redis:monitor")
+	application.RegisterEvent[redis.InstallProgress]("redis:install")
+	application.RegisterEvent[redis.ServerLogLine]("redis:serverlog")
 	application.RegisterEvent[string]("video:saved")
 	application.RegisterEvent[string]("video:cmd")
 	application.RegisterEvent[VideoStatus]("video:status")
 	application.RegisterEvent[UIMessage]("ui:message")
+	application.RegisterEvent[string]("ball:action")
+	application.RegisterEvent[string]("tool:activate")
+	application.RegisterEvent[mysql.InstallProgress]("mysql:install")
 }
 
 func main() {
+	// 加载全局配置（用户配置目录 config.json）并初始化可配置文件日志
+	startupCfg := LoadAppConfig()
+	logDir := InitLogger(startupCfg.Log)
+	opLogf("app", "=== go-tools 启动 === 日志目录: %s (enabled=%v level=%s)", logDir, startupCfg.Log.Enabled, startupCfg.Log.Level)
+
 	// Create an instance of the app structure
 	appInstance := NewApp()
 	// Create a new Wails application by providing the necessary options.
@@ -81,13 +102,18 @@ func main() {
 		app.Event.Emit(name, data...)
 	})
 
+	// 注入事件发射器，使 mysql 包可将安装进度实时推送给前端
+	mysql.SetEmitter(func(name string, data ...any) {
+		app.Event.Emit(name, data...)
+	})
+
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.
 	// 'Mac' options tailor the window when running on macOS.
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title: "Window 1",
+	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title: startupCfg.General.AppName,
 		// Window sized to the golden ratio (1000 / 618 ≈ 1.618).
 		Width:  1000,
 		Height: 718,
@@ -99,6 +125,11 @@ func main() {
 		BackgroundColour: application.NewRGB(6, 7, 15),
 		URL:              "/",
 	})
+
+	// 注入主窗口与托盘图标：关闭主窗口时隐藏到托盘而非退出，托盘右键提供“设置/退出”
+	appInstance.SetMainWindow(mainWindow)
+	appInstance.SetTrayIcon(trayIconData)
+	appInstance.SetDefaultLogo(defaultLogoPNG)
 
 	// Create a goroutine that emits an event containing the current time every second.
 	// The frontend can listen to this event and update the UI accordingly.

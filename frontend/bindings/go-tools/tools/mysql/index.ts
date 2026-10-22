@@ -6,8 +6,13 @@ export type {
     ColumnInfo,
     ConnConfig,
     IndexInfo,
+    InstallProgress,
+    InstanceConfig,
+    InstanceStatus,
     QueryResult,
+    RemoteVersion,
     RoutineInfo,
+    ServerVersion,
     TableInfo,
     TableSchema,
     ViewInfo

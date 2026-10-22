@@ -182,26 +182,26 @@ const copyText = async (text: string) => {
 
 <style scoped>
 .tool-card {
-    margin-bottom: 16px;
+    margin-bottom: var(--base-space-lg)$3
 }
 
 .form-row {
-    margin-bottom: 12px;
+    margin-bottom: var(--base-margin)$3
 }
 
 .lbl {
-    color: #4e5969;
-    font-size: 14px;
+    color: var(--color-text-2);
+    font-size: var(--base-size-default);
 }
 
 .tilde {
     text-align: center;
-    color: #86909c;
+    color: var(--color-text-3);
 }
 
 .field-label {
-    color: #4e5969;
-    font-size: 13px;
-    margin-bottom: 6px;
+    color: var(--color-text-2);
+    font-size: var(--base-size-medium);
+    margin-bottom: var(--base-space-sm)$3
 }
 </style>

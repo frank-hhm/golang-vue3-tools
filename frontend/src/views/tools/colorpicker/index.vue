@@ -1,34 +1,34 @@
-<template>
-    <layout-body title="颜色取色器">
+﻿<template>
+    <layout-body title="棰滆壊鍙栬壊鍣?>
         <div class="cp">
-            <!-- 顶部：从屏幕取色 + 选项 -->
+            <!-- 椤堕儴锛氫粠灞忓箷鍙栬壊 + 閫夐」 -->
             <div class="cp-top">
                 <a-button type="outline" @click="pickFromScreen">
-                    <template #icon><icon-eye /></template>从屏幕取色
+                    <template #icon><icon-eye /></template>浠庡睆骞曞彇鑹?
                 </a-button>
                 <div class="cp-opts">
-                    <a-checkbox v-model="autoCopy">自动将所选颜色复制到剪贴板</a-checkbox>
+                    <a-checkbox v-model="autoCopy">鑷姩灏嗘墍閫夐鑹插鍒跺埌鍓创鏉?/a-checkbox>
                 </div>
             </div>
 
             <div class="cp-main">
-                <!-- 左：饱和度/明度方块 -->
+                <!-- 宸︼細楗卞拰搴?鏄庡害鏂瑰潡 -->
                 <div class="cp-sv-wrap">
                     <div ref="svEl" class="cp-sv" :style="svStyle" @pointerdown="onSvDown">
                         <div class="cp-marker" :style="svMarkerStyle"></div>
                     </div>
                 </div>
 
-                <!-- 中：色相条 -->
+                <!-- 涓細鑹茬浉鏉?-->
                 <div ref="hueEl" class="cp-hue" @pointerdown="onHueDown">
                     <div class="cp-hue-marker" :style="hueMarkerStyle"></div>
                 </div>
 
-                <!-- 右：数值面板 -->
+                <!-- 鍙筹細鏁板€奸潰鏉?-->
                 <div class="cp-panel">
                     <div class="cp-swatches">
-                        <div class="cp-swatch" :style="{ background: hexColor }" title="新颜色"></div>
-                        <div class="cp-swatch" :style="{ background: oldColor }" title="原颜色"></div>
+                        <div class="cp-swatch" :style="{ background: hexColor }" title="鏂伴鑹?></div>
+                        <div class="cp-swatch" :style="{ background: oldColor }" title="鍘熼鑹?></div>
                     </div>
 
                     <div class="cp-grid">
@@ -70,12 +70,12 @@
 
                     <div class="cp-modes">
                         <span class="cp-mode-active">
-                            H: {{ hsv.h }}°&nbsp;&nbsp;S: {{ hsv.s }}%&nbsp;&nbsp;V: {{ hsv.v }}%
+                            H: {{ hsv.h }}掳&nbsp;&nbsp;S: {{ hsv.s }}%&nbsp;&nbsp;V: {{ hsv.v }}%
                         </span>
                     </div>
                     <div class="cp-modes">
                         <span class="cp-mode-sub">
-                            H: {{ hsl.h }}°&nbsp;&nbsp;S: {{ hsl.s }}%&nbsp;&nbsp;L: {{ hsl.l }}%
+                            H: {{ hsl.h }}掳&nbsp;&nbsp;S: {{ hsl.s }}%&nbsp;&nbsp;L: {{ hsl.l }}%
                         </span>
                     </div>
 
@@ -103,7 +103,7 @@
 import { computed, getCurrentInstance, reactive, ref } from "vue";
 import { Message } from "@arco-design/web-vue";
 
-/* ============ 颜色模型：以 HSV 为主，派生其余格式 ============ */
+/* ============ 棰滆壊妯″瀷锛氫互 HSV 涓轰富锛屾淳鐢熷叾浣欐牸寮?============ */
 const hsv = reactive({ h: 173, s: 86, v: 11 });
 const oldColor = ref("#000000");
 const autoCopy = ref(false);
@@ -183,7 +183,7 @@ const htmlHex = computed(() => hexColor.value);
 const bgrHex = computed(() => `${toHex2(rgb.value.b)}${toHex2(rgb.value.g)}${toHex2(rgb.value.r)}`);
 const rgbStr = computed(() => `${rgb.value.r},${rgb.value.g},${rgb.value.b}`);
 
-/* ============ 编辑入口 ============ */
+/* ============ 缂栬緫鍏ュ彛 ============ */
 function setChannel(ch: "r" | "g" | "b", val: number) {
     const cur = { ...rgb.value };
     cur[ch] = clamp(Math.round(val || 0), 0, 255);
@@ -191,7 +191,7 @@ function setChannel(ch: "r" | "g" | "b", val: number) {
     hsv.h = nh.h; hsv.s = nh.s; hsv.v = nh.v;
 }
 
-/* ============ 取色方块 / 色相条交互 ============ */
+/* ============ 鍙栬壊鏂瑰潡 / 鑹茬浉鏉′氦浜?============ */
 const svEl = ref<HTMLElement | null>(null);
 const hueEl = ref<HTMLElement | null>(null);
 let draggingSV = false;
@@ -251,7 +251,7 @@ function onHueDown(e: PointerEvent) {
     e.preventDefault();
 }
 
-/* ============ 剪贴板 & 屏幕取色 ============ */
+/* ============ 鍓创鏉?& 灞忓箷鍙栬壊 ============ */
 const {
     proxy: { $GoTools },
 } = getCurrentInstance() as any;
@@ -259,13 +259,13 @@ const {
 async function copyText(t: string) {
     try {
         await navigator.clipboard.writeText(t);
-        Message.success("已复制 " + t);
+        Message.success("宸插鍒?" + t);
     } catch {
-        Message.error("复制失败");
+        Message.error("澶嶅埗澶辫触");
     }
 }
 
-/** 将取到的颜色应用到当前选色，并按需自动复制 */
+/** 灏嗗彇鍒扮殑棰滆壊搴旂敤鍒板綋鍓嶉€夎壊锛屽苟鎸夐渶鑷姩澶嶅埗 */
 function applyPickedHex(hex: string) {
     oldColor.value = hexColor.value;
     const c = hexToRgb(hex);
@@ -277,28 +277,28 @@ function applyPickedHex(hex: string) {
 }
 
 async function pickFromScreen() {
-    // 优先：后端原生取色覆盖层（冻结屏幕+放大镜，单击取色）。
+    // 浼樺厛锛氬悗绔師鐢熷彇鑹茶鐩栧眰锛堝喕缁撳睆骞?鏀惧ぇ闀滐紝鍗曞嚮鍙栬壊锛夈€?
     if (typeof $GoTools?.PickColorFromScreen === "function") {
         try {
             const hex = await $GoTools.PickColorFromScreen();
             if (hex) applyPickedHex(hex);
         } catch (err) {
-            console.error("屏幕取色失败:", err);
-            Message.error("屏幕取色失败: " + err);
+            console.error("灞忓箷鍙栬壊澶辫触:", err);
+            Message.error("灞忓箷鍙栬壊澶辫触: " + err);
         }
         return;
     }
-    // 回退：Chromium EyeDropper（由本窗口承载）
+    // 鍥為€€锛欳hromium EyeDropper锛堢敱鏈獥鍙ｆ壙杞斤級
     const ED = (window as any).EyeDropper;
     if (typeof ED !== "function") {
-        Message.warning("当前环境不支持屏幕取色（需 WebView2 / Chrome 95+）");
+        Message.warning("褰撳墠鐜涓嶆敮鎸佸睆骞曞彇鑹诧紙闇€ WebView2 / Chrome 95+锛?);
         return;
     }
     try {
         const res = await new ED().open();
         if (res && res.sRGBHex) applyPickedHex(res.sRGBHex);
     } catch {
-        /* 用户按 ESC 取消取色，静默处理 */
+        /* 鐢ㄦ埛鎸?ESC 鍙栨秷鍙栬壊锛岄潤榛樺鐞?*/
     }
 }
 </script>
@@ -308,7 +308,7 @@ async function pickFromScreen() {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: 4px;
+    padding: var(--base-space-xs)$3
 }
 
 .cp-top {
@@ -316,18 +316,18 @@ async function pickFromScreen() {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--base-space-ml);
 }
 
 .cp-opts {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--base-space-sm);
 }
 
 .cp-main {
     display: flex;
-    gap: 12px;
+    gap: var(--base-margin);
     align-items: stretch;
 }
 
@@ -340,7 +340,7 @@ async function pickFromScreen() {
     position: relative;
     width: 100%;
     height: 260px;
-    border-radius: 6px;
+    border-radius: var(--base-radius-default);
     border: 1px solid var(--color-border-2);
     cursor: crosshair;
     touch-action: none;
@@ -361,7 +361,7 @@ async function pickFromScreen() {
     position: relative;
     width: 18px;
     height: 260px;
-    border-radius: 6px;
+    border-radius: var(--base-radius-default);
     cursor: pointer;
     touch-action: none;
     background: linear-gradient(to bottom,
@@ -376,7 +376,7 @@ async function pickFromScreen() {
     height: 4px;
     background: #fff;
     border: 1px solid #999;
-    border-radius: 2px;
+    border-radius: var(--base-radius-small);
     transform: translateY(-50%);
     pointer-events: none;
 }
@@ -385,14 +385,14 @@ async function pickFromScreen() {
     width: 210px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--base-space-ml);
 }
 
 .cp-swatches {
     display: flex;
     gap: 0;
     border: 1px solid var(--color-border-2);
-    border-radius: 4px;
+    border-radius: var(--base-radius-medium);
     overflow: hidden;
     height: 40px;
 }
@@ -404,20 +404,20 @@ async function pickFromScreen() {
 .cp-grid {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--base-space-sm);
 }
 
 .cp-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--base-space-sm);
 }
 
 .cp-row label {
     width: 34px;
     text-align: right;
     color: var(--color-text-2);
-    font-size: 13px;
+    font-size: var(--base-size-medium);
 }
 
 .cp-tag {
@@ -426,7 +426,7 @@ async function pickFromScreen() {
 
 .cp-pct {
     color: var(--color-text-3);
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .cp-ro :deep(.arco-input-element) {
@@ -434,7 +434,7 @@ async function pickFromScreen() {
 }
 
 .cp-modes {
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .cp-mode-active {
@@ -449,9 +449,9 @@ async function pickFromScreen() {
 .cp-out {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--base-space-sm);
     border-top: 1px dashed var(--color-border-2);
-    padding-top: 8px;
+    padding-top: var(--base-space-md)$3
 }
 
 .cp-out .cp-row label {

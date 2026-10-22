@@ -87,7 +87,7 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
 
 .tb-title {
     padding-left: 14px;
-    font-size: 13px;
+    font-size: var(--base-size-medium);
     font-weight: bold;
 }
 
@@ -101,18 +101,18 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
 .tb-menu {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--base-space-xs);
     height: 40px;
     padding: 0 14px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: var(--base-size-medium);
 }
 .tb-menu:hover {
     background: rgba(255, 255, 255, 0.12);
 }
 
 .tb-caret {
-    font-size: 12px;
+    font-size: var(--base-size-small);
 }
 
 .tb-btn {
@@ -122,13 +122,13 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--base-size-default);
 }
 .tb-btn:hover {
     background: rgba(255, 255, 255, 0.12);
 }
 .tb-close:hover {
-    background: #f53f3f;
+    background: rgb(var(--red-6));
     color: #fff;
 }
 

@@ -3,11 +3,17 @@
 
 export type {
     ConnConfig,
+    InstallProgress,
+    InstanceConfig,
+    InstanceStatus,
     KeyInfo,
     KeyValue,
     MonitorLine,
+    RemoteVersion,
     ScanResult,
+    ServerLogLine,
     ServerStatus,
+    ServerVersion,
     SlowlogEntry,
     ZItem
 } from "./models.js";

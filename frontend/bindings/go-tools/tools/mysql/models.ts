@@ -75,6 +75,56 @@ export interface IndexInfo {
 }
 
 /**
+ * InstallProgress 版本安装进度事件负载（stage 语义与 redis 一致）
+ */
+export interface InstallProgress {
+    "version": string;
+
+    /**
+     * info|downloading|extracting|done|error
+     */
+    "stage": string;
+    "percent": number;
+    "note": string;
+}
+
+/**
+ * InstanceConfig 本地实例配置
+ */
+export interface InstanceConfig {
+    "id": string;
+    "name": string;
+    "version": string;
+    "port": number;
+    "rootPassword": string;
+
+    /**
+     * <=0 用 mysql 默认 151
+     */
+    "maxConnections": number;
+}
+
+/**
+ * InstanceStatus 实例运行状态（TCP 探测 + SHOW STATUS 聚合）
+ */
+export interface InstanceStatus {
+    "id": string;
+    "name": string;
+    "version": string;
+    "port": number;
+    "running": boolean;
+
+    /**
+     * 本进程拉起的才有；孤儿进程为 0
+     */
+    "pid": number;
+    "uptimeSeconds": number;
+    "threadsConnected": number;
+    "threadsRunning": number;
+    "maxConnections": number;
+}
+
+/**
  * QueryResult 通用查询/执行结果。
  */
 export interface QueryResult {
@@ -91,6 +141,15 @@ export interface QueryResult {
 }
 
 /**
+ * RemoteVersion 线上可安装版本
+ */
+export interface RemoteVersion {
+    "version": string;
+    "url": string;
+    "size": number;
+}
+
+/**
  * RoutineInfo 函数/存储过程信息。
  */
 export interface RoutineInfo {
@@ -103,6 +162,26 @@ export interface RoutineInfo {
     "returnType": string;
     "comment": string;
     "definition": string;
+}
+
+/**
+ * ServerVersion 本地可用的一个 MySQL 版本
+ */
+export interface ServerVersion {
+    /**
+     * 如 8.4.6
+     */
+    "version": string;
+
+    /**
+     * mysqld.exe 完整路径
+     */
+    "path": string;
+
+    /**
+     * bundled | downloaded | local
+     */
+    "source": string;
 }
 
 /**

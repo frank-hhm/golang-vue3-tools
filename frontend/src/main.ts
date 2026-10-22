@@ -10,6 +10,7 @@ import "@/styles/index.scss"
 
 import * as Utils from '@/utils'
 import { setupGoMessage } from '@/utils/gomessage'
+import { initTheme, syncThemeFromConfig } from '@/utils/theme'
 import * as GoToolsBindings from "bindings/go-tools/index";
 import { ScreenshotService as GoScreenshot } from "bindings/go-tools/tools/screenshot/index";
 
@@ -36,6 +37,11 @@ app.config.globalProperties.$GoTools = {
 
 router.isReady().then(() => {
     app.mount("#app")
+    // 主题：同步应用本地记忆（多窗口即时同步），再用后端配置作为首次运行回退
+    initTheme()
+    GoToolsBindings.App.GetConfig?.()
+        .then((cfg: any) => syncThemeFromConfig(cfg?.general?.theme))
+        .catch(() => { /* */ })
 }).catch(err => {
     console.log(err)
 })

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="toast" :class="level">
     <span class="ic">{{ iconChar }}</span>
     <div class="msg">{{ text }}</div>
@@ -48,9 +48,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 14px;
+  padding: 0 var(--base-padding);
   background: #fff;
-  border-radius: 8px;
+  border-radius: var(--base-radius-large);
   border: 1px solid #e5e6eb;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   overflow: hidden;
@@ -60,13 +60,13 @@ onUnmounted(() => {
   -webkit-app-region: drag;
 }
 .ic {
-  font-size: 18px;
+  font-size: var(--base-size-large);
   font-weight: 700;
   flex: none;
 }
 .msg {
   flex: 1;
-  font-size: 13px;
+  font-size: var(--base-size-small);
   color: #1d2129;
   line-height: 1.4;
   display: -webkit-box;
@@ -78,8 +78,8 @@ onUnmounted(() => {
   flex: none;
   color: #86909c;
   cursor: pointer;
-  font-size: 12px;
-  padding: 4px;
+  font-size: var(--base-size-small);
+  padding: var(--base-radius-small);
   app-region: no-drag;
   -webkit-app-region: no-drag;
 }
