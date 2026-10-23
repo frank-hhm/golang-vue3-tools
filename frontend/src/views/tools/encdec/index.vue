@@ -1,45 +1,65 @@
 <template>
-    <layout-body title="文字加密解密">
-        <!-- 输入区 -->
-        <a-card class="tool-card">
-            <div class="field-label">输入文本</div>
-            <a-textarea v-model="input" :auto-size="{ minRows: 8, maxRows: 16 }" placeholder="请输入待处理的文字"
-                allow-clear />
-        </a-card>
-
-        <!-- 操作按钮 -->
-        <a-card class="tool-card">
-            <a-space wrap :size="12">
-                <a-button v-for="op in operations" :key="op.label" type="outline" status="success"
-                    @click="run(op.fn)">
-                    {{ op.label }}
-                </a-button>
-            </a-space>
-        </a-card>
-
-        <!-- 结果区 -->
-        <a-card class="tool-card">
-            <a-row justify="space-between" align="center" class="form-row">
-                <a-col>
-                    <div class="field-label">转换结果</div>
+    <a-row class="enc-page" :gutter="6">
+        <!-- 左侧约 25%：输入（上50%）+ 操作列表（下50%） -->
+        <a-col :span="6" class="side-col">
+            <a-row class="side-pages">
+                <a-col class="side-cols" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>输入文本</template>
+                        <template #extra>
+                            <a-tag size="small">{{ input.length }} 字符</a-tag>
+                        </template>
+                        <div class="panel-body">
+                            <a-textarea v-model="input" class="fill-textarea" placeholder="请输入待处理的文字"
+                                allow-clear />
+                        </div>
+                    </a-card>
                 </a-col>
-                <a-col>
-                    <a-space :size="12">
-                        <a-button :disabled="!output" @click="useAsInput">
+                <a-col class="side-cols mt6" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>操作</template>
+                        <template #extra>
+                            <a-tag size="small">{{ operations.length }} 种</a-tag>
+                        </template>
+                        <div class="op-list">
+                            <a-button v-for="op in operations" :key="op.label" size="small" long
+                                @click="run(op.fn)">
+                                {{ op.label }}
+                            </a-button>
+                        </div>
+                    </a-card>
+                </a-col>
+            </a-row>
+        </a-col>
+
+        <!-- 右侧：转换结果 -->
+        <a-col :span="18" class="main-col">
+            <a-card class="main-panel" :body-style="{ padding: 0 }">
+                <template #title>
+                    <a-space :size="8">
+                        <span>转换结果</span>
+                        <a-tag size="small">{{ output.length }} 字符</a-tag>
+                    </a-space>
+                </template>
+                <template #extra>
+                    <a-space :size="8">
+                        <a-button size="small" :disabled="!output" @click="useAsInput">
                             <template #icon><icon-swap /></template>作为输入
                         </a-button>
-                        <a-button :disabled="!output" @click="copyText(output)">
+                        <a-button size="small" :disabled="!output" @click="copyText(output)">
                             <template #icon><icon-copy /></template>复制
                         </a-button>
-                        <a-button :disabled="!output" status="danger" @click="output = ''">
+                        <a-button size="small" status="danger" :disabled="!output" @click="output = ''">
                             <template #icon><icon-delete /></template>清空
                         </a-button>
                     </a-space>
-                </a-col>
-            </a-row>
-            <a-textarea v-model="output" :auto-size="{ minRows: 8, maxRows: 16 }" placeholder="结果" readonly />
-        </a-card>
-    </layout-body>
+                </template>
+                <div class="panel-body">
+                    <a-textarea v-model="output" class="fill-textarea" placeholder="结果" readonly />
+                </div>
+            </a-card>
+        </a-col>
+    </a-row>
 </template>
 
 <script setup lang="ts">
@@ -256,17 +276,103 @@ const useAsInput = () => {
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-margin);
+/* 页面根容器：a-row 铺满工具窗口内容区 */
+.enc-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
 }
 
-.form-row {
-    margin-bottom: var(--base-margin);
+/* 左侧列：上下两张卡片各占 50% 高 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.field-label {
-    color: var(--color-text-2);
+.side-pages {
+    height: calc(100% - 6px);
+}
+
+.side-cols {
+    height: 50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 输入/结果文本域：填满卡片并内部滚动 */
+.panel-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    padding: var(--base-padding);
+}
+
+.fill-textarea {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+}
+
+.fill-textarea :deep(.arco-textarea) {
+    height: 100%;
+    resize: none;
+    font-family: Consolas, Monaco, "Courier New", monospace;
     font-size: var(--base-size-small);
-    margin-bottom: var(--base-radius-default);
+}
+
+/* 操作按钮列表 */
+.op-list {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--base-padding);
+    overflow-y: auto;
+}
+
+/* 右侧主列 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 </style>

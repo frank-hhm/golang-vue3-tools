@@ -1,84 +1,106 @@
 <template>
-    <layout-body title="进制转换">
-        <!-- 输入进制选择 -->
-        <a-card class="tool-card">
-            <a-row>
-                <a-col :span="24" class="mb12">
-                    <a-space :size="8">
-                        <a-radio-group v-model="inputBase" type="radio">
-                            <a-radio v-for="b in COMMON_BASES" :key="b" :value="b">{{ b }}进制</a-radio>
-                        </a-radio-group>
-                        <a-divider direction="vertical" />
-                        <span class="field-label" style="margin: 0">更多：</span>
-                        <a-select v-model="inputBase" style="width: 96px">
-                            <a-option v-for="b in ALL_BASES" :key="b" :value="b">{{ b }}</a-option>
-                        </a-select>
-                    </a-space>
+    <a-row class="hex-page" :gutter="6">
+        <!-- 左侧约 30%：输入（上50%）+ 简介（下50%） -->
+        <a-col :span="6" class="side-col">
+            <a-row class="side-pages">
+                <a-col class="side-cols" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>输入</template>
+                        <template #extra>
+                            <a-tag size="small" color="arcoblue">{{ inputBase }} 进制</a-tag>
+                        </template>
+                        <div class="side-body">
+                            <div class="field">
+                                <div class="field-label">常用进制</div>
+                                <a-radio-group v-model="inputBase" class="base-radios">
+                                    <a-radio v-for="b in COMMON_BASES" :key="b" :value="b">{{ b }}</a-radio>
+                                </a-radio-group>
+                            </div>
+                            <div class="field">
+                                <div class="field-label">更多进制（2 ~ 62）</div>
+                                <a-select v-model="inputBase" style="width: 100%">
+                                    <a-option v-for="b in ALL_BASES" :key="b" :value="b">{{ b }}</a-option>
+                                </a-select>
+                            </div>
+                            <div class="field">
+                                <div class="field-label">数值</div>
+                                <a-input v-model="inputStr" :placeholder="`请输入 ${inputBase} 进制数`" allow-clear
+                                    @press-enter="convert" />
+                            </div>
+                            <a-button type="primary" status="success" long @click="convert">
+                                <template #icon><icon-swap /></template>转换
+                            </a-button>
+
+                            <div class="field-label">二进制选项</div>
+                            <div class="bin-opts">
+                                <div class="bin-row">
+                                    <a-checkbox v-model="padEnabled">补 0 至</a-checkbox>
+                                    <a-select v-model="padBits" :disabled="!padEnabled" size="small" style="flex: 1">
+                                        <a-option :value="8">8 位</a-option>
+                                        <a-option :value="16">16 位</a-option>
+                                        <a-option :value="32">32 位</a-option>
+                                        <a-option :value="64">64 位</a-option>
+                                    </a-select>
+                                </div>
+                                <a-radio-group v-model="endian" type="button" size="mini">
+                                    <a-radio value="big">大端序</a-radio>
+                                    <a-radio value="little">小端序</a-radio>
+                                </a-radio-group>
+                            </div>
+                        </div>
+                    </a-card>
                 </a-col>
-                <a-col :span="24">
-                    <a-row :gutter="12">
-                        <a-col :span="18">
-                            <a-input v-model="inputStr" :placeholder="`请输入 ${inputBase} 进制数`" allow-clear
-                                @press-enter="convert" />
-                        </a-col>
-                        <a-col :span="6">
-                            <a-space>
-                                <a-button type="primary" status="success" long @click="convert">转换</a-button>
-                            </a-space>
-                        </a-col>
-                    </a-row>
+                <a-col class="side-cols mt6" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>简介</template>
+                        <div class="side-body">
+                            <p class="intro">
+                                进制其实是一种记数的方法，所以也称为进位记数法/值计数法，可以用有限的数字符号代表所有的数值。
+                                可使用数字符号的数目称为基数（英文：radix）或底数，基数为 n，即可称 n 进制，简称 n 进制。
+                                例如平常生活中我们经常用到的十进制，就是使用 10 个阿拉伯数字 0-9 进行记数，所以它的基数就是 10，称为十进制。
+                            </p>
+                        </div>
+                    </a-card>
                 </a-col>
             </a-row>
-        </a-card>
+        </a-col>
 
-        <!-- 转换结果表 -->
-        <a-card class="tool-card">
-            <a-table :data="rows" :pagination="false" :loading="false" row-key="base"
-                :row-class="(record) => (record.base === inputBase ? 'row-active' : '')">
-                <template #columns>
-                    <a-table-column title="进制" data-index="base" :width="80" />
-                    <a-table-column title="结果">
-                        <template #cell="{ record }">
-                            <a-input :model-value="record.value" readonly @click="selectAll">
-                                <template #append>
-                                    <a-button :disabled="!record.value" @click="copyText(record.value)">
-                                        <template #icon><icon-copy /></template>
-                                    </a-button>
-                                </template>
-                            </a-input>
-                            <!-- 二进制专属：补位 + 字节序 -->
-                            <div v-if="record.base === 2" class="bin-opts">
-                                <a-space wrap :size="12">
-                                    <a-checkbox v-model="padEnabled">补0至</a-checkbox>
-                                    <a-select v-model="padBits" :disabled="!padEnabled" style="width: 96px"
-                                        size="small">
-                                        <a-option :value="8">8位</a-option>
-                                        <a-option :value="16">16位</a-option>
-                                        <a-option :value="32">32位</a-option>
-                                        <a-option :value="64">64位</a-option>
-                                    </a-select>
-                                    <a-radio-group v-model="endian" size="small">
-                                        <a-radio value="big">大端序</a-radio>
-                                        <a-radio value="little">小端序</a-radio>
-                                    </a-radio-group>
-                                </a-space>
-                            </div>
-                        </template>
-                    </a-table-column>
-                    <a-table-column title="解释" data-index="explain" :width="260" />
+        <!-- 右侧：转换结果表 -->
+        <a-col :span="18" class="main-col">
+            <a-card class="main-panel" :body-style="{ padding: 0 }">
+                <template #title>
+                    <a-space :size="8">
+                        <span>转换结果</span>
+                        <a-tag size="small">共 {{ rows.length }} 项</a-tag>
+                    </a-space>
                 </template>
-            </a-table>
-        </a-card>
-
-        <!-- 简介 -->
-        <a-card class="tool-card" title="简介">
-            <p class="intro">
-                进制其实是一种记数的方法，所以也称为进位记数法/值计数法，可以用有限的数字符号代表所有的数值。
-                可使用数字符号的数目称为基数（英文：radix）或底数，基数为 n，即可称 n 进制，简称 n 进制。
-                例如平常生活中我们经常用到的十进制，就是使用 10 个阿拉伯数字 0-9 进行记数，所以它的基数就是 10，称为十进制。
-            </p>
-        </a-card>
-    </layout-body>
+                <template #extra>
+                    <a-tag size="small" color="gray">输入 {{ inputBase }} 进制</a-tag>
+                </template>
+                <div class="result-body">
+                    <a-table class="result-table" :data="rows" :pagination="false" :loading="false" row-key="base"
+                        :scroll="{ y: '100%' }"
+                        :row-class="(record) => (record.base === inputBase ? 'row-active' : '')">
+                        <template #columns>
+                            <a-table-column title="进制" data-index="base" :width="80" />
+                            <a-table-column title="结果">
+                                <template #cell="{ record }">
+                                    <a-input :model-value="record.value" readonly @click="selectAll">
+                                        <template #append>
+                                            <a-button :disabled="!record.value" @click="copyText(record.value)">
+                                                <template #icon><icon-copy /></template>
+                                            </a-button>
+                                        </template>
+                                    </a-input>
+                                </template>
+                            </a-table-column>
+                            <a-table-column title="解释" data-index="explain" :width="240" />
+                        </template>
+                    </a-table>
+                </div>
+            </a-card>
+        </a-col>
+    </a-row>
 </template>
 
 <script setup lang="ts">
@@ -236,17 +258,90 @@ const copyText = async (text: string) => {
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-margin);
+/* 页面根容器：a-row 铺满工具窗口内容区 */
+.hex-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
+}
+
+/* 左侧列：上下两张卡片各占 50% 高 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-pages {
+    height: calc(100% - 6px);
+}
+
+.side-cols {
+    height: 50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
+    overflow-y: auto;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .field-label {
     color: var(--color-text-2);
     font-size: var(--base-size-small);
+    font-weight: 500;
+}
+
+.base-radios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px var(--base-padding);
+}
+
+.base-radios :deep(.arco-radio) {
+    margin-right: 0;
 }
 
 .bin-opts {
-    margin-top: var(--base-margin);
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-radius-default);
+}
+
+.bin-row {
+    display: flex;
+    align-items: center;
+    gap: var(--base-radius-default);
 }
 
 .intro {
@@ -254,6 +349,63 @@ const copyText = async (text: string) => {
     font-size: var(--base-size-small);
     line-height: 1.8;
     margin: 0;
+}
+
+/* 右侧主列 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.result-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: var(--base-padding);
+}
+
+.result-table {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* a-table 内部逐层撑满：表头固定、表体滚动 */
+.result-table :deep(.arco-spin) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.result-table :deep(.arco-table-container) {
+    flex: 1;
+    min-height: 0;
+}
+
+.result-table :deep(.arco-table-body) {
+    flex: 1;
+    min-height: 0;
 }
 
 :deep(.row-active) {

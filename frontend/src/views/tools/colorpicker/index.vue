@@ -1,27 +1,20 @@
 ﻿<template>
-    <a-card title="颜色取色器">
-        <template #extra>
-            <a-space>
-                自动将所选颜色复制到剪贴板<a-checkbox v-model="autoCopy"></a-checkbox>
-                <a-button type="primary" @click="pickFromScreen">
-                    屏幕取色
+    <a-card class="cp-card" size="small" :title="isWin ? undefined : '颜色取色器'">
+        <div ref="bodyEl" class="cp-body">
+            <!-- 工具栏：自动复制开关 + 屏幕取色 -->
+            <div ref="barEl" class="cp-bar">
+                <a-checkbox v-model="autoCopy">自动将所选颜色复制到剪贴板</a-checkbox>
+                <a-button type="primary" size="small" @click="pickFromScreen">
+                    <template #icon>
+                        <icon-bg-colors />
+                    </template>屏幕取色
                 </a-button>
-            </a-space>
-        </template>
-        <div class="cp">
-            <!-- 顶部：从屏幕取色 + 选项 -->
-            <div class="cp-top">
-                <div class="cp-opts">
-
-                </div>
             </div>
 
             <div class="cp-main">
-                <!-- 左：饱和度/明度方块 -->
-                <div class="cp-sv-wrap">
-                    <div ref="svEl" class="cp-sv" :style="svStyle" @pointerdown="onSvDown">
-                        <div class="cp-marker" :style="svMarkerStyle"></div>
-                    </div>
+                <!-- 左：饱和度/明度方块（随窗口高度自适应） -->
+                <div ref="svEl" class="cp-sv" :style="svStyle" @pointerdown="onSvDown">
+                    <div class="cp-marker" :style="svMarkerStyle"></div>
                 </div>
 
                 <!-- 中：色相条 -->
@@ -29,8 +22,8 @@
                     <div class="cp-hue-marker" :style="hueMarkerStyle"></div>
                 </div>
 
-                <!-- 右：数值面板 -->
-                <div class="cp-panel">
+                <!-- 右：取色数值面板 -->
+                <div ref="panelEl" class="cp-panel">
                     <div class="cp-swatches">
                         <div class="cp-swatch" :style="{ background: hexColor }" title="新颜色"></div>
                         <div class="cp-swatch" :style="{ background: oldColor }" title="原颜色"></div>
@@ -39,8 +32,8 @@
                     <div class="cp-grid">
                         <div class="cp-row">
                             <label>R:</label>
-                            <a-input-number :model-value="rgb.r" :min="0" :max="255" size="mini" hide-button
-                                @change="(v: number | undefined) => setChannel('r', v ?? 0)" />
+                            <a-input-number class="cp-input-rgb" :model-value="rgb.r" :min="0" :max="255" size="mini"
+                                hide-button @change="(v: number | undefined) => setChannel('r', v ?? 0)" />
                             <label class="cp-tag">C:</label>
                             <a-input-number :model-value="cmyk.c" :min="0" :max="100" size="mini" hide-button disabled
                                 class="cp-ro" />
@@ -48,8 +41,8 @@
                         </div>
                         <div class="cp-row">
                             <label>G:</label>
-                            <a-input-number :model-value="rgb.g" :min="0" :max="255" size="mini" hide-button
-                                @change="(v: number | undefined) => setChannel('g', v ?? 0)" />
+                            <a-input-number class="cp-input-rgb" :model-value="rgb.g" :min="0" :max="255" size="mini"
+                                hide-button @change="(v: number | undefined) => setChannel('g', v ?? 0)" />
                             <label class="cp-tag">M:</label>
                             <a-input-number :model-value="cmyk.m" :min="0" :max="100" size="mini" hide-button disabled
                                 class="cp-ro" />
@@ -57,15 +50,15 @@
                         </div>
                         <div class="cp-row">
                             <label>B:</label>
-                            <a-input-number :model-value="rgb.b" :min="0" :max="255" size="mini" hide-button
-                                @change="(v: number | undefined) => setChannel('b', v ?? 0)" />
+                            <a-input-number class="cp-input-rgb" :model-value="rgb.b" :min="0" :max="255" size="mini"
+                                hide-button @change="(v: number | undefined) => setChannel('b', v ?? 0)" />
                             <label class="cp-tag">Y:</label>
                             <a-input-number :model-value="cmyk.y" :min="0" :max="100" size="mini" hide-button disabled
                                 class="cp-ro" />
                             <span class="cp-pct">%</span>
                         </div>
                         <div class="cp-row">
-                            <span></span>
+                            <span class="cp-gap"></span>
                             <label class="cp-tag">K:</label>
                             <a-input-number :model-value="cmyk.k" :min="0" :max="100" size="mini" hide-button disabled
                                 class="cp-ro" />
@@ -83,21 +76,22 @@
                             H: {{ hsl.h }}°&nbsp;&nbsp;S: {{ hsl.s }}%&nbsp;&nbsp;L: {{ hsl.l }}%
                         </span>
                     </div>
+                </div>
+            </div>
 
-                    <div class="cp-out">
-                        <div class="cp-row">
-                            <label>HTML:</label>
-                            <a-input :model-value="htmlHex" size="mini" readonly @click="copyText(htmlHex)" />
-                        </div>
-                        <div class="cp-row">
-                            <label>Hex:</label>
-                            <a-input :model-value="bgrHex" size="mini" readonly @click="copyText(bgrHex)" />
-                        </div>
-                        <div class="cp-row">
-                            <label>R,G,B:</label>
-                            <a-input :model-value="rgbStr" size="mini" readonly @click="copyText(rgbStr)" />
-                        </div>
-                    </div>
+            <!-- 底部：常用格式输出（点击复制） -->
+            <div class="cp-out">
+                <div class="cp-field">
+                    <label>HTML:</label>
+                    <a-input :model-value="htmlHex" size="mini" readonly @click="copyText(htmlHex)" />
+                </div>
+                <div class="cp-field">
+                    <label>Hex:</label>
+                    <a-input :model-value="bgrHex" size="mini" readonly @click="copyText(bgrHex)" />
+                </div>
+                <div class="cp-field">
+                    <label>R,G,B:</label>
+                    <a-input :model-value="rgbStr" size="mini" readonly @click="copyText(rgbStr)" />
                 </div>
             </div>
         </div>
@@ -105,13 +99,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, reactive, ref } from "vue";
+import { computed, getCurrentInstance, nextTick, onMounted, reactive, ref } from "vue";
+import { useRoute } from "vue-router";
+import { Window } from "@wailsio/runtime";
 import { Message } from "@arco-design/web-vue";
 
 /* ============ 颜色模型：以 HSV 为主，派生其余格式 ============ */
 const hsv = reactive({ h: 173, s: 86, v: 11 });
 const oldColor = ref("#000000");
 const autoCopy = ref(false);
+
+/** 原生独立窗口（/win/*，空白布局）：窗口标题栏已显示工具名，卡片不再重复大标题 */
+const route = useRoute();
+const isWin = computed(() => !!route.meta?.blank);
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 const toHex2 = (n: number) => clamp(Math.round(n), 0, 255).toString(16).padStart(2, "0").toUpperCase();
@@ -199,6 +199,9 @@ function setChannel(ch: "r" | "g" | "b", val: number) {
 /* ============ 取色方块 / 色相条交互 ============ */
 const svEl = ref<HTMLElement | null>(null);
 const hueEl = ref<HTMLElement | null>(null);
+const bodyEl = ref<HTMLElement | null>(null);
+const barEl = ref<HTMLElement | null>(null);
+const panelEl = ref<HTMLElement | null>(null);
 let draggingSV = false;
 let draggingHue = false;
 
@@ -306,43 +309,92 @@ async function pickFromScreen() {
         /* 用户按 ESC 取消取色，静默处理 */
     }
 }
+
+/* ============ 原生窗口内容自适应 ============ */
+
+/**
+ * 按内容自然高度调整窗口尺寸，消除底部多余空白（仅 /win 独立窗口生效）。
+ * 数值面板以首末子元素推算自然高度（不受 flex 纵向拉伸影响）；
+ * 窗口上下留白由卡片视口偏移反推；尺寸均为 DIP（与 CSS px 等值）。
+ */
+async function fitWindow() {
+    const body = bodyEl.value, bar = barEl.value, panel = panelEl.value, sv = svEl.value;
+    if (!isWin.value || !body || !bar || !panel || !sv || panel.children.length === 0) return;
+
+    const first = panel.children[0] as HTMLElement;
+    const last = panel.children[panel.children.length - 1] as HTMLElement;
+    const panelNatural = last.offsetTop + last.offsetHeight - first.offsetTop;
+    const rowNatural = Math.max(panelNatural, parseFloat(getComputedStyle(sv).minHeight) || 0);
+
+    const cs = getComputedStyle(body);
+    const padT = parseFloat(cs.paddingTop) || 0;
+    const cardNatural = padT + bar.offsetHeight + (parseFloat(cs.rowGap) || 0) + rowNatural + (parseFloat(cs.paddingBottom) || 0);
+
+    // .win-content 的上下留白：卡片视口顶 = 标题栏高度 + 留白
+    const titlebarH = document.querySelector<HTMLElement>(".win-titlebar")?.clientHeight ?? 40;
+    const pad = Math.max(0, body.getBoundingClientRect().top - padT - titlebarH);
+    const innerH = Math.round(titlebarH + pad * 2 + cardNatural) + 2; // +2 容差，防面板出现滚动条
+
+    try {
+        const size = await Window.Size();
+        if (size.width > 0) await Window.SetSize(size.width, innerH);
+    } catch {
+        /* 非原生窗口环境（浏览器调试等）忽略 */
+    }
+}
+
+onMounted(() => {
+    void nextTick(() => requestAnimationFrame(() => void fitWindow()));
+});
 </script>
 
 <style scoped>
-.cp {
+/* 卡片铺满窗口：高度由 fitWindow 按内容自适应，内部不产生冗余空白 */
+.cp-card {
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
 
-.cp-top {
+.cp-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: var(--base-padding);
+}
+
+.cp-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
+}
+
+/* 工具栏：自动复制开关 + 屏幕取色 */
+.cp-bar {
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
     gap: var(--base-padding);
 }
 
-.cp-opts {
-    display: flex;
-    flex-direction: column;
-    gap: var(--base-padding);
-}
-
+/* 主区：左取色方块 + 中色相条 + 右数值面板，高度弹性铺满 */
 .cp-main {
+    flex: 1;
+    min-height: 0;
     display: flex;
     gap: var(--base-padding);
     align-items: stretch;
 }
 
-.cp-sv-wrap {
-    flex: 1;
-    min-width: 220px;
-}
-
 .cp-sv {
     position: relative;
-    width: 100%;
-    height: 260px;
+    flex: 1;
+    min-width: 0;
+    min-height: 180px;
     border-radius: var(--base-radius-default);
     border: 1px solid var(--color-border-2);
     cursor: crosshair;
@@ -363,7 +415,7 @@ async function pickFromScreen() {
 .cp-hue {
     position: relative;
     width: 18px;
-    height: 260px;
+    flex: none;
     border-radius: var(--base-radius-default);
     cursor: pointer;
     touch-action: none;
@@ -384,20 +436,24 @@ async function pickFromScreen() {
     pointer-events: none;
 }
 
+/* 数值面板：宽度固定，纵向内容不足时内部滚动 */
 .cp-panel {
-    width: 210px;
+    width: 180px;
+    flex: none;
     display: flex;
     flex-direction: column;
-    gap: var(--base-padding);
+    gap: 10px;
+    overflow-y: auto;
 }
 
 .cp-swatches {
+    flex: none;
     display: flex;
     gap: 0;
     border: 1px solid var(--color-border-2);
     border-radius: var(--base-radius-default);
     overflow: hidden;
-    height: 40px;
+    height: 36px;
 }
 
 .cp-swatch {
@@ -407,27 +463,45 @@ async function pickFromScreen() {
 .cp-grid {
     display: flex;
     flex-direction: column;
-    gap: var(--base-padding);
+    gap: 8px;
 }
 
 .cp-row {
     display: flex;
     align-items: center;
-    gap: var(--base-padding);
+    gap: 8px;
 }
 
 .cp-row label {
-    width: 34px;
+    flex: none;
+    width: 30px;
     text-align: right;
     color: var(--color-text-2);
     font-size: var(--base-size-small);
 }
 
 .cp-tag {
-    width: 20px !important;
+    width: 18px !important;
+}
+
+/* K 行占位：与「RGB 输入框」等宽，使 K 与 C/M/Y 列对齐 */
+.cp-gap {
+    flex: none;
+    width: 84px;
+}
+
+.cp-input-rgb {
+    flex: none;
+    width: 46px;
+}
+
+.cp-ro {
+    flex: 1;
+    min-width: 0;
 }
 
 .cp-pct {
+    flex: none;
     color: var(--color-text-3);
     font-size: var(--base-size-small);
 }
@@ -437,6 +511,7 @@ async function pickFromScreen() {
 }
 
 .cp-modes {
+    flex: none;
     font-size: var(--base-size-small);
 }
 
@@ -449,15 +524,31 @@ async function pickFromScreen() {
     color: var(--color-text-2);
 }
 
+/* 底部：常用格式输出（点击复制） */
 .cp-out {
+    flex: none;
     display: flex;
-    flex-direction: column;
     gap: var(--base-padding);
     border-top: 1px dashed var(--color-border-2);
-    padding-top: var(--base-padding);
+    padding-top: 10px;
 }
 
-.cp-out .cp-row label {
-    width: 52px;
+.cp-field {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cp-field label {
+    flex: none;
+    color: var(--color-text-2);
+    font-size: var(--base-size-small);
+}
+
+.cp-field :deep(.arco-input) {
+    flex: 1;
+    min-width: 0;
 }
 </style>

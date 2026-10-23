@@ -1,76 +1,89 @@
 <template>
-    <layout-body title="随机字符串生成">
-        <a-card class="tool-card">
-            <!-- 长度：支持固定长度或区间随机 -->
-            <a-row :gutter="12" align="center" class="form-row">
-                <a-col :span="3"><span class="lbl">长度</span></a-col>
-                <a-col :span="21">
-                    <a-space :size="12">
-                        <a-radio-group v-model="lenMode" type="button" size="small">
+    <a-row class="str-page" :gutter="6">
+        <!-- 左侧约 25%：生成设置 -->
+        <a-col :span="6" class="side-col">
+            <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                <template #title>生成设置</template>
+                <template #extra>
+                    <a-tag size="small">{{ charset.length }} 字符</a-tag>
+                </template>
+                <div class="side-body">
+                    <div class="field">
+                        <div class="field-label">长度模式</div>
+                        <a-radio-group v-model="lenMode" type="button" size="mini">
                             <a-radio value="fixed">固定</a-radio>
                             <a-radio value="range">区间</a-radio>
                         </a-radio-group>
-                        <template v-if="lenMode === 'fixed'">
-                            <a-input-number v-model="fixedLen" :min="1" :max="1000" :precision="0"
-                                style="width: 130px" />
-                        </template>
-                        <template v-else>
-                            <a-input-number v-model="minLen" :min="1" :max="1000" :precision="0"
-                                style="width: 130px" />
-                            <span class="tilde">~</span>
-                            <a-input-number v-model="maxLen" :min="1" :max="1000" :precision="0"
-                                style="width: 130px" />
-                        </template>
+                        <a-input-number v-if="lenMode === 'fixed'" v-model="fixedLen" :min="1" :max="1000"
+                            :precision="0" style="width: 100%" />
+                        <a-row v-else :gutter="8" align="center">
+                            <a-col :span="11">
+                                <a-input-number v-model="minLen" :min="1" :max="1000" :precision="0"
+                                    style="width: 100%" />
+                            </a-col>
+                            <a-col :span="2" class="tilde">~</a-col>
+                            <a-col :span="11">
+                                <a-input-number v-model="maxLen" :min="1" :max="1000" :precision="0"
+                                    style="width: 100%" />
+                            </a-col>
+                        </a-row>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">字符类型</div>
+                        <div class="checks">
+                            <a-checkbox v-model="useDigits">数字 0-9</a-checkbox>
+                            <a-checkbox v-model="useLower">小写字母 a-z</a-checkbox>
+                            <a-checkbox v-model="useUpper">大写字母 A-Z</a-checkbox>
+                            <a-checkbox v-model="useSymbols">常用符号 ~!@#$%^&amp;*()_+</a-checkbox>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">字符集（可手动编辑）</div>
+                        <a-input v-model="charset" placeholder="生成时使用的字符集" allow-clear />
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">生成数量</div>
+                        <a-input-number v-model="count" :min="1" :max="1000" :precision="0" style="width: 100%" />
+                    </div>
+
+                    <a-button type="primary" status="success" long class="gen-btn" @click="generate">
+                        <template #icon><icon-refresh /></template>生成
+                    </a-button>
+                </div>
+            </a-card>
+        </a-col>
+
+        <!-- 右侧：生成结果 -->
+        <a-col :span="18" class="main-col">
+            <a-card class="main-panel" :body-style="{ padding: 0 }">
+                <template #title>
+                    <a-space :size="8">
+                        <span>生成结果</span>
+                        <a-tag size="small">{{ resultLines }} 行</a-tag>
+                        <a-tag size="small">{{ result.length }} 字符</a-tag>
                     </a-space>
-                </a-col>
-            </a-row>
-
-            <!-- 字符集 -->
-            <a-row :gutter="12" align="center" class="form-row">
-                <a-col :span="3"><span class="lbl">字符集</span></a-col>
-                <a-col :span="21">
-                    <a-input v-model="charset" placeholder="生成时使用的字符集，可手动编辑" allow-clear />
-                </a-col>
-            </a-row>
-
-            <!-- 字符类型勾选 -->
-            <a-row class="form-row">
-                <a-col :span="3"></a-col>
-                <a-col :span="21">
-                    <a-space direction="vertical" :size="10">
-                        <a-checkbox v-model="useDigits">数字 0123456789</a-checkbox>
-                        <a-checkbox v-model="useLower">小写字母 abcdefghijklmnopqrstuvwxyz</a-checkbox>
-                        <a-checkbox v-model="useUpper">大写字母 ABCDEFGHIJKLMNOPQRSTUVWXYZ</a-checkbox>
-                        <a-checkbox v-model="useSymbols">常用符号 ~!@#$%^&amp;*()_+</a-checkbox>
-                    </a-space>
-                </a-col>
-            </a-row>
-
-            <!-- 生成数量 -->
-            <a-row :gutter="12" align="center" class="form-row">
-                <a-col :span="3"><span class="lbl">生成数量</span></a-col>
-                <a-col :span="21">
-                    <a-space :size="12">
-                        <a-input-number v-model="count" :min="1" :max="1000" :precision="0" />
-                        <a-button type="primary" status="success" @click="generate">
-                            <template #icon><icon-refresh /></template>生成
-                        </a-button>
-                        <a-button :disabled="!result" @click="copyText(result)">
-                            <template #icon><icon-copy /></template>复制
-                        </a-button>
-                    </a-space>
-                </a-col>
-            </a-row>
-
-            <!-- 结果 -->
-            <div class="field-label">结果</div>
-            <a-textarea v-model="result" :auto-size="{ minRows: 6, maxRows: 16 }" placeholder="结果" readonly />
-        </a-card>
-    </layout-body>
+                </template>
+                <template #extra>
+                    <a-button size="small" :disabled="!result" @click="copyText(result)">
+                        <template #icon><icon-copy /></template>复制全部
+                    </a-button>
+                </template>
+                <div class="panel-body">
+                    <a-textarea v-if="result" v-model="result" class="fill-textarea" readonly />
+                    <div v-else class="panel-empty">
+                        <a-empty description="点击左侧「生成」后这里显示结果" />
+                    </div>
+                </div>
+            </a-card>
+        </a-col>
+    </a-row>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { Message } from "@arco-design/web-vue";
 
 /** 各类字符集常量 */
@@ -92,6 +105,9 @@ const useDigits = ref(true);
 const useLower = ref(true);
 const useUpper = ref(true);
 const useSymbols = ref(true);
+
+/** 结果行数（用于标题统计） */
+const resultLines = computed(() => (result.value ? result.value.split("\n").length : 0));
 
 /** 根据勾选项重建字符集（手动编辑字符集后再改动勾选会覆盖，属预期行为） */
 const rebuildCharset = () => {
@@ -181,17 +197,63 @@ const copyText = async (text: string) => {
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-margin);
+/* 页面根容器：a-row 铺满工具窗口内容区 */
+.str-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
 }
 
-.form-row {
-    margin-bottom: var(--base-margin);
+/* 左侧设置卡片：占满整列高度，内部滚动 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.lbl {
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
+    overflow-y: auto;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field-label {
     color: var(--color-text-2);
-    font-size: var(--base-size-default);
+    font-size: var(--base-size-small);
+    font-weight: 500;
+}
+
+.checks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .tilde {
@@ -199,9 +261,60 @@ const copyText = async (text: string) => {
     color: var(--color-text-3);
 }
 
-.field-label {
-    color: var(--color-text-2);
+.gen-btn {
+    margin-top: auto;
+}
+
+/* 右侧主列 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    padding: var(--base-padding);
+}
+
+.panel-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fill-textarea {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+}
+
+.fill-textarea :deep(.arco-textarea) {
+    height: 100%;
+    resize: none;
+    font-family: Consolas, Monaco, "Courier New", monospace;
     font-size: var(--base-size-small);
-    margin-bottom: var(--base-radius-default);
 }
 </style>

@@ -14,6 +14,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-ngnix:before {
+  content: "\e7b8";
+}
+
+.icon-npm:before {
+  content: "\e8b6";
+}
+
 .icon-php:before {
   content: "\e685";
 }

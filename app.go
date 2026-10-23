@@ -1,3 +1,5 @@
+//go:build windows
+
 package main
 
 import (
@@ -6,6 +8,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"go-tools/tools/mysql"
+	"go-tools/tools/nginx"
+	"go-tools/tools/npm"
+	"go-tools/tools/php"
 	"go-tools/tools/redis"
 	"go-tools/tools/sniffer"
 	"go-tools/tools/usbserial"
@@ -181,10 +186,13 @@ func (a *App) ServiceStartup(ctx context.Context, options application.ServiceOpt
 	return nil
 }
 
-// ServiceShutdown 应用退出时停止所有由本程序拉起的本地服务实例（Redis + MySQL）。
+// ServiceShutdown 应用退出时停止所有由本程序拉起的本地服务实例（Redis + MySQL + PHP + Nginx + npm 静态站点）。
 func (a *App) ServiceShutdown() error {
 	redis.StopAll()
 	mysql.StopAll()
+	php.StopAll()
+	nginx.StopAll()
+	npm.StopAll()
 	return nil
 }
 
@@ -731,6 +739,320 @@ func (a *App) MySQLSrvPluginsDir() string {
 	return dir
 }
 
+/* ============================ PHP 本地服务管理 ============================ */
+
+// PhpSrvListVersions 聚合三渠道本地可用 PHP 版本
+func (a *App) PhpSrvListVersions() ([]php.ServerVersion, error) { return php.ListVersions() }
+
+// PhpSrvRemoteVersions 拉取线上可安装版本（windows.php.net）
+func (a *App) PhpSrvRemoteVersions() ([]php.RemoteVersion, error) { return php.FetchRemoteVersions() }
+
+// PhpSrvInstall 异步安装 PHP 版本（nts=true 下载 NTS 构型），进度经 php:install 事件推送
+func (a *App) PhpSrvInstall(version string, nts bool) error { return php.InstallVersion(version, nts) }
+
+// PhpSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+func (a *App) PhpSrvRemoveVersion(version string) error { return php.RemoveVersion(version) }
+
+// PhpSrvAddLocal 注册本机已有的 PHP 目录（含 php.exe）
+func (a *App) PhpSrvAddLocal(dir string) error { return php.AddLocalVersion(dir) }
+
+// PhpSrvChooseDir 弹原生目录选择框（供添加本机 PHP 目录），取消返回空串
+func (a *App) PhpSrvChooseDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	dir, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		AllowsOtherFileTypes(false).
+		SetTitle("选择 php.exe 所在目录").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// PhpSrvListInstances 列出全部 PHP 实例配置
+func (a *App) PhpSrvListInstances() ([]php.InstanceConfig, error) { return php.ListInstances() }
+
+// PhpSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+func (a *App) PhpSrvSaveInstance(cfg php.InstanceConfig) error { return php.SaveInstance(cfg) }
+
+// PhpSrvRemoveInstance 删除实例配置（运行中先停止）
+func (a *App) PhpSrvRemoveInstance(id string) error { return php.RemoveInstance(id) }
+
+// PhpSrvStart 启动实例（php -S 内置服务器，隐藏窗口）
+func (a *App) PhpSrvStart(id string) error { return php.StartInstance(id) }
+
+// PhpSrvStop 停止实例（kill 进程树）
+func (a *App) PhpSrvStop(id string) error { return php.StopInstance(id) }
+
+// PhpSrvRestart 重启实例
+func (a *App) PhpSrvRestart(id string) error { return php.RestartInstance(id) }
+
+// PhpSrvStatus 实例运行状态（端口探测 + ini 概览）
+func (a *App) PhpSrvStatus(id string) (php.InstanceStatus, error) { return php.GetInstanceStatus(id) }
+
+// PhpSrvLogs 返回实例最近 n 行日志
+func (a *App) PhpSrvLogs(id string, lines int) ([]string, error) { return php.Logs(id, lines) }
+
+// PhpSrvSuggestPort 从 from 起探测可用端口
+func (a *App) PhpSrvSuggestPort(from int) int { return php.SuggestPort(from) }
+
+// PhpSrvPluginsDir 返回插件目录 <exedir>/plugins/php，供前端展示指引
+func (a *App) PhpSrvPluginsDir() string {
+	dir, err := php.PluginsDir()
+	if err != nil {
+		return ""
+	}
+	return dir
+}
+
+// PhpSrvGetConfigText 读取实例 php.ini 全文
+func (a *App) PhpSrvGetConfigText(id string) (string, error) { return php.GetConfigText(id) }
+
+// PhpSrvSaveConfigText 保存实例 php.ini（先备份后校验，加载失败回滚）
+func (a *App) PhpSrvSaveConfigText(id, text string) error { return php.SaveConfigText(id, text) }
+
+// PhpSrvGetCommon 读取实例常用配置项（内存/上传/时区等）
+func (a *App) PhpSrvGetCommon(id string) (*php.CommonFields, error) { return php.GetCommon(id) }
+
+// PhpSrvSetCommon 写入实例常用配置项
+func (a *App) PhpSrvSetCommon(id string, f php.CommonFields) error { return php.SetCommon(id, f) }
+
+// PhpSrvExtensions 列出实例候选扩展（可用/已启用/已加载）
+func (a *App) PhpSrvExtensions(id string) ([]php.ExtensionInfo, error) { return php.Extensions(id) }
+
+// PhpSrvSetExtension 启用/禁用扩展，返回提示信息
+func (a *App) PhpSrvSetExtension(id, name string, enable bool) (string, error) {
+	return php.SetExtension(id, name, enable)
+}
+
+// PhpSrvLoadedExtensions 实测已加载扩展名列表（php -m）
+func (a *App) PhpSrvLoadedExtensions(id string) ([]string, error) { return php.LoadedExtensions(id) }
+
+// PhpSrvDisableFunctions 读取实例禁用函数列表
+func (a *App) PhpSrvDisableFunctions(id string) ([]string, error) { return php.DisableFunctions(id) }
+
+// PhpSrvSetDisableFunctions 全量设置禁用函数列表
+func (a *App) PhpSrvSetDisableFunctions(id string, list []string) error {
+	return php.SetDisableFunctions(id, list)
+}
+
+// PhpSrvAddDisableFunctions 追加禁用函数
+func (a *App) PhpSrvAddDisableFunctions(id string, names []string) error {
+	return php.AddDisableFunctions(id, names)
+}
+
+// PhpSrvRemoveDisableFunctions 移除若干禁用函数
+func (a *App) PhpSrvRemoveDisableFunctions(id string, names []string) error {
+	return php.RemoveDisableFunctions(id, names)
+}
+
+// PhpSrvCommonlyDisabled 返回常见建议禁用函数列表（供前端快捷添加）
+func (a *App) PhpSrvCommonlyDisabled() []string { return php.CommonlyDisabled() }
+
+// PhpSrvInfo 返回实例 php -i 关键配置概览
+func (a *App) PhpSrvInfo(id string) (*php.PHPInfo, error) { return php.Info(id) }
+
+/* ============================ Nginx 本地服务管理 ============================ */
+
+// NginxSrvListVersions 聚合三渠道本地可用 Nginx 版本
+func (a *App) NginxSrvListVersions() ([]nginx.ServerVersion, error) { return nginx.ListVersions() }
+
+// NginxSrvRemoteVersions 拉取线上可安装版本（nginx.org 官方 zip）
+func (a *App) NginxSrvRemoteVersions() ([]nginx.RemoteVersion, error) {
+	return nginx.FetchRemoteVersions()
+}
+
+// NginxSrvInstall 异步安装 Nginx 版本，进度经 nginx:install 事件推送
+func (a *App) NginxSrvInstall(version string) error { return nginx.InstallVersion(version) }
+
+// NginxSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+func (a *App) NginxSrvRemoveVersion(version string) error { return nginx.RemoveVersion(version) }
+
+// NginxSrvAddLocal 注册本机已有的 Nginx 目录（含 nginx.exe）
+func (a *App) NginxSrvAddLocal(dir string) error { return nginx.AddLocalVersion(dir) }
+
+// NginxSrvChooseDir 弹原生目录选择框（供添加本机 Nginx 目录），取消返回空串
+func (a *App) NginxSrvChooseDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	dir, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		AllowsOtherFileTypes(false).
+		SetTitle("选择 nginx.exe 所在目录").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// NginxSrvListInstances 列出全部 Nginx 实例配置
+func (a *App) NginxSrvListInstances() ([]nginx.InstanceConfig, error) { return nginx.ListInstances() }
+
+// NginxSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+func (a *App) NginxSrvSaveInstance(cfg nginx.InstanceConfig) error { return nginx.SaveInstance(cfg) }
+
+// NginxSrvRemoveInstance 删除实例配置（运行中先停止）
+func (a *App) NginxSrvRemoveInstance(id string) error { return nginx.RemoveInstance(id) }
+
+// NginxSrvStart 启动实例（-p prefix -c conf，隐藏窗口）
+func (a *App) NginxSrvStart(id string) error { return nginx.StartInstance(id) }
+
+// NginxSrvStop 停止实例（nginx -s quit + 兑底 kill）
+func (a *App) NginxSrvStop(id string) error { return nginx.StopInstance(id) }
+
+// NginxSrvRestart 重启实例
+func (a *App) NginxSrvRestart(id string) error { return nginx.RestartInstance(id) }
+
+// NginxSrvReload 平滑重载配置
+func (a *App) NginxSrvReload(id string) error { return nginx.ReloadInstance(id) }
+
+// NginxSrvCheckConfig 执行 nginx -t 配置检查，返回输出文本
+func (a *App) NginxSrvCheckConfig(id string) (string, error) { return nginx.CheckConfig(id) }
+
+// NginxSrvStatus 实例运行状态（端口探测 + master/worker 进程）
+func (a *App) NginxSrvStatus(id string) (nginx.InstanceStatus, error) {
+	return nginx.GetInstanceStatus(id)
+}
+
+// NginxSrvLogs 返回实例最近 n 行日志
+func (a *App) NginxSrvLogs(id string, lines int) ([]string, error) { return nginx.Logs(id, lines) }
+
+// NginxSrvSuggestPort 从 from 起探测可用端口
+func (a *App) NginxSrvSuggestPort(from int) int { return nginx.SuggestPort(from) }
+
+// NginxSrvPluginsDir 返回插件目录 <exedir>/plugins/nginx，供前端展示指引
+func (a *App) NginxSrvPluginsDir() string {
+	dir, err := nginx.PluginsDir()
+	if err != nil {
+		return ""
+	}
+	return dir
+}
+
+// NginxSrvGetConfigText 读取实例 nginx.conf 全文
+func (a *App) NginxSrvGetConfigText(id string) (string, error) { return nginx.GetConfigText(id) }
+
+// NginxSrvSaveConfigText 保存实例 nginx.conf（先备份后校验，失败回滚）
+func (a *App) NginxSrvSaveConfigText(id, text string) error { return nginx.SaveConfigText(id, text) }
+
+/* ============================ npm 本地服务管理 ============================ */
+
+// NpmSrvListVersions 聚合三渠道本地可用 Node.js 版本
+func (a *App) NpmSrvListVersions() ([]npm.ServerVersion, error) { return npm.ListVersions() }
+
+// NpmSrvRemoteVersions 拉取线上可安装版本（nodejs.org dist index.json）
+func (a *App) NpmSrvRemoteVersions() ([]npm.RemoteVersion, error) { return npm.FetchRemoteVersions() }
+
+// NpmSrvInstall 异步安装 Node.js 版本，进度经 npm:install 事件推送
+func (a *App) NpmSrvInstall(version string) error { return npm.InstallVersion(version) }
+
+// NpmSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+func (a *App) NpmSrvRemoveVersion(version string) error { return npm.RemoveVersion(version) }
+
+// NpmSrvAddLocal 注册本机已有的 Node.js 目录（含 node.exe）
+func (a *App) NpmSrvAddLocal(dir string) error { return npm.AddLocalVersion(dir) }
+
+// NpmSrvChooseDir 弹原生目录选择框（供添加本机 Node.js 目录），取消返回空串
+func (a *App) NpmSrvChooseDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	dir, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		AllowsOtherFileTypes(false).
+		SetTitle("选择 node.exe 所在目录").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// NpmSrvListInstances 列出全部静态站点实例配置
+func (a *App) NpmSrvListInstances() ([]npm.InstanceConfig, error) { return npm.ListInstances() }
+
+// NpmSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+func (a *App) NpmSrvSaveInstance(cfg npm.InstanceConfig) error { return npm.SaveInstance(cfg) }
+
+// NpmSrvRemoveInstance 删除实例配置（运行中先停止）
+func (a *App) NpmSrvRemoveInstance(id string) error { return npm.RemoveInstance(id) }
+
+// NpmSrvStart 启动静态站点服务（内置 Go HTTP 服务器）
+func (a *App) NpmSrvStart(id string) error { return npm.StartInstance(id) }
+
+// NpmSrvStop 停止静态站点服务（优雅 Shutdown）
+func (a *App) NpmSrvStop(id string) error { return npm.StopInstance(id) }
+
+// NpmSrvRestart 重启实例
+func (a *App) NpmSrvRestart(id string) error { return npm.RestartInstance(id) }
+
+// NpmSrvStatus 实例运行状态（端口探测 + 请求计数）
+func (a *App) NpmSrvStatus(id string) (npm.InstanceStatus, error) { return npm.GetInstanceStatus(id) }
+
+// NpmSrvLogs 返回实例最近 n 行访问日志
+func (a *App) NpmSrvLogs(id string, lines int) ([]string, error) { return npm.Logs(id, lines) }
+
+// NpmSrvSuggestPort 从 from 起探测可用端口
+func (a *App) NpmSrvSuggestPort(from int) int { return npm.SuggestPort(from) }
+
+// NpmSrvPluginsDir 返回插件目录 <exedir>/plugins/npm，供前端展示指引
+func (a *App) NpmSrvPluginsDir() string {
+	dir, err := npm.PluginsDir()
+	if err != nil {
+		return ""
+	}
+	return dir
+}
+
+// NpmGetConfigText 读取托管 .npmrc 全文
+func (a *App) NpmGetConfigText() (string, error) { return npm.GetConfigText() }
+
+// NpmSaveConfigText 保存托管 .npmrc
+func (a *App) NpmSaveConfigText(text string) error { return npm.SaveConfigText(text) }
+
+// NpmConfigItems 列出托管 .npmrc 配置键值
+func (a *App) NpmConfigItems() ([]npm.NpmConfigKV, error) { return npm.ConfigItems() }
+
+// NpmSetConfigItem 设置单条 npm 配置
+func (a *App) NpmSetConfigItem(key, value string) error { return npm.SetConfigItem(key, value) }
+
+// NpmGetRegistry 返回当前生效的 registry
+func (a *App) NpmGetRegistry() string { return npm.GetRegistry() }
+
+// NpmSetRegistry 设置 registry
+func (a *App) NpmSetRegistry(url string) error { return npm.SetRegistry(url) }
+
+// NpmCommonRegistries 返回常用镜像源列表（供前端快捷选择）
+func (a *App) NpmCommonRegistries() []npm.NpmConfigKV { return npm.CommonRegistries() }
+
+// NpmUserNpmrc 返回用户全局 ~/.npmrc 的路径/内容/是否存在，并附带托管 registry 同步能力
+func (a *App) NpmUserNpmrc() (string, string, bool) { return npm.UserNpmrc() }
+
+// NpmApplyToUserNpmrc 将托管配置同步到用户全局 ~/.npmrc（先备份），返回备份文件路径
+func (a *App) NpmApplyToUserNpmrc() (string, error) { return npm.ApplyToUserNpmrc() }
+
+// NpmGlobalPackages 列出指定 Node 版本的全局已安装包
+func (a *App) NpmGlobalPackages(version string) ([]npm.NpmPackage, error) {
+	return npm.GlobalPackages(version)
+}
+
+// NpmInstallGlobal 异步安装全局包，进度经 npm:install 事件推送
+func (a *App) NpmInstallGlobal(version, pkg string) error { return npm.InstallGlobal(version, pkg) }
+
+// NpmUninstallGlobal 异步卸载全局包，进度经 npm:install 事件推送
+func (a *App) NpmUninstallGlobal(version, pkg string) error { return npm.UninstallGlobal(version, pkg) }
+
+// NpmVersionOf 返回指定 Node 版本配套的 npm 版本号
+func (a *App) NpmVersionOf(version string) string { return npm.NpmVersion(version) }
+
 // AppDataDir 返回程序目录下的数据子目录（不存在则创建），如 "videos" → <exedir>/data/videos；用作各类另存默认位置
 func (a *App) AppDataDir(sub string) (string, error) {
 	exe, err := os.Executable()
@@ -845,6 +1167,83 @@ func (a *App) MySQLSaveConnections(configs []mysql.ConnConfig) (string, error) {
 
 // MySQLLoadConnections 从文件读取连接列表
 func (a *App) MySQLLoadConnections() ([]mysql.ConnConfig, error) { return mysql.LoadConnections() }
+
+// MySQLDeleteRows 按单列主键批量删除多行，返回受影响行数
+func (a *App) MySQLDeleteRows(id, database, table, pkCol string, pkVals []string) (int64, error) {
+	return mysql.DeleteRows(id, database, table, pkCol, pkVals)
+}
+
+/* ---------------- MySQL SQL 执行日志（工具级设置） ---------------- */
+
+// MySQLGetSQLLogSettings 返回 SQL 日志开关、目录与现存文件列表
+func (a *App) MySQLGetSQLLogSettings() mysql.SQLLogSettings {
+	st := mysql.SQLLogStatus()
+	st.Dir = CurrentConfig().ToolSettings["mysql"].SQLLogDir
+	return st
+}
+
+// MySQLSetSQLLogSettings 保存 SQL 日志开关与目录（立即生效并落盘），返回实际写入目录
+func (a *App) MySQLSetSQLLogSettings(enabled bool, dir string) (string, error) {
+	dir = strings.TrimSpace(dir)
+	resolved := mysql.ConfigureSQLLog(enabled, dir)
+
+	appCfgWriteMu.Lock()
+	defer appCfgWriteMu.Unlock()
+	cfg := CurrentConfig()
+	if cfg.ToolSettings == nil {
+		cfg.ToolSettings = map[string]ToolSettings{}
+	}
+	cfg.ToolSettings["mysql"] = ToolSettings{SQLLogEnabled: enabled, SQLLogDir: dir}
+	if _, err := writeAppConfigLocked(cfg); err != nil {
+		errLogf("mysql", "保存 SQL 日志设置失败: %v", err)
+		return resolved, err
+	}
+	opLogf("mysql", "SQL 日志设置已更新: enabled=%v dir=%s", enabled, resolved)
+	return resolved, nil
+}
+
+// MySQLChooseSQLLogDir 弹出原生目录选择框（取消返回空串）
+func (a *App) MySQLChooseSQLLogDir() (string, error) {
+	if a.app == nil {
+		return "", fmt.Errorf("应用尚未初始化")
+	}
+	dir, err := a.app.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		AllowsOtherFileTypes(false).
+		SetTitle("选择 SQL 日志目录").
+		PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// MySQLOpenSQLLogDir 在资源管理器中打开 SQL 日志目录
+func (a *App) MySQLOpenSQLLogDir() error {
+	dir := mysql.SQLLogStatus().ResolvedDir
+	if _, err := os.Stat(dir); err != nil {
+		_ = os.MkdirAll(dir, 0o755)
+	}
+	cmd := exec.Command("explorer.exe", dir)
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	if err := cmd.Start(); err != nil {
+		errLogf("mysql", "打开 SQL 日志目录失败: %v", err)
+		return err
+	}
+	return nil
+}
+
+// MySQLClearSQLLog 清空 SQL 日志文件，返回删除的文件数
+func (a *App) MySQLClearSQLLog() (int, error) {
+	n, err := mysql.ClearSQLLog()
+	if err != nil {
+		errLogf("mysql", "清空 SQL 日志失败: %v", err)
+		return n, err
+	}
+	opLogf("mysql", "已清空 SQL 日志: %d 个文件", n)
+	return n, nil
+}
 
 /* ============================ 视频录制 ============================ */
 
@@ -1142,6 +1541,14 @@ func (a *App) GetConfig() AppConfig {
 
 // SaveConfig 保存配置：写入用户配置目录 JSON + 重新初始化日志器 + 热键重载 + 浮动球显隐；返回日志目录。
 func (a *App) SaveConfig(cfg AppConfig) (string, error) {
+	// 浮动球位置由后端维护（拖动结束落盘），前端保存设置时沿用当前值，避免被零值覆盖。
+	if cur := CurrentConfig(); cur.Ball.HasPos {
+		cfg.Ball.X, cfg.Ball.Y, cfg.Ball.HasPos = cur.Ball.X, cur.Ball.Y, cur.Ball.HasPos
+	}
+	// 工具级设置由各工具页自行保存（如 MySQL 的 SQL 日志），设置页 payload 不含该字段，沿用当前值避免被清空。
+	if len(cfg.ToolSettings) == 0 {
+		cfg.ToolSettings = CurrentConfig().ToolSettings
+	}
 	path, err := SaveAppConfig(cfg)
 	if err != nil {
 		errLogf("config", "保存配置失败: %v", err)
@@ -1160,6 +1567,10 @@ func (a *App) SaveConfig(cfg AppConfig) (string, error) {
 		}
 	} else {
 		a.BallClose()
+	}
+	// 广播配置变更：首页等窗口据此刷新工具列表（设置页会自动保存，前端自行去重）
+	if a.app != nil {
+		a.app.Event.Emit("config:saved", path)
 	}
 	return logDir, nil
 }

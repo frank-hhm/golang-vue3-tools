@@ -1,69 +1,87 @@
-﻿<template>
-    <layout-body title="WebSocket调试">
-        <!-- 连接配置 -->
-        <a-card class="tool-card">
-            <a-row :gutter="12" class="form-row">
-                <a-col :span="24">
-                    <a-row :gutter="12">
-                        <a-col :span="8">
-                            <a-input v-model="url" placeholder="ws:// 或 wss:// 地址，如 wss://echo.websocket.events"
-                                :disabled="locked" allow-clear @press-enter="toggleConnect">
+<template>
+    <a-row class="ws-page" :gutter="6">
+        <!-- 左侧约 30%：连接配置（上50%）+ 发送消息（下50%） -->
+        <a-col :span="6" class="side-col">
+            <a-row class="ws-pages">
+                <a-col class="side-cols" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>连接配置</template>
+                        <template #extra>
+                            <a-tag :color="statusMeta.color" size="small">
+                                <template #icon>
+                                    <icon-exclamation-circle v-if="status === 'idle'" />
+                                    <icon-play-arrow v-else-if="status === 'connecting'" />
+                                    <icon-link v-else-if="status === 'open'" />
+                                    <icon-poweroff v-else />
+                                </template>
+                                {{ statusMeta.text }}
+                            </a-tag>
+                        </template>
+                        <div class="side-body">
+                            <a-input v-model="url" placeholder="ws:// 或 wss:// 地址" :disabled="locked" allow-clear
+                                @press-enter="toggleConnect">
                                 <template #prefix><icon-link /></template>
                             </a-input>
-                        </a-col>
-                        <a-col :span="16">
-                            <a-space>
-                                <a-input v-model="protocols" placeholder="子协议（可选，逗号分隔）" :disabled="locked"
-                                    allow-clear />
-                                <a-button v-if="!locked" type="primary" status="success" @click="connect">
-                                    <template #icon><icon-play-arrow /></template>连接
-                                </a-button>
-                                <a-button v-else status="danger" @click="disconnect">
-                                    <template #icon><icon-poweroff /></template>断开
-                                </a-button>
-
-                                <a-tag :color="statusMeta.color" size="small">
-                                    <template #icon>
-                                        <icon-exclamation-circle v-if="status === 'idle'" />
-                                        <icon-play-arrow v-else-if="status === 'connecting'" />
-                                        <icon-link v-else-if="status === 'open'" />
-                                        <icon-poweroff v-else />
-                                    </template>
-                                    {{ statusMeta.text }}
-                                </a-tag>
-
+                            <a-input v-model="protocols" placeholder="子协议（可选，逗号分隔）" :disabled="locked" allow-clear />
+                            <a-button v-if="!locked" type="primary" status="success" long @click="connect">
+                                <template #icon><icon-play-arrow /></template>连接
+                            </a-button>
+                            <a-button v-else status="danger" long @click="disconnect">
+                                <template #icon><icon-poweroff /></template>断开
+                            </a-button>
+                            <div class="switch-row">
                                 <div class="switch-item">
-                                    <div>自动重连</div>
+                                    <span>自动重连</span>
                                     <a-switch v-model="autoReconnect" size="small" />
                                 </div>
                                 <div class="switch-item">
-                                    <div>自动滚动</div>
+                                    <span>自动滚动</span>
                                     <a-switch v-model="autoScroll" size="small" />
                                 </div>
-                            </a-space>
-                        </a-col>
-                    </a-row>
-                </a-col>
-                <a-col :span="24" class="mt20">
-                    <a-space>
-                        <div class="stat">
-                            连接时长: <b>{{ duration }}</b>
+                            </div>
+                            <div class="stat-row">
+                                <div class="stat">连接时长: <b>{{ duration }}</b></div>
+                                <div class="stat">接收: <b class="in">{{ inCount }}</b></div>
+                                <div class="stat">发送: <b class="out">{{ outCount }}</b></div>
+                            </div>
                         </div>
-                        <div class="stat">接收: <b class="in">{{ inCount }}</b></div>
-                        <div class="stat">发送: <b class="out">{{ outCount }}</b></div>
-                    </a-space>
+                    </a-card>
+                </a-col>
+                <a-col class="side-cols mt6" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>发送消息</template>
+                        <template #extra>
+                            <a-button size="small" type="primary" status="success" :disabled="!connected || !sendText"
+                                @click="send">
+                                <template #icon><icon-send /></template>发送
+                            </a-button>
+                        </template>
+                        <div class="side-body send-body">
+                            <a-textarea v-model="sendText" :auto-size="{ minRows: 3, maxRows: 6 }"
+                                placeholder="输入要发送的内容（支持文本 / JSON），Ctrl+Enter 快速发送" allow-clear
+                                @press-enter.ctrl="send" />
+                            <div class="send-actions">
+                                <a-select :model-value="undefined" placeholder="插入最近发送" size="small"
+                                    :disabled="!sendHistory.length" class="history-select" @change="onPickHistory">
+                                    <a-option v-for="(h, i) in sendHistory" :key="i" :value="h">
+                                        {{ h.length > 30 ? h.slice(0, 30) + '…' : h }}
+                                    </a-option>
+                                </a-select>
+                                <a-button size="small" @click="sendText = ''" :disabled="!sendText">清空输入</a-button>
+                            </div>
+                        </div>
+                    </a-card>
                 </a-col>
             </a-row>
-        </a-card>
+        </a-col>
 
-        <!-- 实时消息 -->
-        <a-card class="tool-card">
-            <div class="msg-area">
-                <!-- 左：消息列表 -->
-                <div class="list-pane">
-                    <div class="list-toolbar">
-                        <a-input v-model="msgSearch" placeholder="搜索消息" size="small" allow-clear
-                            class="search-input">
+        <!-- 右侧主区域：实时消息（列表 + 详情）铺满 -->
+        <a-col :span="18" class="main-col">
+            <a-card class="main-panel" :body-style="{ padding: 0 }">
+                <template #title>实时消息</template>
+                <template #extra>
+                    <a-space :size="8">
+                        <a-input v-model="msgSearch" placeholder="搜索消息" size="small" allow-clear class="search-input">
                             <template #prefix><icon-search /></template>
                         </a-input>
                         <a-select v-model="msgFilter" size="small" style="width: 100px">
@@ -76,68 +94,51 @@
                         <a-button size="small" :disabled="!messages.length" @click="clearMessages">
                             <template #icon><icon-delete /></template>清除消息
                         </a-button>
-                    </div>
-                    <div ref="logRef" class="msg-list">
-                        <div v-for="m in filteredMessages" :key="m.id" class="msg-row"
-                            :class="{ active: m.id === selectedMsgId }" @click="selectedMsgId = m.id">
-                            <component :is="dirIcon(m.dir)" class="row-icon" :style="{ color: dirIconColor(m.dir) }" />
-                            <span class="row-text">{{ preview(m) }}</span>
-                            <span class="row-time">{{ m.time.slice(0, 8) }}</span>
-                        </div>
-                        <div v-if="!filteredMessages.length" class="msg-empty">暂无消息</div>
-                    </div>
-                </div>
-
-                <!-- 右：消息详情 -->
-                <div class="detail-pane">
-                    <template v-if="selectedMsg">
-                        <div class="detail-toolbar">
-                            <a-radio-group v-model="viewMode" type="button" size="mini">
-                                <a-radio value="pretty">美化</a-radio>
-                                <a-radio value="raw">原生</a-radio>
-                            </a-radio-group>
-                            <a-tag size="small" :color="dirColor(selectedMsg.dir)">{{ dirLabel(selectedMsg.dir)
-                                }}</a-tag>
-                            <span class="detail-time">{{ selectedMsg.time }}</span>
-                            <a-button size="mini" type="text" style="margin-left: auto"
-                                @click="copyText(selectedMsg.data)">
-                                <template #icon><icon-copy /></template>复制
-                            </a-button>
-                        </div>
-                        <div class="detail-body">
-                            <div v-for="(line, i) in detailLines" :key="i" class="code-line">
-                                <span class="ln">{{ i + 1 }}</span><span class="lc">{{ line }}</span>
-                            </div>
-                        </div>
-                    </template>
-                    <a-empty v-else description="选择左侧消息查看详情" class="detail-empty" />
-                </div>
-            </div>
-        </a-card>
-
-        <!-- 发送区 -->
-        <a-card class="tool-card">
-            <div class="field-label">发送消息</div>
-            <a-textarea v-model="sendText" :auto-size="{ minRows: 3, maxRows: 8 }"
-                placeholder="输入要发送的内容（支持文本 / JSON），Ctrl+Enter 快速发送" allow-clear @press-enter.ctrl="send" />
-            <a-row justify="space-between" align="center" class="send-bar">
-                <a-col>
-                    <a-space :size="12">
-                        <a-select :model-value="undefined" placeholder="插入最近发送" size="small" style="width: 200px"
-                            :disabled="!sendHistory.length" @change="onPickHistory">
-                            <a-option v-for="(h, i) in sendHistory" :key="i" :value="h">
-                                {{ h.length > 30 ? h.slice(0, 30) + '…' : h }}
-                            </a-option>
-                        </a-select>
-                        <a-button size="small" @click="sendText = ''" :disabled="!sendText">清空输入</a-button>
-                    <a-button size="small" type="primary" status="success" :disabled="!connected || !sendText" @click="send">
-                        <template #icon><icon-send /></template>发送
-                    </a-button>
                     </a-space>
-                </a-col>
-            </a-row>
-        </a-card>
-    </layout-body>
+                </template>
+                <div class="msg-area">
+                    <!-- 左：消息列表 -->
+                    <div class="list-pane">
+                        <div ref="logRef" class="msg-list">
+                            <div v-for="m in filteredMessages" :key="m.id" class="msg-row"
+                                :class="{ active: m.id === selectedMsgId }" @click="selectedMsgId = m.id">
+                                <component :is="dirIcon(m.dir)" class="row-icon"
+                                    :style="{ color: dirIconColor(m.dir) }" />
+                                <span class="row-text">{{ preview(m) }}</span>
+                                <span class="row-time">{{ m.time.slice(0, 8) }}</span>
+                            </div>
+                            <div v-if="!filteredMessages.length" class="msg-empty">暂无消息</div>
+                        </div>
+                    </div>
+
+                    <!-- 右：消息详情 -->
+                    <div class="detail-pane">
+                        <template v-if="selectedMsg">
+                            <div class="detail-toolbar">
+                                <a-radio-group v-model="viewMode" type="button" size="mini">
+                                    <a-radio value="pretty">美化</a-radio>
+                                    <a-radio value="raw">原生</a-radio>
+                                </a-radio-group>
+                                <a-tag size="small" :color="dirColor(selectedMsg.dir)">{{ dirLabel(selectedMsg.dir)
+                                    }}</a-tag>
+                                <span class="detail-time">{{ selectedMsg.time }}</span>
+                                <a-button size="mini" type="text" style="margin-left: auto"
+                                    @click="copyText(selectedMsg.data)">
+                                    <template #icon><icon-copy /></template>复制
+                                </a-button>
+                            </div>
+                            <div class="detail-body">
+                                <div v-for="(line, i) in detailLines" :key="i" class="code-line">
+                                    <span class="ln">{{ i + 1 }}</span><span class="lc">{{ line }}</span>
+                                </div>
+                            </div>
+                        </template>
+                        <a-empty v-else description="选择左侧消息查看详情" class="detail-empty" />
+                    </div>
+                </div>
+            </a-card>
+        </a-col>
+    </a-row>
 </template>
 
 <script setup lang="ts">
@@ -426,16 +427,79 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-padding);
+/* 页面根容器：a-row 铺满工具窗口内容区（.win-content / .layout-content 有确定高度） */
+.ws-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
 }
 
-.form-row {
-    margin-bottom: var(--base-margin);
+/* 左侧列（a-col，约 30% 宽）：上下两张卡片各占 50% 高 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.status-row {
-    margin-top: var(--base-radius-default);
+.ws-pages {
+    height: calc(100% - 6px);
+}
+
+.side-cols {
+    height: 50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 左侧卡片：标题走 #title、操作走 #extra，body 弹性填充 */
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 左侧卡片内容：纵向排列，超出可滚动 */
+.side-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
+    overflow-y: auto;
+}
+
+.switch-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-radius-default);
+}
+
+.switch-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--color-text-2);
+    font-size: var(--base-size-small);
+}
+
+.stat-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: auto;
 }
 
 .stat {
@@ -456,23 +520,60 @@ onUnmounted(() => {
     color: rgb(var(--green-6));
 }
 
-.switch-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--color-text-2);
-    font-size: var(--base-size-small);
+/* 发送卡片：输入后操作行贴底 */
+.send-body {
+    gap: var(--base-radius-large);
 }
 
-
-.field-label {
-    line-height: 20px;
-}
-
-.msg-area {
+.send-actions {
     display: flex;
-    gap: 12px;
-    height: 360px;
+    align-items: center;
+    gap: var(--base-radius-default);
+    margin-top: auto;
+}
+
+.history-select {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 右侧主列 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.search-input {
+    width: 180px;
+}
+
+/* 消息区：列表 + 详情，铺满主卡片 */
+.msg-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
 }
 
 .list-pane {
@@ -485,21 +586,9 @@ onUnmounted(() => {
     min-width: 0;
 }
 
-.list-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: var(--base-padding);
-    border-bottom: 1px solid var(--color-border-2);
-}
-
-.search-input {
-    flex: 1;
-    min-width: 0;
-}
-
 .msg-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
@@ -574,6 +663,7 @@ onUnmounted(() => {
 
 .detail-body {
     flex: 1;
+    min-height: 0;
     overflow: auto;
     background: #1d2129;
     padding: var(--base-padding) 0;
@@ -604,9 +694,5 @@ onUnmounted(() => {
 
 .detail-empty {
     margin: auto;
-}
-
-.send-bar {
-    margin-top: var(--base-radius-large);
 }
 </style>

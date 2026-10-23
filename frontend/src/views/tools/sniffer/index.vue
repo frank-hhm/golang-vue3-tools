@@ -1,196 +1,260 @@
-﻿<template>
-    <layout-body title="抓包工具">
-        <!-- 顶部工具栏 -->
-        <a-card class="tool-card toolbar">
-            <a-row justify="space-between" align="center">
-                <a-col>
-                    <a-space :size="12">
-                        <a-input-number v-model="port" :min="1" :max="65535" size="small" style="width: 110px"
-                            :disabled="running" hide-button />
-                        <a-tag v-if="!running" color="gray">未开始</a-tag>
-                        <a-tag v-else color="green">
-                            <template #icon><icon-record /></template>捕获中 127.0.0.1:{{ port }}
-                        </a-tag>
-                        <a-button v-if="!running" type="primary" status="success" @click="onStart">
-                            <template #icon><icon-play-arrow /></template>开始抓包
-                        </a-button>
-                        <a-button v-else status="danger" @click="onStop">
-                            <template #icon><icon-pause /></template>停止
-                        </a-button>
-                        <a-button :disabled="!flows.length" @click="clearAll">
-                            <template #icon><icon-delete /></template>清空
-                        </a-button>
-                    </a-space>
+<template>
+    <a-row class="sniffer-page" :gutter="6">
+        <!-- 左侧约 30%：抓包控制（上50%）+ 筛选（下50%） -->
+        <a-col :span="5" class="side-col">
+            <a-row class="side-pages">
+                <a-col class="side-cols" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>
+                            <a-space :size="6">
+                                <span class="led" :class="{ on: running }"></span>
+                                <span>抓包控制</span>
+                            </a-space>
+                        </template>
+                        <template #extra>
+                            <a-tag size="small" :color="running ? 'green' : 'gray'">
+                                {{ running ? "捕获中" : "未开始" }}
+                            </a-tag>
+                        </template>
+                        <div class="side-body">
+                            <div class="field">
+                                <div class="field-label">代理端口</div>
+                                <a-input-number v-model="port" :min="1" :max="65535" :disabled="running" hide-button
+                                    style="width: 100%" />
+                            </div>
+                            <div class="field-actions">
+                                <a-button v-if="!running" type="primary" status="success" long @click="onStart">
+                                    <template #icon><icon-play-arrow /></template>开始抓包
+                                </a-button>
+                                <a-button v-else status="danger" long @click="onStop">
+                                    <template #icon><icon-pause /></template>停止抓包
+                                </a-button>
+                                <a-button long :disabled="!flows.length" @click="clearAll">
+                                    <template #icon><icon-delete /></template>清空记录
+                                </a-button>
+                            </div>
+                            <a-descriptions :column="2" size="small" bordered class="stat-desc">
+                                <a-descriptions-item label="总数">{{ flows.length }}</a-descriptions-item>
+                                <a-descriptions-item label="显示">{{ filteredFlows.length }}</a-descriptions-item>
+                                <a-descriptions-item label="监听" :span="2">
+                                    <span class="mono">127.0.0.1:{{ port }}</span>
+                                </a-descriptions-item>
+                            </a-descriptions>
+                            <div class="ca-tip">
+                                <icon-info-circle /> 开始后会安装本地根证书并临时接管系统代理（停止时自动还原），用于解密 HTTPS 流量。
+                            </div>
+                        </div>
+                    </a-card>
                 </a-col>
-                <a-col>
-                    <span class="count-tip">共 {{ flows.length }} 条 / 显示 {{ filteredFlows.length }} 条</span>
+                <a-col class="side-cols mt6" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>
+                            <a-space>
+                                <div>筛选</div>
+                                <a-input-search v-model="sideSearch" placeholder="筛选应用 / 域名" size="small" allow-clear />
+                            </a-space>
+                        </template>
+                        <template #extra>
+                            <a-radio-group v-model="filterTab" type="button">
+                                <a-radio value="app">应用</a-radio>
+                                <a-radio value="domain">域名</a-radio>
+                            </a-radio-group>
+                        </template>
+                        <div class="side-body filter-body">
+                            <div v-show="filterTab === 'app'" class="filter-view">
+                                <a-list :bordered="false" size="small" class="filter-list">
+                                    <a-list-item @click="selectedProcess = ''">
+                                        <div class="filter-item" :class="{ active: !selectedProcess }">
+                                            <span class="filter-name">全部</span>
+                                            <a-tag size="small" color="gray">{{ flows.length }}</a-tag>
+                                        </div>
+                                    </a-list-item>
+                                    <a-list-item v-for="p in processList" :key="p.name" @click="toggleProcess(p.name)">
+                                        <div class="filter-item" :class="{ active: selectedProcess === p.name }">
+                                            <span class="filter-name" :title="p.name">{{ p.name }}</span>
+                                            <a-tag size="small" color="gray">{{ p.count }}</a-tag>
+                                        </div>
+                                    </a-list-item>
+                                </a-list>
+                            </div>
+                            <div v-show="filterTab === 'domain'" class="filter-view">
+                                <a-list :bordered="false" size="small" class="filter-list">
+                                    <a-list-item @click="selectedDomain = ''">
+                                        <div class="filter-item" :class="{ active: !selectedDomain }">
+                                            <span class="filter-name">全部</span>
+                                            <a-tag size="small" color="gray">{{ flows.length }}</a-tag>
+                                        </div>
+                                    </a-list-item>
+                                    <a-list-item v-for="d in domainList" :key="d.name" @click="toggleDomain(d.name)">
+                                        <div class="filter-item" :class="{ active: selectedDomain === d.name }">
+                                            <span class="filter-name" :title="d.name">{{ d.name }}</span>
+                                            <a-tag size="small" color="gray">{{ d.count }}</a-tag>
+                                        </div>
+                                    </a-list-item>
+                                </a-list>
+                            </div>
+                        </div>
+                    </a-card>
                 </a-col>
             </a-row>
-            <div class="ca-tip">
-                <icon-info-circle /> 开始后会安装本地根证书并临时接管系统代理（停止时自动还原），用于解密 HTTPS 流量。
-            </div>
-        </a-card>
+        </a-col>
 
-        <div class="main-area">
-            <!-- 左侧：应用 / 域名 筛选 -->
-            <div class="sidebar">
-                <a-input-search v-model="sideSearch" placeholder="筛选" size="small" allow-clear class="side-search" />
-
-                <div class="side-group">
-                    <div class="side-title" @click="showApps = !showApps">
-                        <icon-down :class="{ collapsed: !showApps }" /> 应用程序
-                    </div>
-                    <ul v-show="showApps" class="side-list">
-                        <li :class="{ active: !selectedProcess, item: true }" @click="selectedProcess = ''">
-                            <span class="name">全部</span><span class="cnt">{{ flows.length }}</span>
-                        </li>
-                        <li v-for="p in processList" :key="p.name"
-                            :class="{ active: selectedProcess === p.name, item: true }" @click="toggleProcess(p.name)">
-                            <span class="name" :title="p.name">{{ p.name }}</span><span class="cnt">{{ p.count }}</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <a-divider margin="8" />
-
-                <div class="side-group">
-                    <div class="side-title" @click="showDomains = !showDomains">
-                        <icon-down :class="{ collapsed: !showDomains }" /> 域名
-                    </div>
-                    <ul v-show="showDomains" class="side-list">
-                        <li v-for="d in domainList" :key="d.name"
-                            :class="{ active: selectedDomain === d.name, item: true }" @click="toggleDomain(d.name)">
-                            <span class="name" :title="d.name">{{ d.name }}</span><span class="cnt">{{ d.count }}</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- 中间：协议 Tab + 请求列表 -->
-            <div class="center">
-                <div class="proto-tabs">
-                    <span v-for="t in PROTO_TABS" :key="t.key" class="proto-tab"
-                        :class="{ active: selectedProto === t.key }" @click="selectedProto = t.key">
-                        {{ t.label }}<span v-if="protoCount(t.key) && t.key !== 'All'" class="pcnt">{{ protoCount(t.key)
-                            }}</span>
-                    </span>
-                    <a-input-search v-model="keyword" placeholder="搜索 URL / 域名" size="mini" allow-clear
-                        style="width: 180px; margin-left: auto" />
-                </div>
-
-                <a-table :data="pagedFlows" row-key="id" size="small" :pagination="false"
-                    :scroll="{ y: '100%', x: 720 }" :column-resizable="true"
-                    :row-class="(r) => (r.id === selectedId ? 'row-selected' : '')" @row-click="onRowClick"
-                    class="flow-table">
-                    <template #columns>
-                        <a-table-column title="ID" data-index="id" :width="60" />
-                        <a-table-column title="协议" data-index="protocol" :width="70">
-                            <template #cell="{ record }">
-                                <a-tag size="small" :color="protoColor(record.protocol)">{{ record.protocol }}</a-tag>
-                            </template>
-                        </a-table-column>
-                        <a-table-column title="方法" data-index="method" :width="70" />
-                        <a-table-column title="URL" data-index="url" :ellipsis="true" :tooltip="true" />
-                        <a-table-column title="应用程序" data-index="process" :width="120" :ellipsis="true"
-                            :tooltip="true" />
-                        <a-table-column title="状态" data-index="statusCode" :width="70">
-                            <template #cell="{ record }">
-                                <span :style="{ color: statusColor(record.statusCode) }">{{ record.statusCode }}</span>
-                            </template>
-                        </a-table-column>
-                        <a-table-column title="大小" :width="90">
-                            <template #cell="{ record }">{{ formatSize(record.respSize) }}</template>
-                        </a-table-column>
-                        <a-table-column title="耗时" :width="80">
-                            <template #cell="{ record }">{{ record.duration }}ms</template>
-                        </a-table-column>
-                    </template>
-                </a-table>
-
-                <div class="pager">
-                    <a-pagination v-model:current="page" :total="filteredFlows.length" :page-size="pageSize" size="mini"
-                        :page-count="pageSize" show-total />
-                </div>
-            </div>
-
-            <!-- 右侧：详情 -->
-            <div class="detail">
-                <template v-if="selectedFlow">
-                    <div class="detail-head">
-                        <a-tag :color="protoColor(selectedFlow.protocol)">{{ selectedFlow.method }}</a-tag>
-                        <span class="detail-url" :title="selectedFlow.url">{{ selectedFlow.url }}</span>
-                        <a-tag :style="{ color: statusColor(selectedFlow.statusCode) }">{{ selectedFlow.statusCode }}
-                        </a-tag>
-                    </div>
-                    <a-tabs default-active-key="overview" size="small" type="text">
-                        <a-tab-pane key="overview" title="概览">
-                            <a-descriptions :column="1" size="small" bordered>
-                                <a-descriptions-item label="时间">{{ selectedFlow.time }}</a-descriptions-item>
-                                <a-descriptions-item label="协议">{{ selectedFlow.protocol }}</a-descriptions-item>
-                                <a-descriptions-item label="方法">{{ selectedFlow.method }}</a-descriptions-item>
-                                <a-descriptions-item label="域名">{{ selectedFlow.host }}</a-descriptions-item>
-                                <a-descriptions-item label="路径">{{ selectedFlow.path }}</a-descriptions-item>
-                                <a-descriptions-item label="状态">{{ selectedFlow.statusCode }}
-                                    {{ selectedFlow.status }}</a-descriptions-item>
-                                <a-descriptions-item label="应用程序">{{ selectedFlow.process || '-' }} (PID
-                                    {{ selectedFlow.pid }})</a-descriptions-item>
-                                <a-descriptions-item label="响应类型">{{ selectedFlow.contentType || '-'
-                                }}</a-descriptions-item>
-                                <a-descriptions-item label="请求/响应大小">{{ formatSize(selectedFlow.reqSize) }} /
-                                    {{ formatSize(selectedFlow.respSize) }}</a-descriptions-item>
-                                <a-descriptions-item label="耗时">{{ selectedFlow.duration }} ms</a-descriptions-item>
-                            </a-descriptions>
-                        </a-tab-pane>
-                        <a-tab-pane key="reqHeaders" :title="`请求头(${headerCount(selectedFlow.requestHeaders)})`">
-                            <a-descriptions v-if="headerEntries(selectedFlow.requestHeaders).length" :column="1"
-                                size="small" bordered>
-                                <a-descriptions-item v-for="hd in headerEntries(selectedFlow.requestHeaders)"
-                                    :key="hd.k" :label="hd.k">
-                                    <span class="hdr-val">{{ hd.v }}</span>
-                                </a-descriptions-item>
-                            </a-descriptions>
-                            <a-empty v-else description="（无请求头）" />
-                        </a-tab-pane>
-                        <a-tab-pane key="reqBody" title="请求体">
-                            <div class="body-bar">
-                                <a-tag size="small" color="gray">{{ bodyKind(selectedFlow.requestBody) }}</a-tag>
-                                <a-button v-if="selectedFlow.requestBody" size="mini" type="text"
-                                    @click="copyText(selectedFlow.requestBody)">
-                                    <template #icon><icon-copy /></template>复制
-                                </a-button>
+        <!-- 右侧：请求列表（左）+ 请求详情（右） -->
+        <a-col :span="19" class="main-col">
+            <a-row class="main-row">
+                <a-col :span="12" class="pane-col">
+                    <a-card class="main-panel" :body-style="{ padding: 0 }">
+                        <template #title>
+                            <a-space :size="8">
+                                <span>请求列表</span>
+                                <a-tag size="small">共 {{ flows.length }}</a-tag>
+                            </a-space>
+                        </template>
+                        <template #extra>
+                            <a-radio-group v-model="selectedProto" type="button">
+                                <a-radio v-for="t in PROTO_TABS" :key="t.key" :value="t.key">
+                                    {{ t.label }}<span v-if="t.key !== 'All'" class="pcnt">{{ protoCount(t.key)
+                                        }}</span>
+                                </a-radio>
+                            </a-radio-group>
+                        </template>
+                        <div class="list-body">
+                            <div class="list-toolbar">
+                                <a-input-search v-model="keyword" placeholder="搜索 URL / 域名" size="small" allow-clear
+                                    class="list-search" />
+                                <span class="count-tip">显示 {{ filteredFlows.length }} 条</span>
                             </div>
-                            <pre class="body-pre">{{ formatBody(selectedFlow.requestBody) }}</pre>
-                        </a-tab-pane>
-                        <a-tab-pane key="respHeaders" :title="`响应头(${headerCount(selectedFlow.responseHeaders)})`">
-                            <a-descriptions v-if="headerEntries(selectedFlow.responseHeaders).length" :column="1"
-                                size="small" bordered>
-                                <a-descriptions-item v-for="hd in headerEntries(selectedFlow.responseHeaders)"
-                                    :key="hd.k" :label="hd.k">
-                                    <span class="hdr-val">{{ hd.v }}</span>
-                                </a-descriptions-item>
-                            </a-descriptions>
-                            <a-empty v-else description="（无响应头）" />
-                        </a-tab-pane>
-                        <a-tab-pane key="respBody" title="响应体">
-                            <div class="body-bar">
-                                <a-tag size="small" color="gray">{{ bodyKind(selectedFlow.responseBody) }}</a-tag>
-                                <a-button v-if="selectedFlow.responseBody" size="mini" type="text"
-                                    @click="copyText(selectedFlow.responseBody)">
-                                    <template #icon><icon-copy /></template>复制
-                                </a-button>
+                            <a-table class="flow-table" :data="pagedFlows" row-key="id" size="small" :pagination="false"
+                                :scroll="{ y: '100%', x: 720 }" :column-resizable="true"  :bordered="{ wrapper: true, cell: true }"
+                                :row-class="(r) => (r.id === selectedId ? 'row-selected' : '')" @row-click="onRowClick">
+                                <template #columns>
+                                    <a-table-column title="ID" data-index="id" :width="60" />
+                                    <a-table-column title="协议" data-index="protocol" :width="70">
+                                        <template #cell="{ record }">
+                                            <a-tag size="small" :color="protoColor(record.protocol)">
+                                                {{ record.protocol }}
+                                            </a-tag>
+                                        </template>
+                                    </a-table-column>
+                                    <a-table-column title="方法" data-index="method" :width="70" />
+                                    <a-table-column title="URL" data-index="url" :ellipsis="true" :tooltip="true" />
+                                    <a-table-column title="应用程序" data-index="process" :width="120" :ellipsis="true"
+                                        :tooltip="true" />
+                                    <a-table-column title="状态" data-index="statusCode" :width="70">
+                                        <template #cell="{ record }">
+                                            <span :style="{ color: statusColor(record.statusCode) }">
+                                                {{ record.statusCode }}
+                                            </span>
+                                        </template>
+                                    </a-table-column>
+                                    <a-table-column title="大小" :width="90">
+                                        <template #cell="{ record }">{{ formatSize(record.respSize) }}</template>
+                                    </a-table-column>
+                                    <a-table-column title="耗时" :width="80">
+                                        <template #cell="{ record }">{{ record.duration }}ms</template>
+                                    </a-table-column>
+                                </template>
+                            </a-table>
+                            <div class="pager">
+                                <a-pagination v-model:current="page" :total="filteredFlows.length" :page-size="pageSize"
+                                    size="mini" show-total />
                             </div>
-                            <pre class="body-pre">{{ formatBody(selectedFlow.responseBody) }}</pre>
-                        </a-tab-pane>
-                    </a-tabs>
-                </template>
-                <a-empty v-else description="选择左侧请求查看详情" style="margin-top: 60px" />
-            </div>
-        </div>
-    </layout-body>
+                        </div>
+                    </a-card>
+                </a-col>
+
+                <a-col :span="12" class="pane-col">
+                    <a-card class="main-panel" :body-style="{ padding: 0 }">
+                        <template #title>请求详情</template>
+                        <template #extra>
+                            <a-space v-if="selectedFlow" :size="6">
+                                <a-tag size="small" :color="protoColor(selectedFlow.protocol)">
+                                    {{ selectedFlow.method }}
+                                </a-tag>
+                                <a-tag size="small" :style="{ color: statusColor(selectedFlow.statusCode) }">
+                                    {{ selectedFlow.statusCode }}
+                                </a-tag>
+                            </a-space>
+                        </template>
+                        <div class="detail-body">
+                            <template v-if="selectedFlow">
+                                <div class="detail-head">
+                                    <span class="detail-url" :title="selectedFlow.url">{{ selectedFlow.url }}</span>
+                                </div>
+                                <a-radio-group v-model="detailTab" type="button" class="detail-nav">
+                                    <a-radio value="overview">概览</a-radio>
+                                    <a-radio value="reqHeaders">请求头</a-radio>
+                                    <a-radio value="reqBody">请求体</a-radio>
+                                    <a-radio value="respHeaders">响应头</a-radio>
+                                    <a-radio value="respBody">响应体</a-radio>
+                                </a-radio-group>
+
+                                <div v-show="detailTab === 'overview'" class="detail-view">
+                                    <a-descriptions :column="1" size="small" bordered>
+                                        <a-descriptions-item label="时间">{{ selectedFlow.time }}</a-descriptions-item>
+                                        <a-descriptions-item label="协议">{{ selectedFlow.protocol
+                                            }}</a-descriptions-item>
+                                        <a-descriptions-item label="方法">{{ selectedFlow.method }}</a-descriptions-item>
+                                        <a-descriptions-item label="域名">{{ selectedFlow.host }}</a-descriptions-item>
+                                        <a-descriptions-item label="路径">{{ selectedFlow.path }}</a-descriptions-item>
+                                        <a-descriptions-item label="状态">{{ selectedFlow.statusCode }}
+                                            {{ selectedFlow.status }}</a-descriptions-item>
+                                        <a-descriptions-item label="应用程序">{{ selectedFlow.process || '-' }} (PID
+                                            {{ selectedFlow.pid }})</a-descriptions-item>
+                                        <a-descriptions-item label="响应类型">
+                                            {{ selectedFlow.contentType || '-' }}
+                                        </a-descriptions-item>
+                                        <a-descriptions-item label="请求/响应大小">{{ formatSize(selectedFlow.reqSize) }} /
+                                            {{ formatSize(selectedFlow.respSize) }}</a-descriptions-item>
+                                        <a-descriptions-item label="耗时">{{ selectedFlow.duration }}
+                                            ms</a-descriptions-item>
+                                    </a-descriptions>
+                                </div>
+
+                                <div v-show="detailTab === 'reqHeaders'" class="detail-view">
+                                    <a-descriptions v-if="headerEntries(selectedFlow.requestHeaders).length" :column="1"
+                                        size="small" bordered>
+                                        <a-descriptions-item v-for="hd in headerEntries(selectedFlow.requestHeaders)"
+                                            :key="hd.k" :label="hd.k">
+                                            <span class="hdr-val">{{ hd.v }}</span>
+                                        </a-descriptions-item>
+                                    </a-descriptions>
+                                    <a-empty v-else description="（无请求头）" />
+                                </div>
+
+                                <div v-show="detailTab === 'reqBody'" class="detail-view detail-view-fill">
+                                    <body-viewer :body="selectedFlow.requestBody" />
+                                </div>
+
+                                <div v-show="detailTab === 'respHeaders'" class="detail-view">
+                                    <a-descriptions v-if="headerEntries(selectedFlow.responseHeaders).length"
+                                        :column="1" size="small" bordered>
+                                        <a-descriptions-item v-for="hd in headerEntries(selectedFlow.responseHeaders)"
+                                            :key="hd.k" :label="hd.k">
+                                            <span class="hdr-val">{{ hd.v }}</span>
+                                        </a-descriptions-item>
+                                    </a-descriptions>
+                                    <a-empty v-else description="（无响应头）" />
+                                </div>
+
+                                <div v-show="detailTab === 'respBody'" class="detail-view detail-view-fill">
+                                    <body-viewer :body="selectedFlow.responseBody"
+                                        :content-type="selectedFlow.contentType" />
+                                </div>
+                            </template>
+                            <div v-else class="detail-empty">
+                                <a-empty description="选择左侧请求查看详情" />
+                            </div>
+                        </div>
+                    </a-card>
+                </a-col>
+            </a-row>
+        </a-col>
+    </a-row>
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, onMounted, onUnmounted, ref } from "vue";
+import { computed, getCurrentInstance, onMounted, onUnmounted, ref, watch } from "vue";
 import { Message } from "@arco-design/web-vue";
 import type { TableData } from "@arco-design/web-vue";
 import { Events } from "@wailsio/runtime";
@@ -219,8 +283,8 @@ const selectedProcess = ref("");
 const selectedDomain = ref("");
 const keyword = ref("");
 const sideSearch = ref("");
-const showApps = ref(true);
-const showDomains = ref(true);
+const filterTab = ref("app");
+const detailTab = ref("overview");
 
 const selectedId = ref<number | null>(null);
 const page = ref(1);
@@ -297,6 +361,11 @@ const filteredFlows = computed(() =>
     )
 );
 
+/** 筛选条件变化后回到第一页，避免停留在越界空页 */
+watch([selectedProto, selectedProcess, selectedDomain, keyword], () => {
+    page.value = 1;
+});
+
 const pagedFlows = computed(() => {
     const start = (page.value - 1) * pageSize;
     return filteredFlows.value.slice(start, start + pageSize);
@@ -335,8 +404,6 @@ const toggleProcess = (name: string) => (selectedProcess.value = selectedProcess
 const toggleDomain = (name: string) => (selectedDomain.value = selectedDomain.value === name ? "" : name);
 
 /* ============ 展示辅助 ============ */
-const headerCount = (hObj: Hdrs) => (hObj ? Object.keys(hObj).length : 0);
-
 const formatSize = (n: number) => {
     if (!n) return "0 B";
     if (n < 1024) return `${n} B`;
@@ -360,208 +427,289 @@ type Hdrs = Record<string, string[] | null | undefined> | null | undefined;
 /** 把请求/响应头映射转为 [{ 名, 值 }] 列表 */
 const headerEntries = (hObj: Hdrs) =>
     Object.entries(hObj || {}).map(([k, v]) => ({ k, v: (v || []).join(", ") }));
-
-/** 尝试将 JSON 美化缩进，失败则原样返回 */
-const formatBody = (s?: string) => {
-    if (!s) return "(空)";
-    try {
-        return JSON.stringify(JSON.parse(s), null, 2);
-    } catch {
-        return s;
-    }
-};
-
-/** 粗略判断请求/响应体类型 */
-const bodyKind = (s?: string) => {
-    if (!s) return "空";
-    try {
-        JSON.parse(s);
-        return "JSON";
-    } catch {
-        /* 非 JSON */
-    }
-    if (s.trimStart().startsWith("<")) return "HTML/XML";
-    return "文本";
-};
-
-const copyText = async (text: string) => {
-    try {
-        await navigator.clipboard.writeText(text);
-        Message.success("已复制到剪贴板");
-    } catch {
-        Message.error("复制失败");
-    }
-};
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-margin);
+/* 页面根容器：a-row 铺满工具窗口内容区（.win-content / .layout-content 有确定高度） */
+.sniffer-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
 }
 
-.toolbar .count-tip {
-    color: var(--color-text-3);
+/* 左侧列（a-col，约 30% 宽）：上下两张卡片各占 50% 高 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-pages {
+    height: calc(100% - 6px);
+}
+
+.side-cols {
+    height: 50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 左侧卡片：标题走 #title、操作走 #extra，body 弹性填充 */
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
+    overflow-y: auto;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.field-label {
+    color: var(--color-text-2);
     font-size: var(--base-size-small);
+    font-weight: 500;
+}
+
+.field-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-radius-default);
+}
+
+.led {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgb(var(--red-6));
+    box-shadow: 0 0 4px rgba(245, 63, 63, 0.6);
+    vertical-align: middle;
+}
+
+.led.on {
+    background: rgb(var(--green-6));
+    box-shadow: 0 0 6px rgba(0, 180, 42, 0.7);
+}
+
+.stat-desc :deep(.arco-descriptions-item-label) {
+    font-size: var(--base-size-small);
+}
+
+.stat-desc :deep(.arco-descriptions-item-value) {
+    font-size: var(--base-size-small);
+}
+
+.mono {
+    font-family: Consolas, Monaco, "Courier New", monospace;
 }
 
 .ca-tip {
-    margin-top: var(--base-padding);
+    margin-top: auto;
     color: var(--color-text-3);
     font-size: var(--base-size-small);
+    line-height: 1.6;
 }
 
-.main-area {
-    display: flex;
-    gap: 12px;
-    height: calc(100vh - 220px);
-    min-height: 420px;
-}
-
-/* 左侧 */
-.sidebar {
-    width: 200px;
-    flex: 0 0 200px;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-large);
-    padding: var(--base-padding);
-    overflow-y: auto;
-    background: var(--color-bg-2);
-}
-
-.side-search {
-    margin-bottom: var(--base-padding);
-}
-
-.side-title {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-weight: 600;
-    font-size: var(--base-size-small);
-    color: var(--color-text-1);
-    cursor: pointer;
-    margin: var(--base-radius-default) 0;
-}
-
-.side-title .collapsed {
-    transform: rotate(-90deg);
-}
-
-.side-list {
-    list-style: none;
-    margin: 0;
+/* 筛选卡片：搜索 + 应用/域名列表 */
+.filter-body {
+    gap: var(--base-radius-default);
     padding: 0;
 }
 
-.side-list .item {
+.filter-view {
+    flex: 1;
+    min-height: 0;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--base-radius-default) var(--base-padding);
-    border-radius: var(--base-radius-default);
+    flex-direction: column;
+}
+
+.filter-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.filter-list :deep(.arco-list-item) {
+    padding: 0;
     cursor: pointer;
+}
+
+.filter-list :deep(.arco-list-item:hover) {
+    background: var(--color-fill-2);
+}
+
+.filter-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:var(--base-padding);
     font-size: var(--base-size-small);
     color: var(--color-text-2);
 }
 
-.side-list .item:hover {
-    background: var(--color-fill-2);
-}
-
-.side-list .item.active {
-    background: var(--color-primary-light-1);
+.filter-item.active {
     color: rgb(var(--primary-6));
 }
 
-.side-list .name {
+.filter-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 130px;
 }
 
-.side-list .cnt {
+/* 右侧主列：请求列表 + 请求详情 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-row {
+    flex: 1;
+    min-height: 0;
+}
+
+.pane-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 列表与详情之间的 6px 间距（与 redis 的 gutter 一致） */
+.pane-col+.pane-col {
+    padding-left: 6px;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 请求列表：工具栏 + 表格 + 分页 */
+.list-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.list-toolbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
+    border-bottom: 1px solid var(--color-border-1);
+}
+
+.list-search {
+    flex: 1;
+    min-width: 0;
+}
+
+.count-tip {
+    flex: none;
     color: var(--color-text-3);
     font-size: var(--base-size-small);
 }
 
-/* 中间 */
-.center {
-    flex: 1 1 46%;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-large);
-    overflow: hidden;
-}
-
-.proto-tabs {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: var(--base-radius-default) var(--base-radius-large);
-    border-bottom: 1px solid var(--color-border-2);
-    flex-wrap: wrap;
-}
-
-.proto-tab {
-    padding: var(--base-radius-small) var(--base-radius-large);
-    border-radius: var(--base-radius-default);
-    cursor: pointer;
-    font-size: var(--base-size-small);
-    color: var(--color-text-2);
-}
-
-.proto-tab:hover {
-    background: var(--color-fill-2);
-}
-
-.proto-tab.active {
-    background: rgb(var(--primary-6));
-    color: #fff;
-}
-
-.proto-tab .pcnt {
-    margin-left: var(--base-radius-default);
-    opacity: 0.85;
-    font-size: var(--base-size-small);
+.pcnt {
+    margin-left: 4px;
+    opacity: 0.8;
 }
 
 .flow-table {
     flex: 1;
+    min-height: 0;
     overflow: hidden;
 }
 
-.pager {
-    padding: var(--base-radius-default) var(--base-radius-large);
-    border-top: 1px solid var(--color-border-2);
+/* a-table 内部逐层撑满：表头固定、表体滚动 */
+.flow-table :deep(.arco-spin) {
+    height: 100%;
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
+}
+
+.flow-table :deep(.arco-table-container) {
+    flex: 1;
+    min-height: 0;
+}
+
+.flow-table :deep(.arco-table-body) {
+    flex: 1;
+    min-height: 0;
 }
 
 :deep(.row-selected) {
     background-color: var(--color-primary-light-1) !important;
 }
 
-/* 右侧详情 */
-.detail {
-    flex: 1 1 40%;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-large);
-    padding: var(--base-radius-large) var(--base-padding);
-    overflow-y: auto;
-    background: var(--color-bg-2);
+.pager {
+    flex: none;
+    padding: 6px var(--base-padding);
+    border-top: 1px solid var(--color-border-1);
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* 请求详情：URL + 子视图切换 + 可滚动内容 */
+.detail-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-radius-default);
+    padding: var(--base-padding);
 }
 
 .detail-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: var(--base-padding);
+    flex: none;
 }
 
 .detail-url {
-    flex: 1;
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -569,23 +717,28 @@ const copyText = async (text: string) => {
     color: var(--color-text-1);
 }
 
-.body-pre {
-    background: #1d2129;
-    color: #e6e6e6;
-    padding: var(--base-radius-large) var(--base-padding);
-    border-radius: var(--base-radius-default);
-    font-size: var(--base-size-small);
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 360px;
+.detail-nav {
+    flex: none;
+}
+
+.detail-view {
+    flex: 1;
+    min-height: 0;
     overflow: auto;
 }
 
-.body-bar {
+/* 报文视图：交给 body-viewer 自己滚动（行号栏与内容同步） */
+.detail-view-fill {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-empty {
+    flex: 1;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--base-radius-default);
+    justify-content: center;
 }
 
 .hdr-val {

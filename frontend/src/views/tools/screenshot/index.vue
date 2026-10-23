@@ -1,32 +1,49 @@
-﻿<template>
-    <layout-body title="截图预览">
-        <a-card class="tool-card">
-            <a-row justify="space-between" align="center" class="form-row">
-                <a-col>
-                    <span class="field-label" style="margin: 0">截图结果</span>
-                </a-col>
-                <a-col>
-                    <a-space :size="12">
-                        <a-button type="primary" status="success" @click="recapture">
-                            <template #icon><icon-camera /></template>重新截图
-                        </a-button>
-                        <a-button :disabled="!image" @click="copyImage">
-                            <template #icon><icon-copy /></template>复制图片
-                        </a-button>
-                        <a-button :disabled="!image" :loading="saving" @click="download">
-                            <template #icon><icon-download /></template>保存 PNG
-                        </a-button>
-                    </a-space>
-                </a-col>
-            </a-row>
+<template>
+    <a-row class="shot-page" :gutter="6">
+        <!-- 左侧约 25%：截图操作 -->
+        <a-col :span="6" class="side-col">
+            <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                <template #title>截图操作</template>
+                <template #extra>
+                    <a-tag size="small" :color="image ? 'green' : 'gray'">
+                        {{ image ? "已有截图" : "暂无截图" }}
+                    </a-tag>
+                </template>
+                <div class="side-body">
+                    <a-button type="primary" status="success" long @click="recapture">
+                        <template #icon><icon-camera /></template>重新截图
+                    </a-button>
+                    <a-button long :disabled="!image" @click="copyImage">
+                        <template #icon><icon-copy /></template>复制图片
+                    </a-button>
+                    <a-button long :disabled="!image" :loading="saving" @click="download">
+                        <template #icon><icon-download /></template>保存 PNG
+                    </a-button>
+                    <div class="tip">
+                        截图会先复制到系统剪贴板，可直接 Ctrl+V 粘贴；「保存 PNG」会存到程序目录 data/screenshots 下。
+                    </div>
+                </div>
+            </a-card>
+        </a-col>
 
-            <div class="preview-wrap">
-                <img v-if="image" :src="image" class="preview-img" alt="screenshot" />
-                <a-empty v-else description="暂无截图，点击「重新截图」进行区域捕获" />
-            </div>
-            <div class="tip">截图会先复制到系统剪贴板，可直接 Ctrl+V 粘贴；「保存 PNG」会存到程序目录 data/screenshots 下。</div>
-        </a-card>
-    </layout-body>
+        <!-- 右侧：预览 -->
+        <a-col :span="18" class="main-col">
+            <a-card class="main-panel" :body-style="{ padding: 0 }">
+                <template #title>
+                    <a-space :size="8">
+                        <span>截图预览</span>
+                        <a-tag size="small">PNG</a-tag>
+                    </a-space>
+                </template>
+                <div class="preview-body">
+                    <div class="preview-wrap">
+                        <img v-if="image" :src="image" class="preview-img" alt="screenshot" />
+                        <a-empty v-else description="暂无截图，点击左侧「重新截图」进行区域捕获" />
+                    </div>
+                </div>
+            </a-card>
+        </a-col>
+    </a-row>
 </template>
 
 <script setup lang="ts">
@@ -97,38 +114,105 @@ const copyImage = async () => {
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-padding);
+/* 页面根容器：a-row 铺满工具窗口内容区 */
+.shot-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
 }
 
-.form-row {
-    margin-bottom: var(--base-margin);
+/* 左侧操作卡片 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.field-label {
-    color: var(--color-text-2);
-    font-size: var(--base-size-small);
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.preview-wrap {
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-large);
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
     padding: var(--base-padding);
-    min-height: 240px;
+    overflow-y: auto;
+}
+
+.tip {
+    margin-top: auto;
+    color: var(--color-text-3);
+    font-size: var(--base-size-small);
+    line-height: 1.8;
+}
+
+/* 右侧主列 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.preview-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    padding: var(--base-padding);
+}
+
+/* 预览区随窗口铺满，图片等比缩放 */
+.preview-wrap {
+    flex: 1;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: var(--base-padding);
+    border: 1px solid var(--color-border-2);
+    border-radius: var(--base-radius-large);
     background: var(--color-fill-1);
+    overflow: hidden;
 }
 
 .preview-img {
     max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
     border-radius: var(--base-radius-default);
-}
-
-.tip {
-    margin-top: var(--base-radius-large);
-    color: var(--color-text-3);
-    font-size: var(--base-size-small);
 }
 </style>

@@ -1,11 +1,18 @@
-﻿<template>
-    <a-card title="二维码生成">
-        <a-tabs default-active-key="normal" type="rounded" class="tool-card">
-            <!-- ============ 普通二维码 ============ -->
-            <a-tab-pane key="normal" title="普通二维码">
-                <a-row :gutter="16">
-                    <a-col :span="14">
-                        <div class="field-label">文本：</div>
+<template>
+    <a-row class="qr-page" :gutter="6">
+        <!-- 左侧约 25%：参数设置 -->
+        <a-col :span="6" class="side-col">
+            <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                <template #title>参数设置</template>
+                <template #extra>
+                    <a-tag size="small">{{ qrMode === "normal" ? "普通" : "透明" }}</a-tag>
+                </template>
+                <div class="side-body">
+                    <!-- 文本 -->
+                    <div class="field">
+                        <div class="field-label">文本</div>
+                        <a-textarea v-model="text" :auto-size="{ minRows: 4, maxRows: 8 }" placeholder="请输入文字"
+                            allow-clear />
                         <div class="quick-bar">
                             <a-button size="mini" type="text" @click="vcardVisible = true">电子名片</a-button>
                             <a-button size="mini" type="text" @click="phoneVisible = true">手机号</a-button>
@@ -16,209 +23,236 @@
                                 <template #icon><icon-upload /></template>传图解码
                             </a-button>
                         </div>
-                        <a-textarea v-model="text" :auto-size="{ minRows: 4, maxRows: 8 }" placeholder="请输入文字"
-                            allow-clear class="form-row" />
+                    </div>
 
-                        <a-row :gutter="12" align="center" class="form-row">
-                            <a-col :span="8">
-                                <span class="opt-label">容错：</span>
-                                <a-select v-model="ecLevel" size="small" style="width: 96px">
-                                    <a-option value="L">7%</a-option>
-                                    <a-option value="M">15%</a-option>
-                                    <a-option value="Q">25%</a-option>
-                                    <a-option value="H">30%</a-option>
-                                </a-select>
-                            </a-col>
-                            <a-col :span="8">
-                                <span class="opt-label">大小：</span>
-                                <a-input-number v-model="size" :min="60" :max="1024" :step="10" size="small"
-                                    style="width: 110px" hide-button />
-                                <span class="unit">px</span>
-                            </a-col>
-                            <a-col :span="8">
-                                <span class="opt-label">外边距：</span>
-                                <a-input-number v-model="margin" :min="0" :max="100" size="small" style="width: 90px"
-                                    hide-button />
-                                <span class="unit">px</span>
-                            </a-col>
-                        </a-row>
-                        <a-row :gutter="12" align="center" class="form-row">
+                    <!-- 通用：容错级别 -->
+                    <div class="field">
+                        <div class="field-label">容错级别</div>
+                        <a-select v-model="ecLevel" size="small" style="width: 100%">
+                            <a-option value="L">L · 7%</a-option>
+                            <a-option value="M">M · 15%</a-option>
+                            <a-option value="Q">Q · 25%</a-option>
+                            <a-option value="H">H · 30%</a-option>
+                        </a-select>
+                    </div>
+
+                    <!-- 普通二维码参数 -->
+                    <template v-if="qrMode === 'normal'">
+                        <a-row :gutter="8">
                             <a-col :span="12">
-                                <span class="opt-label">前景色：</span>
-                                <a-color-picker v-model="fgColor" size="small" :show-alpha="false" />
+                                <div class="field">
+                                    <div class="field-label">大小 (px)</div>
+                                    <a-input-number v-model="size" :min="60" :max="1024" :step="10" size="small"
+                                        hide-button style="width: 100%" />
+                                </div>
                             </a-col>
                             <a-col :span="12">
-                                <span class="opt-label">背景色：</span>
-                                <a-color-picker v-model="bgColor" size="small" :show-alpha="false" />
+                                <div class="field">
+                                    <div class="field-label">外边距 (px)</div>
+                                    <a-input-number v-model="margin" :min="0" :max="100" size="small" hide-button
+                                        style="width: 100%" />
+                                </div>
                             </a-col>
                         </a-row>
-                        <div class="form-row">
-                            <span class="opt-label">Logo：</span>
-                            <a-button size="small" @click="pickLogo">
-                                <template #icon><icon-upload /></template>{{ logoData ? "重新上传" : "上传 Logo" }}
-                            </a-button>
-                            <a-button v-if="logoData" size="small" status="danger" type="text"
-                                @click="logoData = ''">移除</a-button>
-                            <img v-if="logoData" :src="logoData" class="logo-thumb" alt="logo" />
+                        <a-row :gutter="8">
+                            <a-col :span="12">
+                                <div class="field">
+                                    <div class="field-label">前景色</div>
+                                    <a-color-picker v-model="fgColor" size="small" :show-alpha="false" />
+                                </div>
+                            </a-col>
+                            <a-col :span="12">
+                                <div class="field">
+                                    <div class="field-label">背景色</div>
+                                    <a-color-picker v-model="bgColor" size="small" :show-alpha="false" />
+                                </div>
+                            </a-col>
+                        </a-row>
+                        <div class="field">
+                            <div class="field-label">Logo</div>
+                            <div class="logo-row">
+                                <a-button size="small" @click="pickLogo">
+                                    <template #icon><icon-upload /></template>{{ logoData ? "重新上传" : "上传 Logo" }}
+                                </a-button>
+                                <a-button v-if="logoData" size="small" status="danger" type="text"
+                                    @click="logoData = ''">移除</a-button>
+                                <img v-if="logoData" :src="logoData" class="logo-thumb" alt="logo" />
+                            </div>
                             <input ref="logoInput" type="file" accept="image/*" style="display: none"
                                 @change="onLogoChange" />
                         </div>
-
-                        <a-button type="primary" status="success" @click="renderNormal">
-                            生成二维码 (Generate)
+                        <a-button type="primary" status="success" long class="gen-btn" @click="renderNormal">
+                            <template #icon><icon-qrcode /></template>生成二维码
                         </a-button>
-                    </a-col>
+                    </template>
 
-                    <a-col :span="10">
-                        <div class="preview-box">
-                            <canvas v-show="normalHasResult" ref="normalCanvas" class="qr-canvas"></canvas>
-                            <div v-if="!normalHasResult" class="preview-empty">
-                                <icon-qrcode style="font-size: var(--base-size-large-xx); color: var(--color-fill-3)" />
-                            </div>
+                    <!-- 透明二维码参数 -->
+                    <template v-else>
+                        <a-row :gutter="8">
+                            <a-col :span="12">
+                                <div class="field">
+                                    <div class="field-label">二维码大小</div>
+                                    <a-input-number v-model="tQrSize" :min="40" :max="300" size="small" hide-button
+                                        style="width: 100%" />
+                                </div>
+                            </a-col>
+                            <a-col :span="12">
+                                <div class="field">
+                                    <div class="field-label">颜色</div>
+                                    <a-color-picker v-model="tFgColor" size="small" :show-alpha="false" />
+                                </div>
+                            </a-col>
+                        </a-row>
+                        <div class="field">
+                            <div class="field-label">背景图片</div>
+                            <a-button size="small" long @click="pickBg">
+                                <template #icon><icon-upload /></template>{{ bgImage ? "重新上传背景" : "上传背景图片" }}
+                            </a-button>
+                            <input ref="bgInput" type="file" accept="image/*" style="display: none"
+                                @change="onBgChange" />
                         </div>
-                        <div class="tip">生成结果，可下载保存为 PNG</div>
+                        <a-button v-if="bgImage" type="primary" status="success" long class="gen-btn"
+                            @click="renderTransparent">
+                            <template #icon><icon-qrcode /></template>生成二维码
+                        </a-button>
+                    </template>
+                </div>
+            </a-card>
+        </a-col>
+
+        <!-- 右侧：二维码预览 -->
+        <a-col :span="18" class="main-col">
+            <a-card class="main-panel" :body-style="{ padding: 0 }">
+                <template #title>
+                    <a-space :size="8">
+                        <span>二维码预览</span>
+                        <a-tag size="small">{{ qrMode === "normal" ? "普通二维码" : "透明二维码" }}</a-tag>
+                    </a-space>
+                </template>
+                <template #extra>
+                    <a-radio-group v-model="qrMode" type="button" size="small">
+                        <a-radio value="normal">普通</a-radio>
+                        <a-radio value="transparent">透明</a-radio>
+                    </a-radio-group>
+                </template>
+
+                <!-- 普通二维码 -->
+                <div v-show="qrMode === 'normal'" class="preview-body">
+                    <div class="qr-stage">
+                        <canvas v-show="normalHasResult" ref="normalCanvas" class="qr-canvas"></canvas>
+                        <a-empty v-if="!normalHasResult" description="输入内容后点击左侧「生成二维码」" />
+                    </div>
+                    <div class="preview-foot">
+                        <span class="tip">生成结果可下载保存为 PNG</span>
                         <a-button v-if="normalHasResult" size="small" @click="downloadNormal">
                             <template #icon><icon-download /></template>下载 PNG
                         </a-button>
-                    </a-col>
-                </a-row>
-            </a-tab-pane>
-
-            <!-- ============ 透明二维码 ============ -->
-            <a-tab-pane key="transparent" title="透明二维码">
-                <div class="field-label">文本：</div>
-                <div class="quick-bar">
-                    <a-button size="mini" type="text" @click="vcardVisible = true">电子名片</a-button>
-                    <a-button size="mini" type="text" @click="phoneVisible = true">手机号</a-button>
-                    <a-button size="mini" type="text" @click="emailVisible = true">email</a-button>
-                    <a-button size="mini" type="text" @click="wechatVisible = true">微信公众号</a-button>
-                    <a-button size="mini" type="text" @click="wifiVisible = true">WIFI</a-button>
-                    <a-button size="mini" type="text" @click="decodeVisible = true">
-                        <template #icon><icon-upload /></template>传图解码
-                    </a-button>
+                    </div>
                 </div>
-                <a-textarea v-model="text" :auto-size="{ minRows: 3, maxRows: 6 }" placeholder="请输入文字" allow-clear
-                    class="form-row" />
 
-                <a-row :gutter="12" align="center" class="form-row">
-                    <a-col :span="6">
-                        <span class="opt-label">容错：</span>
-                        <a-select v-model="ecLevel" size="small" style="width: 96px">
-                            <a-option value="L">7%</a-option>
-                            <a-option value="M">15%</a-option>
-                            <a-option value="Q">25%</a-option>
-                            <a-option value="H">30%</a-option>
-                        </a-select>
-                    </a-col>
-                    <a-col :span="6">
-                        <span class="opt-label">二维码大小：</span>
-                        <a-input-number v-model="tQrSize" :min="40" :max="300" size="small" style="width: 100px"
-                            hide-button />
-                    </a-col>
-                    <a-col :span="6">
-                        <span class="opt-label">颜色：</span>
-                        <a-color-picker v-model="tFgColor" size="small" :show-alpha="false" />
-                    </a-col>
-                    <a-col :span="6">
-                        <a-button size="small" @click="pickBg">
-                            <template #icon><icon-upload /></template>上传背景图片
-                        </a-button>
-                        <input ref="bgInput" type="file" accept="image/*" style="display: none" @change="onBgChange" />
-                    </a-col>
-                </a-row>
+                <!-- 透明二维码 -->
+                <div v-show="qrMode === 'transparent'" class="preview-body">
+                    <div v-if="!bgImage" class="qr-stage">
+                        <a-empty description="请先在左侧上传背景图片" />
+                    </div>
+                    <a-row v-else :gutter="6" class="stage-row">
+                        <a-col :span="12" class="stage-col">
+                            <div class="stage-pane">
+                                <div class="pane-title">拖拽调整透明二维码位置</div>
+                                <div class="stage-scroll">
+                                    <div class="stage"
+                                        :style="{ width: STAGE_W + 'px', height: stageH + 'px' }">
+                                        <img :src="bgImage" class="stage-bg" alt="bg" />
+                                        <img v-if="tQrPreview" :src="tQrPreview" class="stage-qr"
+                                            :style="{ left: pos.x + 'px', top: pos.y + 'px', width: tQrSize + 'px', height: tQrSize + 'px' }"
+                                            @pointerdown="startDrag" alt="qr" />
+                                    </div>
+                                </div>
+                            </div>
+                        </a-col>
+                        <a-col :span="12" class="stage-col">
+                            <div class="stage-pane">
+                                <div class="pane-title">生成结果（右键另存）</div>
+                                <div class="result-scroll">
+                                    <a-empty v-if="!tResult" description="点击左侧「生成二维码」" />
+                                    <img v-else :src="tResult" class="result-img" alt="result" />
+                                </div>
+                                <a-button v-if="tResult" size="small"
+                                    @click="downloadDataUrl(tResult, 'qrcode-transparent')">
+                                    <template #icon><icon-download /></template>下载 PNG
+                                </a-button>
+                            </div>
+                        </a-col>
+                    </a-row>
+                </div>
+            </a-card>
+        </a-col>
+    </a-row>
 
-                <a-row :gutter="16" v-if="bgImage">
-                    <a-col :span="12">
-                        <div class="tip">拖拽调整透明二维码位置</div>
-                        <div class="stage" :style="{ width: STAGE_W + 'px', height: stageH + 'px' }">
-                            <img :src="bgImage" class="stage-bg" alt="bg" />
-                            <img v-if="tQrPreview" :src="tQrPreview" class="stage-qr"
-                                :style="{ left: pos.x + 'px', top: pos.y + 'px', width: tQrSize + 'px', height: tQrSize + 'px' }"
-                                @pointerdown="startDrag" alt="qr" />
-                        </div>
-                    </a-col>
-                    <a-col :span="12">
-                        <div class="tip">生成结果（右键另存）</div>
-                        <img v-if="tResult" :src="tResult" class="result-img" alt="result" />
-                        <a-button v-if="tResult" size="small" @click="downloadDataUrl(tResult, 'qrcode-transparent')">
-                            <template #icon><icon-download /></template>下载 PNG
-                        </a-button>
-                    </a-col>
-                </a-row>
-                <div v-else class="tip" style="margin-top: 12px">请先上传背景图片。</div>
+    <!-- ============ 快捷填充弹窗 ============ -->
+    <a-modal v-model:visible="vcardVisible" title="电子名片" @ok="genVcard" ok-text="确定">
+        <a-form :model="vcard" layout="vertical">
+            <a-form-item field="name" label="姓名"><a-input v-model="vcard.name" /></a-form-item>
+            <a-form-item field="phone" label="电话"><a-input v-model="vcard.phone" /></a-form-item>
+            <a-form-item field="email" label="邮箱"><a-input v-model="vcard.email" /></a-form-item>
+            <a-form-item field="org" label="公司"><a-input v-model="vcard.org" /></a-form-item>
+            <a-form-item field="url" label="网址"><a-input v-model="vcard.url" /></a-form-item>
+        </a-form>
+    </a-modal>
 
-                <a-button v-if="bgImage" type="primary" status="success" @click="renderTransparent"
-                    style="margin-top: 12px">
-                    生成二维码 (Generate)
-                </a-button>
-            </a-tab-pane>
-        </a-tabs>
+    <a-modal v-model:visible="phoneVisible" title="手机号" @ok="genPhone" ok-text="确定">
+        <a-form :model="phone" layout="vertical">
+            <a-form-item field="type" label="类型">
+                <a-radio-group v-model="phone.type">
+                    <a-radio value="tel">拨打电话</a-radio>
+                    <a-radio value="smsto">发送短信</a-radio>
+                </a-radio-group>
+            </a-form-item>
+            <a-form-item field="number" label="号码"><a-input v-model="phone.number" /></a-form-item>
+        </a-form>
+    </a-modal>
 
-        <!-- ============ 快捷填充弹窗 ============ -->
-        <a-modal v-model:visible="vcardVisible" title="电子名片" @ok="genVcard" ok-text="确定">
-            <a-form :model="vcard" layout="vertical">
-                <a-form-item field="name" label="姓名"><a-input v-model="vcard.name" /></a-form-item>
-                <a-form-item field="phone" label="电话"><a-input v-model="vcard.phone" /></a-form-item>
-                <a-form-item field="email" label="邮箱"><a-input v-model="vcard.email" /></a-form-item>
-                <a-form-item field="org" label="公司"><a-input v-model="vcard.org" /></a-form-item>
-                <a-form-item field="url" label="网址"><a-input v-model="vcard.url" /></a-form-item>
-            </a-form>
-        </a-modal>
+    <a-modal v-model:visible="emailVisible" title="Email" @ok="genEmail" ok-text="确定">
+        <a-form :model="email" layout="vertical">
+            <a-form-item field="to" label="收件人"><a-input v-model="email.to" /></a-form-item>
+            <a-form-item field="subject" label="主题"><a-input v-model="email.subject" /></a-form-item>
+            <a-form-item field="body" label="正文"><a-textarea v-model="email.body" :auto-size="{ minRows: 2 }" /></a-form-item>
+        </a-form>
+    </a-modal>
 
-        <a-modal v-model:visible="phoneVisible" title="手机号" @ok="genPhone" ok-text="确定">
-            <a-form :model="phone" layout="vertical">
-                <a-form-item field="type" label="类型">
-                    <a-radio-group v-model="phone.type">
-                        <a-radio value="tel">拨打电话</a-radio>
-                        <a-radio value="smsto">发送短信</a-radio>
-                    </a-radio-group>
-                </a-form-item>
-                <a-form-item field="number" label="号码"><a-input v-model="phone.number" /></a-form-item>
-            </a-form>
-        </a-modal>
+    <a-modal v-model:visible="wechatVisible" title="微信公众号" @ok="genWechat" ok-text="确定">
+        <a-form :model="wechat" layout="vertical">
+            <a-form-item field="url" label="公众号链接 / 文本">
+                <a-input v-model="wechat.url" placeholder="https://mp.weixin.qq.com/..." />
+            </a-form-item>
+        </a-form>
+    </a-modal>
 
-        <a-modal v-model:visible="emailVisible" title="Email" @ok="genEmail" ok-text="确定">
-            <a-form :model="email" layout="vertical">
-                <a-form-item field="to" label="收件人"><a-input v-model="email.to" /></a-form-item>
-                <a-form-item field="subject" label="主题"><a-input v-model="email.subject" /></a-form-item>
-                <a-form-item field="body" label="正文"><a-textarea v-model="email.body" :auto-size="{ minRows: 2 }" /></a-form-item>
-            </a-form>
-        </a-modal>
+    <a-modal v-model:visible="wifiVisible" title="WIFI" @ok="genWifi" ok-text="确定">
+        <a-form :model="wifi" layout="vertical">
+            <a-form-item field="ssid" label="WIFI 名称">
+                <a-input v-model="wifi.ssid" placeholder="SSID" />
+                <a-checkbox v-model="wifi.hidden" style="margin-left: 8px">隐藏</a-checkbox>
+            </a-form-item>
+            <a-form-item field="enc" label="加密方式">
+                <a-radio-group v-model="wifi.enc">
+                    <a-radio value="nopass">无密码</a-radio>
+                    <a-radio value="WPA">WPA加密</a-radio>
+                    <a-radio value="WPA2">WPA2加密</a-radio>
+                    <a-radio value="WEP">WEP加密</a-radio>
+                </a-radio-group>
+            </a-form-item>
+            <a-form-item v-if="wifi.enc !== 'nopass'" field="password" label="WIFI 密码">
+                <a-input v-model="wifi.password" placeholder="请输入WIFI密码" />
+            </a-form-item>
+        </a-form>
+    </a-modal>
 
-        <a-modal v-model:visible="wechatVisible" title="微信公众号" @ok="genWechat" ok-text="确定">
-            <a-form :model="wechat" layout="vertical">
-                <a-form-item field="url" label="公众号链接 / 文本">
-                    <a-input v-model="wechat.url" placeholder="https://mp.weixin.qq.com/..." />
-                </a-form-item>
-            </a-form>
-        </a-modal>
-
-        <a-modal v-model:visible="wifiVisible" title="WIFI" @ok="genWifi" ok-text="确定">
-            <a-form :model="wifi" layout="vertical">
-                <a-form-item field="ssid" label="WIFI 名称">
-                    <a-input v-model="wifi.ssid" placeholder="SSID" />
-                    <a-checkbox v-model="wifi.hidden" style="margin-left: 8px">隐藏</a-checkbox>
-                </a-form-item>
-                <a-form-item field="enc" label="加密方式">
-                    <a-radio-group v-model="wifi.enc">
-                        <a-radio value="nopass">无密码</a-radio>
-                        <a-radio value="WPA">WPA加密</a-radio>
-                        <a-radio value="WPA2">WPA2加密</a-radio>
-                        <a-radio value="WEP">WEP加密</a-radio>
-                    </a-radio-group>
-                </a-form-item>
-                <a-form-item v-if="wifi.enc !== 'nopass'" field="password" label="WIFI 密码">
-                    <a-input v-model="wifi.password" placeholder="请输入WIFI密码" />
-                </a-form-item>
-            </a-form>
-        </a-modal>
-
-        <a-modal v-model:visible="decodeVisible" title="传图解码" :footer="false">
-            <div class="tip" style="margin-bottom: 8px">选择包含二维码的图片，自动识别其中的内容。</div>
-            <input ref="decodeInput" type="file" accept="image/*" @change="onDecode" />
-            <div v-if="decodeMsg" :class="['decode-msg', decodeOk ? 'ok' : 'err']">{{ decodeMsg }}</div>
-        </a-modal>
-    </a-card>
+    <a-modal v-model:visible="decodeVisible" title="传图解码" :footer="false">
+        <div class="tip" style="margin-bottom: 8px">选择包含二维码的图片，自动识别其中的内容。</div>
+        <input ref="decodeInput" type="file" accept="image/*" @change="onDecode" />
+        <div v-if="decodeMsg" :class="['decode-msg', decodeOk ? 'ok' : 'err']">{{ decodeMsg }}</div>
+    </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -238,6 +272,8 @@ qrcode.stringToBytes = (s: string): number[] => {
 /* ============ 共享状态 ============ */
 const text = ref("");
 const ecLevel = ref<"L" | "M" | "Q" | "H">("M");
+/** 子视图：普通 / 透明 */
+const qrMode = ref("normal");
 
 /* ============ 普通二维码 ============ */
 const size = ref(250);
@@ -544,73 +580,196 @@ function downloadDataUrl(dataUrl: string, name: string) {
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-margin);
+/* 页面根容器：a-row 铺满工具窗口内容区 */
+.qr-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
 }
 
-.form-row {
-    margin-bottom: var(--base-margin);
+/* 左侧参数卡片 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
+    overflow-y: auto;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .field-label {
     color: var(--color-text-2);
     font-size: var(--base-size-small);
-    margin-bottom: var(--base-radius-default);
-}
-
-.opt-label {
-    color: var(--color-text-2);
-    font-size: var(--base-size-small);
-}
-
-.unit {
-    color: var(--color-text-3);
-    font-size: var(--base-size-small);
-    margin-left: var(--base-radius-small);
+    font-weight: 500;
 }
 
 .quick-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    background-color: var(--color-fill-2);
+    gap: 2px;
+    padding: 2px 6px;
+    background: var(--color-fill-2);
     border-radius: var(--base-radius-default);
-    padding: var(--base-radius-small) var(--base-radius-default);
-    margin-bottom: var(--base-margin);
 }
 
-.preview-box {
+.logo-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    min-height: 260px;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-large);
-    background: repeating-conic-gradient(var(--color-fill-2) 0% 25%, var(--color-bg-2) 0% 50%) 50% / 20px 20px;
-}
-
-.qr-canvas {
-    max-width: 100%;
-    height: auto;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .logo-thumb {
     width: 28px;
     height: 28px;
-    margin-left: var(--base-margin);
-    vertical-align: middle;
     border: 1px solid var(--color-border-2);
     border-radius: var(--base-radius-small);
+}
+
+.gen-btn {
+    margin-top: auto;
+}
+
+/* 右侧主列 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.preview-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: var(--base-padding);
+}
+
+/* 普通二维码预览：棋盘格背景，画布等比缩放 */
+.qr-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--base-padding);
+    border: 1px solid var(--color-border-2);
+    border-radius: var(--base-radius-large);
+    background: repeating-conic-gradient(var(--color-fill-2) 0% 25%, var(--color-bg-2) 0% 50%) 50% / 20px 20px;
+    overflow: hidden;
+}
+
+.qr-canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.preview-foot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .tip {
     color: var(--color-text-3);
     font-size: var(--base-size-small);
-    margin: var(--base-margin) 0;
+    margin: 0;
+}
+
+/* 透明二维码：左右两块面板 */
+.stage-row {
+    flex: 1;
+    min-height: 0;
+    flex-wrap: nowrap;
+}
+
+.stage-col {
+    height: 100%;
+    min-width: 0;
+}
+
+.stage-pane {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: var(--base-padding);
+    background: var(--color-fill-1);
+    border-radius: var(--base-radius-large);
+}
+
+.pane-title {
+    flex: none;
+    color: var(--color-text-2);
+    font-size: var(--base-size-small);
+    font-weight: 500;
+}
+
+.stage-scroll {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: auto;
 }
 
 .stage {
     position: relative;
+    flex: none;
     border: 1px solid var(--color-border-2);
     border-radius: var(--base-radius-large);
     overflow: hidden;
@@ -627,11 +786,24 @@ function downloadDataUrl(dataUrl: string, name: string) {
     touch-action: none;
 }
 
+.result-scroll {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    overflow: auto;
+    border: 1px solid var(--color-border-2);
+    border-radius: var(--base-radius-default);
+    background: var(--color-bg-1);
+}
+
 .result-img {
     max-width: 100%;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-large);
-    margin-bottom: var(--base-margin);
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--base-radius-default);
 }
 
 .decode-msg {

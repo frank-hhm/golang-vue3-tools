@@ -1,50 +1,90 @@
 <template>
-    <layout-body title="图片base64编码">
-        <!-- 上传区 -->
-        <a-card class="tool-card">
-            <div class="dropzone" :class="{ 'is-over': dragOver }" @click="pickFile" @dragover.prevent="dragOver = true"
-                @dragleave.prevent="dragOver = false" @drop.prevent="onDrop">
-                <div class="drop-text">
-                    拖放图片到这里上传，或者
-                    <span class="drop-link">选择图片</span>
-                </div>
-                <input ref="fileInput" type="file" accept="image/*" style="display: none" @change="onFileChange" />
-            </div>
-        </a-card>
-
-        <!-- 结果区 -->
-        <a-card v-if="base64" class="tool-card">
-            <a-row :gutter="16">
-                <a-col :span="6">
-                    <div class="field-label">预览</div>
-                    <img :src="dataUri" class="preview" alt="preview" />
-                    <div class="meta">
-                        <div><span class="meta-k">文件名</span>{{ fileName }}</div>
-                        <div><span class="meta-k">类型</span>{{ mimeType }}</div>
-                        <div><span class="meta-k">大小</span>{{ fileSize }}</div>
-                    </div>
+    <a-row class="img-page" :gutter="6">
+        <!-- 左侧约 25%：上传（上50%）+ 图片信息（下50%） -->
+        <a-col :span="6" class="side-col">
+            <a-row class="side-pages">
+                <a-col class="side-cols" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>上传图片</template>
+                        <template #extra>
+                            <a-tag size="small" :color="base64 ? 'green' : 'gray'">
+                                {{ base64 ? "已选择" : "未选择" }}
+                            </a-tag>
+                        </template>
+                        <div class="side-body">
+                            <div class="dropzone" :class="{ 'is-over': dragOver }" @click="pickFile"
+                                @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false"
+                                @drop.prevent="onDrop">
+                                <icon-upload class="drop-icon" />
+                                <div class="drop-text">
+                                    拖放图片到这里，或
+                                    <span class="drop-link">选择图片</span>
+                                </div>
+                                <div class="drop-hint">支持 PNG / JPG / GIF / WebP / SVG</div>
+                            </div>
+                            <input ref="fileInput" type="file" accept="image/*" style="display: none"
+                                @change="onFileChange" />
+                        </div>
+                    </a-card>
                 </a-col>
-                <a-col :span="18">
-                    <div class="flex between align-center">
-                        <div class="field-label" style="margin: 0">Base64 编码</div>
-                        <a-space :size="12">
-                            <a-switch v-model="withPrefix" type="round">
-                                <template #checked>含 data 前缀</template>
-                                <template #unchecked>仅纯编码</template>
-                            </a-switch>
-                            <a-button type="primary" size="small" status="success" @click="copyText(output)">
-                                <template #icon><icon-copy /></template>复制
-                            </a-button>
-                            <a-button @click="reset" size="small">
+                <a-col class="side-cols mt6" :span="24">
+                    <a-card class="side-card" size="small" :body-style="{ padding: 0 }">
+                        <template #title>图片信息</template>
+                        <template #extra>
+                            <a-button v-if="base64" size="mini" type="text" status="danger" @click="reset">
                                 <template #icon><icon-delete /></template>清空
                             </a-button>
-                        </a-space>
-                    </div>
-                    <a-textarea class="mt20" :model-value="output" :auto-size="{ minRows: 8, maxRows: 18 }" readonly />
+                        </template>
+                        <div class="side-body">
+                            <template v-if="base64">
+                                <div class="preview-wrap">
+                                    <img :src="dataUri" class="preview" alt="preview" />
+                                </div>
+                                <a-descriptions :column="1" size="small" bordered>
+                                    <a-descriptions-item label="文件名">{{ fileName }}</a-descriptions-item>
+                                    <a-descriptions-item label="类型">{{ mimeType }}</a-descriptions-item>
+                                    <a-descriptions-item label="大小">{{ fileSize }}</a-descriptions-item>
+                                </a-descriptions>
+                            </template>
+                            <div v-else class="side-empty">
+                                <a-empty description="尚未选择图片" />
+                            </div>
+                        </div>
+                    </a-card>
                 </a-col>
             </a-row>
-        </a-card>
-    </layout-body>
+        </a-col>
+
+        <!-- 右侧：Base64 编码 -->
+        <a-col :span="18" class="main-col">
+            <a-card class="main-panel" :body-style="{ padding: 0 }">
+                <template #title>
+                    <a-space :size="8">
+                        <span>Base64 编码</span>
+                        <a-tag v-if="base64" size="small">{{ output.length }} 字符</a-tag>
+                    </a-space>
+                </template>
+                <template #extra>
+                    <a-space :size="8">
+                        <a-switch v-model="withPrefix" type="round" :disabled="!base64">
+                            <template #checked>含 data 前缀</template>
+                            <template #unchecked>仅纯编码</template>
+                        </a-switch>
+                        <a-button type="primary" status="success" size="small" :disabled="!base64"
+                            @click="copyText(output)">
+                            <template #icon><icon-copy /></template>复制
+                        </a-button>
+                    </a-space>
+                </template>
+                <div class="panel-body">
+                    <a-textarea v-if="base64" :model-value="output" class="fill-textarea" readonly />
+                    <div v-else class="side-empty">
+                        <a-empty description="选择图片后这里显示 Base64" />
+                    </div>
+                </div>
+            </a-card>
+        </a-col>
+    </a-row>
 </template>
 
 <script setup lang="ts">
@@ -141,25 +181,71 @@ const copyText = async (text: string) => {
 </script>
 
 <style scoped>
-.tool-card {
-    margin-bottom: var(--base-margin);
+/* 页面根容器：a-row 铺满工具窗口内容区 */
+.img-page {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+    background: var(--color-fill-1);
 }
 
-.form-row {
-    margin-bottom: var(--base-margin);
+/* 左侧列：上下两张卡片各占 50% 高 */
+.side-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.field-label {
-    color: #4e5969;
-    font-size: var(--base-size-small);
-    margin-bottom: var(--base-radius-default);
+.side-pages {
+    height: calc(100% - 6px);
 }
 
+.side-cols {
+    height: 50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
+    padding: var(--base-padding);
+    overflow-y: auto;
+}
+
+/* 拖放上传区（填满上传卡片） */
 .dropzone {
-    border: 1px dashed #c9cdd4;
-    border-radius: var(--base-radius-large);
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     padding: var(--base-padding);
     text-align: center;
+    border: 1px dashed var(--color-border-2);
+    border-radius: var(--base-radius-large);
     cursor: pointer;
     transition: border-color 0.2s, background-color 0.2s;
 }
@@ -170,8 +256,13 @@ const copyText = async (text: string) => {
     background-color: var(--color-fill-2);
 }
 
+.drop-icon {
+    font-size: 28px;
+    color: var(--color-text-3);
+}
+
 .drop-text {
-    color: #4e5969;
+    color: var(--color-text-2);
     font-size: var(--base-size-default);
 }
 
@@ -179,22 +270,83 @@ const copyText = async (text: string) => {
     color: rgb(var(--green-6));
 }
 
-.preview {
-    max-width: 100%;
-    border: 1px solid #e5e6eb;
+.drop-hint {
+    color: var(--color-text-3);
+    font-size: var(--base-size-small);
+}
+
+/* 预览与空状态 */
+.preview-wrap {
+    flex: 1;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--color-fill-1);
     border-radius: var(--base-radius-large);
 }
 
-.meta {
-    margin-top: var(--base-margin);
-    color: #4e5969;
-    font-size: var(--base-size-small);
-    line-height: 1.9;
+.preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--base-radius-default);
 }
 
-.meta-k {
-    display: inline-block;
-    width: 56px;
-    color: #86909c;
+.side-empty {
+    flex: 1;
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 右侧主列 */
+.main-col {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-panel {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-1);
+}
+
+.main-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Base64 文本域：填满卡片并内部滚动 */
+.panel-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    padding: var(--base-padding);
+}
+
+.fill-textarea {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+}
+
+.fill-textarea :deep(.arco-textarea) {
+    height: 100%;
+    resize: none;
+    word-break: break-all;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: var(--base-size-small);
 }
 </style>

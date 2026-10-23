@@ -13,6 +13,15 @@ import type * as main$0 from "../../../../../go-tools/models.js";
 import type * as mysql$0 from "../../../../../go-tools/tools/mysql/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import type * as nginx$0 from "../../../../../go-tools/tools/nginx/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import type * as npm$0 from "../../../../../go-tools/tools/npm/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import type * as php$0 from "../../../../../go-tools/tools/php/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import type * as redis$0 from "../../../../../go-tools/tools/redis/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -26,6 +35,9 @@ declare module "@wailsio/runtime" {
         interface CustomEvents {
             "ball:action": string;
             "mysql:install": mysql$0.InstallProgress;
+            "nginx:install": nginx$0.InstallProgress;
+            "npm:install": npm$0.InstallProgress;
+            "php:install": php$0.InstallProgress;
             "redis:install": redis$0.InstallProgress;
             "redis:monitor": redis$0.MonitorLine;
             "redis:serverlog": redis$0.ServerLogLine;

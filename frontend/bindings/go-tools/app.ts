@@ -18,6 +18,15 @@ import * as application$0 from "../github.com/wailsapp/wails/v3/pkg/application/
 import * as mysql$0 from "./tools/mysql/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as nginx$0 from "./tools/nginx/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as npm$0 from "./tools/npm/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as php$0 from "./tools/php/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as redis$0 from "./tools/redis/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -175,6 +184,20 @@ export function MySQLBeginTx(id: string, database: string): $CancellablePromise<
 }
 
 /**
+ * MySQLChooseSQLLogDir 弹出原生目录选择框（取消返回空串）
+ */
+export function MySQLChooseSQLLogDir(): $CancellablePromise<string> {
+    return $Call.ByID(4071753893);
+}
+
+/**
+ * MySQLClearSQLLog 清空 SQL 日志文件，返回删除的文件数
+ */
+export function MySQLClearSQLLog(): $CancellablePromise<number> {
+    return $Call.ByID(1635174980);
+}
+
+/**
  * MySQLClose 关闭指定连接
  */
 export function MySQLClose(id: string): $CancellablePromise<void> {
@@ -196,6 +219,13 @@ export function MySQLDeleteRow(id: string, database: string, table: string, pkCo
 }
 
 /**
+ * MySQLDeleteRows 按单列主键批量删除多行，返回受影响行数
+ */
+export function MySQLDeleteRows(id: string, database: string, table: string, pkCol: string, pkVals: string[] | null): $CancellablePromise<number> {
+    return $Call.ByID(1684997535, id, database, table, pkCol, pkVals);
+}
+
+/**
  * MySQLDropColumn 删除列
  */
 export function MySQLDropColumn(id: string, database: string, table: string, col: string): $CancellablePromise<void> {
@@ -207,6 +237,13 @@ export function MySQLDropColumn(id: string, database: string, table: string, col
  */
 export function MySQLExecute(id: string, database: string, sqlText: string): $CancellablePromise<mysql$0.QueryResult> {
     return $Call.ByID(2907278648, id, database, sqlText);
+}
+
+/**
+ * MySQLGetSQLLogSettings 返回 SQL 日志开关、目录与现存文件列表
+ */
+export function MySQLGetSQLLogSettings(): $CancellablePromise<mysql$0.SQLLogSettings> {
+    return $Call.ByID(1528501552);
 }
 
 /**
@@ -266,6 +303,13 @@ export function MySQLOpen(cfg: mysql$0.ConnConfig): $CancellablePromise<void> {
 }
 
 /**
+ * MySQLOpenSQLLogDir 在资源管理器中打开 SQL 日志目录
+ */
+export function MySQLOpenSQLLogDir(): $CancellablePromise<void> {
+    return $Call.ByID(4231963186);
+}
+
+/**
  * MySQLRollbackTx 回滚事务
  */
 export function MySQLRollbackTx(txID: string): $CancellablePromise<void> {
@@ -277,6 +321,13 @@ export function MySQLRollbackTx(txID: string): $CancellablePromise<void> {
  */
 export function MySQLSaveConnections(configs: mysql$0.ConnConfig[] | null): $CancellablePromise<string> {
     return $Call.ByID(3750105001, configs);
+}
+
+/**
+ * MySQLSetSQLLogSettings 保存 SQL 日志开关与目录（立即生效并落盘），返回实际写入目录
+ */
+export function MySQLSetSQLLogSettings(enabled: boolean, dir: string): $CancellablePromise<string> {
+    return $Call.ByID(2902580500, enabled, dir);
 }
 
 /**
@@ -413,10 +464,353 @@ export function MySQLUpdateCell(id: string, database: string, table: string, pkC
 }
 
 /**
+ * NginxSrvAddLocal 注册本机已有的 Nginx 目录（含 nginx.exe）
+ */
+export function NginxSrvAddLocal(dir: string): $CancellablePromise<void> {
+    return $Call.ByID(2020876814, dir);
+}
+
+/**
+ * NginxSrvCheckConfig 执行 nginx -t 配置检查，返回输出文本
+ */
+export function NginxSrvCheckConfig(id: string): $CancellablePromise<string> {
+    return $Call.ByID(1869927210, id);
+}
+
+/**
+ * NginxSrvChooseDir 弹原生目录选择框（供添加本机 Nginx 目录），取消返回空串
+ */
+export function NginxSrvChooseDir(): $CancellablePromise<string> {
+    return $Call.ByID(2349679268);
+}
+
+/**
+ * NginxSrvGetConfigText 读取实例 nginx.conf 全文
+ */
+export function NginxSrvGetConfigText(id: string): $CancellablePromise<string> {
+    return $Call.ByID(3343569181, id);
+}
+
+/**
+ * NginxSrvInstall 异步安装 Nginx 版本，进度经 nginx:install 事件推送
+ */
+export function NginxSrvInstall(version: string): $CancellablePromise<void> {
+    return $Call.ByID(336647311, version);
+}
+
+/**
+ * NginxSrvListInstances 列出全部 Nginx 实例配置
+ */
+export function NginxSrvListInstances(): $CancellablePromise<nginx$0.InstanceConfig[] | null> {
+    return $Call.ByID(1400739804);
+}
+
+/**
+ * NginxSrvListVersions 聚合三渠道本地可用 Nginx 版本
+ */
+export function NginxSrvListVersions(): $CancellablePromise<nginx$0.ServerVersion[] | null> {
+    return $Call.ByID(1997618393);
+}
+
+/**
+ * NginxSrvLogs 返回实例最近 n 行日志
+ */
+export function NginxSrvLogs(id: string, lines: number): $CancellablePromise<string[] | null> {
+    return $Call.ByID(3856895983, id, lines);
+}
+
+/**
+ * NginxSrvPluginsDir 返回插件目录 <exedir>/plugins/nginx，供前端展示指引
+ */
+export function NginxSrvPluginsDir(): $CancellablePromise<string> {
+    return $Call.ByID(2437051011);
+}
+
+/**
+ * NginxSrvReload 平滑重载配置
+ */
+export function NginxSrvReload(id: string): $CancellablePromise<void> {
+    return $Call.ByID(761447865, id);
+}
+
+/**
+ * NginxSrvRemoteVersions 拉取线上可安装版本（nginx.org 官方 zip）
+ */
+export function NginxSrvRemoteVersions(): $CancellablePromise<nginx$0.RemoteVersion[] | null> {
+    return $Call.ByID(2613287511);
+}
+
+/**
+ * NginxSrvRemoveInstance 删除实例配置（运行中先停止）
+ */
+export function NginxSrvRemoveInstance(id: string): $CancellablePromise<void> {
+    return $Call.ByID(2556542783, id);
+}
+
+/**
+ * NginxSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+ */
+export function NginxSrvRemoveVersion(version: string): $CancellablePromise<void> {
+    return $Call.ByID(1888663448, version);
+}
+
+/**
+ * NginxSrvRestart 重启实例
+ */
+export function NginxSrvRestart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(273531919, id);
+}
+
+/**
+ * NginxSrvSaveConfigText 保存实例 nginx.conf（先备份后校验，失败回滚）
+ */
+export function NginxSrvSaveConfigText(id: string, text: string): $CancellablePromise<void> {
+    return $Call.ByID(2179121844, id, text);
+}
+
+/**
+ * NginxSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+ */
+export function NginxSrvSaveInstance(cfg: nginx$0.InstanceConfig): $CancellablePromise<void> {
+    return $Call.ByID(3936589806, cfg);
+}
+
+/**
+ * NginxSrvStart 启动实例（-p prefix -c conf，隐藏窗口）
+ */
+export function NginxSrvStart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(1867065336, id);
+}
+
+/**
+ * NginxSrvStatus 实例运行状态（端口探测 + master/worker 进程）
+ */
+export function NginxSrvStatus(id: string): $CancellablePromise<nginx$0.InstanceStatus> {
+    return $Call.ByID(3791448766, id);
+}
+
+/**
+ * NginxSrvStop 停止实例（nginx -s quit + 兑底 kill）
+ */
+export function NginxSrvStop(id: string): $CancellablePromise<void> {
+    return $Call.ByID(2166532124, id);
+}
+
+/**
+ * NginxSrvSuggestPort 从 from 起探测可用端口
+ */
+export function NginxSrvSuggestPort($from: number): $CancellablePromise<number> {
+    return $Call.ByID(1809582537, $from);
+}
+
+/**
  * NotifyClose 关闭通知卡片
  */
 export function NotifyClose(): $CancellablePromise<void> {
     return $Call.ByID(1139470008);
+}
+
+/**
+ * NpmApplyToUserNpmrc 将托管配置同步到用户全局 ~/.npmrc（先备份），返回备份文件路径
+ */
+export function NpmApplyToUserNpmrc(): $CancellablePromise<string> {
+    return $Call.ByID(1132578362);
+}
+
+/**
+ * NpmCommonRegistries 返回常用镜像源列表（供前端快捷选择）
+ */
+export function NpmCommonRegistries(): $CancellablePromise<npm$0.NpmConfigKV[] | null> {
+    return $Call.ByID(2185727480);
+}
+
+/**
+ * NpmConfigItems 列出托管 .npmrc 配置键值
+ */
+export function NpmConfigItems(): $CancellablePromise<npm$0.NpmConfigKV[] | null> {
+    return $Call.ByID(412752544);
+}
+
+/**
+ * NpmGetConfigText 读取托管 .npmrc 全文
+ */
+export function NpmGetConfigText(): $CancellablePromise<string> {
+    return $Call.ByID(1914644079);
+}
+
+/**
+ * NpmGetRegistry 返回当前生效的 registry
+ */
+export function NpmGetRegistry(): $CancellablePromise<string> {
+    return $Call.ByID(714163805);
+}
+
+/**
+ * NpmGlobalPackages 列出指定 Node 版本的全局已安装包
+ */
+export function NpmGlobalPackages(version: string): $CancellablePromise<npm$0.NpmPackage[] | null> {
+    return $Call.ByID(1186065808, version);
+}
+
+/**
+ * NpmInstallGlobal 异步安装全局包，进度经 npm:install 事件推送
+ */
+export function NpmInstallGlobal(version: string, pkg: string): $CancellablePromise<void> {
+    return $Call.ByID(3068346058, version, pkg);
+}
+
+/**
+ * NpmSaveConfigText 保存托管 .npmrc
+ */
+export function NpmSaveConfigText(text: string): $CancellablePromise<void> {
+    return $Call.ByID(1981321750, text);
+}
+
+/**
+ * NpmSetConfigItem 设置单条 npm 配置
+ */
+export function NpmSetConfigItem(key: string, value: string): $CancellablePromise<void> {
+    return $Call.ByID(2055543779, key, value);
+}
+
+/**
+ * NpmSetRegistry 设置 registry
+ */
+export function NpmSetRegistry(url: string): $CancellablePromise<void> {
+    return $Call.ByID(818573913, url);
+}
+
+/**
+ * NpmSrvAddLocal 注册本机已有的 Node.js 目录（含 node.exe）
+ */
+export function NpmSrvAddLocal(dir: string): $CancellablePromise<void> {
+    return $Call.ByID(2414098705, dir);
+}
+
+/**
+ * NpmSrvChooseDir 弹原生目录选择框（供添加本机 Node.js 目录），取消返回空串
+ */
+export function NpmSrvChooseDir(): $CancellablePromise<string> {
+    return $Call.ByID(1669211553);
+}
+
+/**
+ * NpmSrvInstall 异步安装 Node.js 版本，进度经 npm:install 事件推送
+ */
+export function NpmSrvInstall(version: string): $CancellablePromise<void> {
+    return $Call.ByID(2147570566, version);
+}
+
+/**
+ * NpmSrvListInstances 列出全部静态站点实例配置
+ */
+export function NpmSrvListInstances(): $CancellablePromise<npm$0.InstanceConfig[] | null> {
+    return $Call.ByID(3811112805);
+}
+
+/**
+ * NpmSrvListVersions 聚合三渠道本地可用 Node.js 版本
+ */
+export function NpmSrvListVersions(): $CancellablePromise<npm$0.ServerVersion[] | null> {
+    return $Call.ByID(3702734926);
+}
+
+/**
+ * NpmSrvLogs 返回实例最近 n 行访问日志
+ */
+export function NpmSrvLogs(id: string, lines: number): $CancellablePromise<string[] | null> {
+    return $Call.ByID(2022898196, id, lines);
+}
+
+/**
+ * NpmSrvPluginsDir 返回插件目录 <exedir>/plugins/npm，供前端展示指引
+ */
+export function NpmSrvPluginsDir(): $CancellablePromise<string> {
+    return $Call.ByID(2917304932);
+}
+
+/**
+ * NpmSrvRemoteVersions 拉取线上可安装版本（nodejs.org dist index.json）
+ */
+export function NpmSrvRemoteVersions(): $CancellablePromise<npm$0.RemoteVersion[] | null> {
+    return $Call.ByID(3153628420);
+}
+
+/**
+ * NpmSrvRemoveInstance 删除实例配置（运行中先停止）
+ */
+export function NpmSrvRemoveInstance(id: string): $CancellablePromise<void> {
+    return $Call.ByID(2721362176, id);
+}
+
+/**
+ * NpmSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+ */
+export function NpmSrvRemoveVersion(version: string): $CancellablePromise<void> {
+    return $Call.ByID(2254482781, version);
+}
+
+/**
+ * NpmSrvRestart 重启实例
+ */
+export function NpmSrvRestart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3728001750, id);
+}
+
+/**
+ * NpmSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+ */
+export function NpmSrvSaveInstance(cfg: npm$0.InstanceConfig): $CancellablePromise<void> {
+    return $Call.ByID(625912597, cfg);
+}
+
+/**
+ * NpmSrvStart 启动静态站点服务（内置 Go HTTP 服务器）
+ */
+export function NpmSrvStart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3069382549, id);
+}
+
+/**
+ * NpmSrvStatus 实例运行状态（端口探测 + 请求计数）
+ */
+export function NpmSrvStatus(id: string): $CancellablePromise<npm$0.InstanceStatus> {
+    return $Call.ByID(1816307273, id);
+}
+
+/**
+ * NpmSrvStop 停止静态站点服务（优雅 Shutdown）
+ */
+export function NpmSrvStop(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3275536423, id);
+}
+
+/**
+ * NpmSrvSuggestPort 从 from 起探测可用端口
+ */
+export function NpmSrvSuggestPort($from: number): $CancellablePromise<number> {
+    return $Call.ByID(3892558132, $from);
+}
+
+/**
+ * NpmUninstallGlobal 异步卸载全局包，进度经 npm:install 事件推送
+ */
+export function NpmUninstallGlobal(version: string, pkg: string): $CancellablePromise<void> {
+    return $Call.ByID(2774484331, version, pkg);
+}
+
+/**
+ * NpmUserNpmrc 返回用户全局 ~/.npmrc 的路径/内容/是否存在，并附带托管 registry 同步能力
+ */
+export function NpmUserNpmrc(): $CancellablePromise<[string, string, boolean]> {
+    return $Call.ByID(1521407249);
+}
+
+/**
+ * NpmVersionOf 返回指定 Node 版本配套的 npm 版本号
+ */
+export function NpmVersionOf(version: string): $CancellablePromise<string> {
+    return $Call.ByID(688487039, version);
 }
 
 /**
@@ -456,6 +850,209 @@ export function OpenToolWindow(path: string, title: string, single: boolean, ful
  */
 export function OpenUDP(cfg: usbserial$0.ConnConfig): $CancellablePromise<void> {
     return $Call.ByID(91747768, cfg);
+}
+
+/**
+ * PhpSrvAddDisableFunctions 追加禁用函数
+ */
+export function PhpSrvAddDisableFunctions(id: string, names: string[] | null): $CancellablePromise<void> {
+    return $Call.ByID(703749362, id, names);
+}
+
+/**
+ * PhpSrvAddLocal 注册本机已有的 PHP 目录（含 php.exe）
+ */
+export function PhpSrvAddLocal(dir: string): $CancellablePromise<void> {
+    return $Call.ByID(2365523230, dir);
+}
+
+/**
+ * PhpSrvChooseDir 弹原生目录选择框（供添加本机 PHP 目录），取消返回空串
+ */
+export function PhpSrvChooseDir(): $CancellablePromise<string> {
+    return $Call.ByID(4009197524);
+}
+
+/**
+ * PhpSrvCommonlyDisabled 返回常见建议禁用函数列表（供前端快捷添加）
+ */
+export function PhpSrvCommonlyDisabled(): $CancellablePromise<string[] | null> {
+    return $Call.ByID(14720830);
+}
+
+/**
+ * PhpSrvDisableFunctions 读取实例禁用函数列表
+ */
+export function PhpSrvDisableFunctions(id: string): $CancellablePromise<string[] | null> {
+    return $Call.ByID(2533445025, id);
+}
+
+/**
+ * PhpSrvExtensions 列出实例候选扩展（可用/已启用/已加载）
+ */
+export function PhpSrvExtensions(id: string): $CancellablePromise<php$0.ExtensionInfo[] | null> {
+    return $Call.ByID(1356653422, id);
+}
+
+/**
+ * PhpSrvGetCommon 读取实例常用配置项（内存/上传/时区等）
+ */
+export function PhpSrvGetCommon(id: string): $CancellablePromise<php$0.CommonFields | null> {
+    return $Call.ByID(1519275673, id);
+}
+
+/**
+ * PhpSrvGetConfigText 读取实例 php.ini 全文
+ */
+export function PhpSrvGetConfigText(id: string): $CancellablePromise<string> {
+    return $Call.ByID(1776542413, id);
+}
+
+/**
+ * PhpSrvInfo 返回实例 php -i 关键配置概览
+ */
+export function PhpSrvInfo(id: string): $CancellablePromise<php$0.PHPInfo | null> {
+    return $Call.ByID(3228259320, id);
+}
+
+/**
+ * PhpSrvInstall 异步安装 PHP 版本（nts=true 下载 NTS 构型），进度经 php:install 事件推送
+ */
+export function PhpSrvInstall(version: string, nts: boolean): $CancellablePromise<void> {
+    return $Call.ByID(161318655, version, nts);
+}
+
+/**
+ * PhpSrvListInstances 列出全部 PHP 实例配置
+ */
+export function PhpSrvListInstances(): $CancellablePromise<php$0.InstanceConfig[] | null> {
+    return $Call.ByID(627928172);
+}
+
+/**
+ * PhpSrvListVersions 聚合三渠道本地可用 PHP 版本
+ */
+export function PhpSrvListVersions(): $CancellablePromise<php$0.ServerVersion[] | null> {
+    return $Call.ByID(3444410409);
+}
+
+/**
+ * PhpSrvLoadedExtensions 实测已加载扩展名列表（php -m）
+ */
+export function PhpSrvLoadedExtensions(id: string): $CancellablePromise<string[] | null> {
+    return $Call.ByID(3059969343, id);
+}
+
+/**
+ * PhpSrvLogs 返回实例最近 n 行日志
+ */
+export function PhpSrvLogs(id: string, lines: number): $CancellablePromise<string[] | null> {
+    return $Call.ByID(2837464799, id, lines);
+}
+
+/**
+ * PhpSrvPluginsDir 返回插件目录 <exedir>/plugins/php，供前端展示指引
+ */
+export function PhpSrvPluginsDir(): $CancellablePromise<string> {
+    return $Call.ByID(2678265939);
+}
+
+/**
+ * PhpSrvRemoteVersions 拉取线上可安装版本（windows.php.net）
+ */
+export function PhpSrvRemoteVersions(): $CancellablePromise<php$0.RemoteVersion[] | null> {
+    return $Call.ByID(2058126823);
+}
+
+/**
+ * PhpSrvRemoveDisableFunctions 移除若干禁用函数
+ */
+export function PhpSrvRemoveDisableFunctions(id: string, names: string[] | null): $CancellablePromise<void> {
+    return $Call.ByID(2395637297, id, names);
+}
+
+/**
+ * PhpSrvRemoveInstance 删除实例配置（运行中先停止）
+ */
+export function PhpSrvRemoveInstance(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3487797263, id);
+}
+
+/**
+ * PhpSrvRemoveVersion 删除版本（内置不可删，运行中实例引用时拒绝）
+ */
+export function PhpSrvRemoveVersion(version: string): $CancellablePromise<void> {
+    return $Call.ByID(3010835048, version);
+}
+
+/**
+ * PhpSrvRestart 重启实例
+ */
+export function PhpSrvRestart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3104580767, id);
+}
+
+/**
+ * PhpSrvSaveConfigText 保存实例 php.ini（先备份后校验，加载失败回滚）
+ */
+export function PhpSrvSaveConfigText(id: string, text: string): $CancellablePromise<void> {
+    return $Call.ByID(451980388, id, text);
+}
+
+/**
+ * PhpSrvSaveInstance 新增/更新实例配置（ID 为空则新建）
+ */
+export function PhpSrvSaveInstance(cfg: php$0.InstanceConfig): $CancellablePromise<void> {
+    return $Call.ByID(2346551998, cfg);
+}
+
+/**
+ * PhpSrvSetCommon 写入实例常用配置项
+ */
+export function PhpSrvSetCommon(id: string, f: php$0.CommonFields): $CancellablePromise<void> {
+    return $Call.ByID(2841207949, id, f);
+}
+
+/**
+ * PhpSrvSetDisableFunctions 全量设置禁用函数列表
+ */
+export function PhpSrvSetDisableFunctions(id: string, list: string[] | null): $CancellablePromise<void> {
+    return $Call.ByID(3921318793, id, list);
+}
+
+/**
+ * PhpSrvSetExtension 启用/禁用扩展，返回提示信息
+ */
+export function PhpSrvSetExtension(id: string, name: string, enable: boolean): $CancellablePromise<string> {
+    return $Call.ByID(210984273, id, name, enable);
+}
+
+/**
+ * PhpSrvStart 启动实例（php -S 内置服务器，隐藏窗口）
+ */
+export function PhpSrvStart(id: string): $CancellablePromise<void> {
+    return $Call.ByID(2249138088, id);
+}
+
+/**
+ * PhpSrvStatus 实例运行状态（端口探测 + ini 概览）
+ */
+export function PhpSrvStatus(id: string): $CancellablePromise<php$0.InstanceStatus> {
+    return $Call.ByID(195219630, id);
+}
+
+/**
+ * PhpSrvStop 停止实例（kill 进程树）
+ */
+export function PhpSrvStop(id: string): $CancellablePromise<void> {
+    return $Call.ByID(1074421644, id);
+}
+
+/**
+ * PhpSrvSuggestPort 从 from 起探测可用端口
+ */
+export function PhpSrvSuggestPort($from: number): $CancellablePromise<number> {
+    return $Call.ByID(3709800537, $from);
 }
 
 /**

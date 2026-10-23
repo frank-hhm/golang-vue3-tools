@@ -117,8 +117,10 @@ var (
 )
 
 type txEntry struct {
-	db *sql.DB
-	tx *sql.Tx
+	db       *sql.DB
+	tx       *sql.Tx
+	connID   string
+	database string
 }
 
 func dsnOf(cfg ConnConfig, database string) string {
@@ -352,7 +354,7 @@ func AddColumn(id, database, table string, col ColumnDef) error {
 		return fmt.Errorf("列名与类型不能为空")
 	}
 	sqlText := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s%s", qual(database, table), colDefSQL("", col), afterClause(col.After))
-	_, err = db.Exec(sqlText)
+	_, err = execLogged(db, id, database, sqlText)
 	return err
 }
 
@@ -372,7 +374,7 @@ func ModifyColumn(id, database, table, oldName string, col ColumnDef) error {
 	} else {
 		sqlText = fmt.Sprintf("ALTER TABLE %s MODIFY COLUMN %s", qual(database, table), def)
 	}
-	_, err = db.Exec(sqlText)
+	_, err = execLogged(db, id, database, sqlText)
 	return err
 }
 
@@ -385,7 +387,7 @@ func DropColumn(id, database, table, col string) error {
 	if strings.TrimSpace(col) == "" {
 		return fmt.Errorf("列名不能为空")
 	}
-	_, err = db.Exec("ALTER TABLE " + qual(database, table) + " DROP COLUMN " + qid(col))
+	_, err = execLogged(db, id, database, "ALTER TABLE "+qual(database, table)+" DROP COLUMN "+qid(col))
 	return err
 }
 
@@ -516,7 +518,8 @@ func UpdateCell(id, database, table, pkCol, pkVal, col, val string) error {
 	if val == "\x00NULL" {
 		arg = nil
 	}
-	_, err = db.Exec("UPDATE "+qual(database, table)+" SET "+qid(col)+"=? WHERE "+qid(pkCol)+"=? LIMIT 1", arg, pkVal)
+	sqlText := "UPDATE " + qual(database, table) + " SET " + qid(col) + "=? WHERE " + qid(pkCol) + "=? LIMIT 1"
+	_, err = execLogged(db, id, database, sqlText, arg, pkVal)
 	return err
 }
 
@@ -542,7 +545,7 @@ func InsertRow(id, database, table string, data map[string]string) (int64, error
 		}
 	}
 	q := "INSERT INTO " + qual(database, table) + " (" + strings.Join(cols, ",") + ") VALUES (" + strings.Join(ph, ",") + ")"
-	r, err := db.Exec(q, args...)
+	r, err := execLogged(db, id, database, q, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -558,8 +561,34 @@ func DeleteRow(id, database, table, pkCol, pkVal string) error {
 	if pkCol == "" {
 		return fmt.Errorf("该表无单列主键，无法定位行")
 	}
-	_, err = db.Exec("DELETE FROM "+qual(database, table)+" WHERE "+qid(pkCol)+"=? LIMIT 1", pkVal)
+	_, err = execLogged(db, id, database, "DELETE FROM "+qual(database, table)+" WHERE "+qid(pkCol)+"=? LIMIT 1", pkVal)
 	return err
+}
+
+// DeleteRows 依据单主键批量删除多行，返回受影响行数。
+func DeleteRows(id, database, table, pkCol string, pkVals []string) (int64, error) {
+	db, err := getDB(id)
+	if err != nil {
+		return 0, err
+	}
+	if pkCol == "" {
+		return 0, fmt.Errorf("该表无单列主键，无法定位行")
+	}
+	if len(pkVals) == 0 {
+		return 0, fmt.Errorf("未选择要删除的行")
+	}
+	ph := make([]string, len(pkVals))
+	args := make([]any, len(pkVals))
+	for i, v := range pkVals {
+		ph[i] = "?"
+		args[i] = v
+	}
+	sqlText := "DELETE FROM " + qual(database, table) + " WHERE " + qid(pkCol) + " IN (" + strings.Join(ph, ",") + ")"
+	r, err := execLogged(db, id, database, sqlText, args...)
+	if err != nil {
+		return 0, err
+	}
+	return r.RowsAffected()
 }
 
 /* ============================ SQL 执行 ============================ */
@@ -587,15 +616,18 @@ func Execute(id, database, sqlText string) (QueryResult, error) {
 	case "SELECT", "SHOW", "DESC", "DESCRIBE", "EXPLAIN", "WITH":
 		rows, err := db.Query(sqlText)
 		if err != nil {
+			logSQL(id, database, sqlText, time.Since(start), 0, "", err)
 			return res, err
 		}
 		defer rows.Close()
 		if err := scanRows(rows, &res); err != nil {
+			logSQL(id, database, sqlText, time.Since(start), 0, "", err)
 			return res, err
 		}
 		res.Note = fmt.Sprintf("%d 行", len(res.Rows))
+		logSQL(id, database, sqlText, time.Since(start), 0, res.Note, nil)
 	default:
-		r, err := db.Exec(sqlText)
+		r, err := execLogged(db, id, database, sqlText)
 		if err != nil {
 			return res, err
 		}
@@ -605,6 +637,34 @@ func Execute(id, database, sqlText string) (QueryResult, error) {
 	}
 	res.Elapsed = time.Since(start).Milliseconds()
 	return res, nil
+}
+
+// execLogged 执行写语句并写入 SQL 日志（日志附带参数值，便于排查）。
+func execLogged(db *sql.DB, connID, database, sqlText string, args ...any) (sql.Result, error) {
+	start := time.Now()
+	r, err := db.Exec(sqlText, args...)
+	var affected int64
+	if r != nil {
+		affected, _ = r.RowsAffected()
+	}
+	logSQL(connID, database, sqlWithArgs(sqlText, args), time.Since(start), affected, "", err)
+	return r, err
+}
+
+// sqlWithArgs 将参数拼接到 SQL 末尾用于日志展示（仅用于日志，不参与执行）。
+func sqlWithArgs(sqlText string, args []any) string {
+	if len(args) == 0 {
+		return sqlText
+	}
+	parts := make([]string, 0, len(args))
+	for _, a := range args {
+		if a == nil {
+			parts = append(parts, "NULL")
+			continue
+		}
+		parts = append(parts, fmt.Sprintf("%v", a))
+	}
+	return sqlText + " -- args=[" + strings.Join(parts, ", ") + "]"
 }
 
 /* ============================ 事务管理 ============================ */
@@ -629,7 +689,7 @@ func BeginTx(id, database string) (string, error) {
 	mu.Lock()
 	txSeq++
 	txID := fmt.Sprintf("tx-%d-%d", time.Now().UnixNano(), txSeq)
-	txs[txID] = &txEntry{db: db, tx: tx}
+	txs[txID] = &txEntry{db: db, tx: tx, connID: id, database: database}
 	mu.Unlock()
 	return txID, nil
 }
@@ -645,23 +705,29 @@ func TxExecute(txID, sqlText string) (QueryResult, error) {
 	}
 	sqlText = strings.TrimSpace(strings.TrimRight(sqlText, ";"))
 	head := strings.ToUpper(firstWord(sqlText))
+	start := time.Now()
 	if head == "SELECT" || head == "SHOW" || head == "DESC" || head == "DESCRIBE" || head == "EXPLAIN" || head == "WITH" {
 		rows, err := entry.tx.Query(sqlText)
 		if err != nil {
+			logSQL(entry.connID, entry.database, sqlText, time.Since(start), 0, "", err)
 			return res, err
 		}
 		defer rows.Close()
 		if err := scanRows(rows, &res); err != nil {
+			logSQL(entry.connID, entry.database, sqlText, time.Since(start), 0, "", err)
 			return res, err
 		}
 		res.Note = fmt.Sprintf("%d 行", len(res.Rows))
+		logSQL(entry.connID, entry.database, sqlText, time.Since(start), 0, res.Note, nil)
 	} else {
 		r, err := entry.tx.Exec(sqlText)
 		if err != nil {
+			logSQL(entry.connID, entry.database, sqlText, time.Since(start), 0, "", err)
 			return res, err
 		}
 		res.Affected, _ = r.RowsAffected()
 		res.Note = fmt.Sprintf("受影响 %d 行", res.Affected)
+		logSQL(entry.connID, entry.database, sqlText, time.Since(start), res.Affected, res.Note, nil)
 	}
 	return res, nil
 }

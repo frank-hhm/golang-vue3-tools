@@ -21,8 +21,11 @@ import (
 // 桌面浮动球 —— 纯 Go 原生 Win32 实现（不再用 WebView 小窗）
 //
 // 形态：一个 WS_EX_LAYERED 分层窗口，用 UpdateLayeredWindow 提交
-// 「逐像素 alpha」的圆形位图 —— 真正的透明圆球（无灰底方框）。
+// 「逐像素 alpha」的圆形位图 —— 圆形底板 + 居中 logo + 柔和投影，
+// 背景与阴影均为像素级 alpha，无灰底方框。
 // 交互：按住拖动用 SetCapture + SetWindowPos 原生移动（无 IPC 往返，不闪动）；
+// 拖动范围以「圆形底板」为准（阴影像素可探出屏幕），鼠标可把球停到屏幕上任意位置；
+// 松手时立即把窗口坐标写入配置，下次显示（含重启/重新打开）由 ballInitPos 原样恢复。
 // 单击（未拖动）在球上弹出原生系统菜单（TrackPopupMenu），选择项经
 // App.handleBallAction → "ball:action" 事件交回主窗口复用前端开窗/截图逻辑。
 // 置顶 WS_EX_TOPMOST、不占任务栏 WS_EX_TOOLWINDOW，默认贴屏幕工作区右下角。
@@ -46,12 +49,16 @@ const (
 
 	ballWM_DESTROY     = 0x0002
 	ballWM_CLOSE       = 0x0010
+	ballWM_SETCURSOR   = 0x0020
 	ballWM_MOUSEMOVE   = 0x0200
 	ballWM_LBUTTONDOWN = 0x0201
 	ballWM_LBUTTONUP   = 0x0202
 	ballWM_RBUTTONUP   = 0x0205
+	ballWM_CAPTURECHG  = 0x0215
 
-	ballIDC_ARROW = 32512
+	ballIDC_ARROW   = 32512
+	ballIDC_HAND    = 32649
+	ballIDC_SIZEALL = 32646
 
 	ballSWP_NOSIZE     = 0x0001
 	ballSWP_NOZORDER   = 0x0004
@@ -66,6 +73,19 @@ const (
 	ballTPM_RIGHTBUTTON = 0x0002
 
 	ballSPI_GETWORKAREA = 0x0030
+
+	// GetSystemMetrics：虚拟屏幕（所有显示器并集）范围，用于跨屏钳制
+	ballSMXVirtualScreen  = 76
+	ballSMYVirtualScreen  = 77
+	ballSMCXVirtualScreen = 78
+	ballSMCYVirtualScreen = 79
+)
+
+// 浮动球视觉参数（单位 DIP，运行时按系统 DPI 放大）
+const (
+	ballDiameterDIP  = 36.0 // 圆形底板直径（不含阴影留白），比原 48 DIP logo 更小
+	ballShadowPadDIP = 14.0 // 四周阴影留白（容纳大半径柔和投影，避免被窗口边缘截断）
+	ballLogoRatio    = 0.56 // logo 内容占底板直径的比例
 )
 
 // ---------------- Win32 结构体 ----------------
@@ -141,6 +161,7 @@ var (
 	ballSetCap   = ballUser32.NewProc("SetCapture")
 	ballRelCap   = ballUser32.NewProc("ReleaseCapture")
 	ballGetCur   = ballUser32.NewProc("GetCursorPos")
+	ballSetCur   = ballUser32.NewProc("SetCursor")
 	ballGetRect  = ballUser32.NewProc("GetWindowRect")
 	ballSetPos   = ballUser32.NewProc("SetWindowPos")
 	ballLoadCur  = ballUser32.NewProc("LoadCursorW")
@@ -148,6 +169,7 @@ var (
 	ballGetDC    = ballUser32.NewProc("GetDC")
 	ballRelDC    = ballUser32.NewProc("ReleaseDC")
 	ballSysInfo  = ballUser32.NewProc("SystemParametersInfoW")
+	ballMetrics  = ballUser32.NewProc("GetSystemMetrics")
 	ballGetDpi   = ballUser32.NewProc("GetDpiForSystem")
 	ballCreatePM = ballUser32.NewProc("CreatePopupMenu")
 	ballAppendM  = ballUser32.NewProc("AppendMenuW")
@@ -178,7 +200,8 @@ var (
 	ballDiameterPx int // 圆球本体直径（物理像素）
 	ballShadowPad  int // 四周为阴影预留的边距（物理像素）
 	ballRadiusF    float64
-	ballLogoImg    image.Image // 浮动球中心 logo 图像（nil 则回退闪电）
+	ballLogoImg    image.Image     // 浮动球中心 logo 图像（nil 则回退闪电）
+	ballLogoRect   image.Rectangle // logo 非透明内容包围盒（去源图留白）
 	ballCx, ballCy float64
 
 	// 拖拽（仅球线程读写）
@@ -187,6 +210,12 @@ var (
 	ballDownPt   ballPoint
 	ballOrigLeft int32
 	ballOrigTop  int32
+	ballDragPx   int32 // 判定为拖动的最小位移（物理像素，随 DPI 放大）
+
+	// 光标（仅球线程使用）：默认箭头 / 悬停手型 / 拖动中四向移动
+	ballCursorArrow uintptr
+	ballCursorHand  uintptr
+	ballCursorMove  uintptr
 )
 
 func ballUtf16(s string) *uint16 {
@@ -232,9 +261,10 @@ func stopNativeBall() {
 	}
 }
 
-// ballLoadLogo 从配置加载 logo 图片到 ballLogoImg。
+// ballLoadLogo 从配置加载 logo 图片到 ballLogoImg，并计算非透明内容包围盒。
 func ballLoadLogo() {
 	ballLogoImg = nil
+	ballLogoRect = image.Rectangle{}
 	cfg := CurrentConfig()
 	var data []byte
 	if cfg.General.AppLogo != "" {
@@ -254,6 +284,42 @@ func ballLoadLogo() {
 		return
 	}
 	ballLogoImg = img
+	ballLogoRect = ballOpaqueBounds(img)
+	if ballLogoRect.Empty() {
+		ballLogoRect = img.Bounds()
+	}
+}
+
+// ballOpaqueBounds 计算图像非透明内容的包围盒（alpha 过低视为空白），
+// 避免 logo 源图自带留白导致缩小后视觉过小。
+func ballOpaqueBounds(img image.Image) image.Rectangle {
+	b := img.Bounds()
+	minX, minY := b.Max.X, b.Max.Y
+	maxX, maxY := b.Min.X-1, b.Min.Y-1
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			_, _, _, a := img.At(x, y).RGBA()
+			if a < 0x1000 {
+				continue
+			}
+			if x < minX {
+				minX = x
+			}
+			if y < minY {
+				minY = y
+			}
+			if x > maxX {
+				maxX = x
+			}
+			if y > maxY {
+				maxY = y
+			}
+		}
+	}
+	if maxX < b.Min.X || maxY < b.Min.Y {
+		return image.Rectangle{}
+	}
+	return image.Rect(minX, minY, maxX+1, maxY+1)
 }
 
 // ballThread 在专用 OS 线程上建窗并泵消息，直到收到关闭。
@@ -282,30 +348,23 @@ func ballThread() {
 	if scale < 1 {
 		scale = 1
 	}
-	if ballLogoImg != nil {
-		// 纯 logo 模式：以 logo 自然尺寸缩放到 48 DIP，无圆球背景无阴影
-		bounds := ballLogoImg.Bounds()
-		maxDim := 48.0
-		var imgScale float64
-		if float64(bounds.Dx()) > maxDim || float64(bounds.Dy()) > maxDim {
-			imgScale = maxDim / math.Max(float64(bounds.Dx()), float64(bounds.Dy()))
-		} else {
-			imgScale = 1.0
-		}
-		ballDiameterPx = int(math.Max(float64(bounds.Dx())*imgScale, float64(bounds.Dy())*imgScale) * scale)
-		ballShadowPad = 2 // 极小边距防裁切
-		ballSizePx = ballDiameterPx + 2*ballShadowPad
-	} else {
-		// 回退圆球模式
-		ballDiameterPx = int(float64(44) * scale)
-		ballShadowPad = int(math.Max(6, float64(11)*scale))
-		ballSizePx = ballDiameterPx + 2*ballShadowPad
+	// 统一形态：圆形底板 + 居中 logo + 柔和投影（阴影留白只用于绘制，不参与点击）
+	ballDiameterPx = int(math.Round(ballDiameterDIP * scale))
+	if ballDiameterPx < 24 {
+		ballDiameterPx = 24
 	}
+	ballShadowPad = int(math.Round(ballShadowPadDIP * scale))
+	if ballShadowPad < 6 {
+		ballShadowPad = 6
+	}
+	ballSizePx = ballDiameterPx + 2*ballShadowPad
 	ballCx = float64(ballSizePx-1) / 2
 	ballCy = ballCx
-	ballRadiusF = float64(ballDiameterPx)/2 - math.Max(1, float64(ballDiameterPx)/32)
+	ballRadiusF = float64(ballDiameterPx) / 2
+	// 拖动阈值同样随 DPI 放大（高 DPI 下 4 物理像素过小，容易误触拖动）
+	ballDragPx = int32(math.Max(3, math.Round(4*scale)))
 
-	left, top := ballDefaultPos(ballSizePx)
+	left, top := ballInitPos()
 
 	hInst, _, _ := ballModHdr.Call(0)
 	hwnd, _, _ := ballCreate.Call(
@@ -344,13 +403,29 @@ func ballThread() {
 	}
 }
 
-// ballDefaultPos 工作区右下角（物理像素），避开任务栏。
-func ballDefaultPos(size int) (int32, int32) {
+// ballInitPos 初始位置：优先沿用上次拖动保存的位置（钳制到可见区域），
+// 否则停靠主屏工作区右下角。
+func ballInitPos() (int32, int32) {
+	cfg := CurrentConfig()
+	if cfg.Ball.HasPos {
+		l, t := ballClampToScreen(int32(cfg.Ball.X), int32(cfg.Ball.Y))
+		if l != int32(cfg.Ball.X) || t != int32(cfg.Ball.Y) {
+			ballLogf("上次位置 (%d, %d) 不在可见区域，已修正为 (%d, %d)", cfg.Ball.X, cfg.Ball.Y, l, t)
+		} else {
+			ballLogf("恢复上次位置: (%d, %d)", l, t)
+		}
+		return l, t
+	}
+	return ballDefaultPos()
+}
+
+// ballDefaultPos 工作区右下角（物理像素），让球面（不含阴影）距屏幕边缘 14 DIP。
+func ballDefaultPos() (int32, int32) {
 	var rc ballRect
 	ballSysInfo.Call(ballSPI_GETWORKAREA, 0, uintptr(unsafe.Pointer(&rc)), 0)
-	margin := int32(16)
-	right := rc.Right - int32(size) - margin
-	bottom := rc.Bottom - int32(size) - margin
+	margin := int32(14)
+	right := rc.Right - int32(ballDiameterPx) - margin - int32(ballShadowPad)
+	bottom := rc.Bottom - int32(ballDiameterPx) - margin - int32(ballShadowPad)
 	if right < rc.Left {
 		right = rc.Left
 	}
@@ -362,11 +437,14 @@ func ballDefaultPos(size int) (int32, int32) {
 
 func ballRegisterClass() {
 	ballClassName = ballUtf16("GoToolsFloatBallCls")
+	ballCursorArrow = ballLoadCursor(ballIDC_ARROW)
+	ballCursorHand = ballLoadCursor(ballIDC_HAND)
+	ballCursorMove = ballLoadCursor(ballIDC_SIZEALL)
 	hInst, _, _ := ballModHdr.Call(0)
 	wc := ballWndClass{
 		LpfnWndProc:   syscall.NewCallback(ballWndProc),
 		HInstance:     hInst,
-		HCursor:       ballLoadCurForArrow(),
+		HCursor:       ballCursorArrow,
 		LpszClassName: ballClassName,
 	}
 	atom, _, err := ballNewClass.Call(uintptr(unsafe.Pointer(&wc)))
@@ -377,8 +455,9 @@ func ballRegisterClass() {
 	ballClassAtom = uint16(atom)
 }
 
-func ballLoadCurForArrow() uintptr {
-	r, _, _ := ballLoadCur.Call(0, uintptr(ballIDC_ARROW))
+// ballLoadCursor 加载系统光标（id 为 IDC_* 常量）。
+func ballLoadCursor(id uintptr) uintptr {
+	r, _, _ := ballLoadCur.Call(0, id)
 	return r
 }
 
@@ -408,26 +487,57 @@ func ballWndProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		ballGetCur.Call(uintptr(unsafe.Pointer(&p)))
 		dx := p.X - ballDownPt.X
 		dy := p.Y - ballDownPt.Y
-		if !ballDragging && (abs32(dx) > 4 || abs32(dy) > 4) {
+		if !ballDragging && (abs32(dx) >= ballDragPx || abs32(dy) >= ballDragPx) {
 			ballDragging = true
+			ballSetCur.Call(ballCursorMove) // 捕获期间不会收到 WM_SETCURSOR，这里主动切光标
 		}
 		if ballDragging {
-			nl, nt := ballOrigLeft+dx, ballOrigTop+dy
-			nl, nt = ballClampToWork(nl, nt, int32(ballSizePx))
-			ballSetPos.Call(hwnd, uintptr(nl), uintptr(nt), 0, 0,
+			nl, nt := ballClampToScreen(ballOrigLeft+dx, ballOrigTop+dy)
+			// SetWindowPos(hwnd, hWndInsertAfter, X, Y, cx, cy, flags)：
+			// 第 2 参必须传 0（配合 SWP_NOZORDER 被忽略）；若误把 X 传在第 2 参，
+			// 会被当成插入句柄而导致移动静默失败（表现为拖不动）。
+			ballSetPos.Call(hwnd, 0, uintptr(nl), uintptr(nt), 0, 0,
 				ballSWP_NOSIZE|ballSWP_NOZORDER|ballSWP_NOACTIVATE)
 		}
 		return 0
 
 	case ballWM_LBUTTONUP:
 		if ballCaptured {
-			ballRelCap.Call()
+			wasDragging := ballDragging
+			if wasDragging {
+				// 兜底：按松手时的光标做最后一次定位，避免快速松手漏掉最后一次 MOUSEMOVE
+				var p ballPoint
+				ballGetCur.Call(uintptr(unsafe.Pointer(&p)))
+				nl, nt := ballClampToScreen(
+					ballOrigLeft+(p.X-ballDownPt.X),
+					ballOrigTop+(p.Y-ballDownPt.Y),
+				)
+				ballSetPos.Call(hwnd, 0, uintptr(nl), uintptr(nt), 0, 0,
+					ballSWP_NOSIZE|ballSWP_NOZORDER|ballSWP_NOACTIVATE)
+			}
+			// 先复位标志再释放捕获：ReleaseCapture 会同步派发 WM_CAPTURECHANGED，
+			// 若不先复位会被它清成“未拖动”，导致刚拖完的位置不落盘。
 			ballCaptured = false
-			if !ballDragging {
+			ballDragging = false
+			ballRelCap.Call()
+			if wasDragging {
+				ballSavePos(hwnd) // 拖动结束：同步记忆位置，立即落盘
+				ballApplyCursor(hwnd)
+			} else {
 				ballShowMenu(hwnd)
 			}
 		}
 		return 0
+
+	case ballWM_CAPTURECHG:
+		// 捕获被系统/其他窗口抢走时复位拖拽状态，避免卡在“按住”状态
+		ballCaptured = false
+		ballDragging = false
+		return 0
+
+	case ballWM_SETCURSOR:
+		ballApplyCursor(hwnd)
+		return 1
 
 	case ballWM_RBUTTONUP:
 		ballShowMenu(hwnd)
@@ -454,32 +564,78 @@ func abs32(v int32) int32 {
 	return v
 }
 
-func ballInsideCircle(x, y float64) bool {
-	if ballLogoImg != nil {
-		// logo 模式：整个窗口都可点击
-		return true
+// ballApplyCursor 悬停在圆球上显示手型、拖动中显示四向移动光标，提示“可按住拖动”。
+func ballApplyCursor(hwnd uintptr) {
+	cur := ballCursorArrow
+	switch {
+	case ballDragging || ballCaptured:
+		cur = ballCursorMove
+	default:
+		var p ballPoint
+		ballGetCur.Call(uintptr(unsafe.Pointer(&p)))
+		var rc ballRect
+		ballGetRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+		if ballInsideCircle(float64(p.X-rc.Left), float64(p.Y-rc.Top)) {
+			cur = ballCursorHand
+		}
 	}
-	dx, dy := x-ballCx, y-ballCy
-	return dx*dx+dy*dy <= ballRadiusF*ballRadiusF
+	if cur != 0 {
+		ballSetCur.Call(cur)
+	}
 }
 
-// ballClampToWork 把窗口左上角钳制到工作区内。
-func ballClampToWork(l, t int32, size int32) (int32, int32) {
-	var rc ballRect
-	ballSysInfo.Call(ballSPI_GETWORKAREA, 0, uintptr(unsafe.Pointer(&rc)), 0)
-	if l < rc.Left {
-		l = rc.Left
+func ballInsideCircle(x, y float64) bool {
+	dx, dy := x-ballCx, y-ballCy
+	r := ballRadiusF + 2 // 多留 2px 容差，按住边缘也能拖动
+	return dx*dx+dy*dy <= r*r
+}
+
+// ballClampToScreen 把窗口左上角钳制到允许放置的范围：
+// 以「圆形底板」为准（阴影像素允许探出屏幕边缘），所以球体能贴住任意一边/角落，
+// 屏幕上任意位置都能停；显示器拔插后恢复旧位置也会被拉回可见区域。
+func ballClampToScreen(l, t int32) (int32, int32) {
+	vxRaw, _, _ := ballMetrics.Call(ballSMXVirtualScreen)
+	vyRaw, _, _ := ballMetrics.Call(ballSMYVirtualScreen)
+	vwRaw, _, _ := ballMetrics.Call(ballSMCXVirtualScreen)
+	vhRaw, _, _ := ballMetrics.Call(ballSMCYVirtualScreen)
+	vx, vy := int32(vxRaw), int32(vyRaw)
+	vw, vh := int32(vwRaw), int32(vhRaw)
+	if vw <= 0 || vh <= 0 {
+		return l, t
 	}
-	if t < rc.Top {
-		t = rc.Top
+	pad := int32(ballShadowPad)
+	dia := int32(ballDiameterPx)
+	// 窗口左上角的合法区间：圆球在左/上边贴齐屏幕时为屏幕坐标减阴影留白
+	minL, maxL := vx-pad, vx+vw-pad-dia
+	minT, maxT := vy-pad, vy+vh-pad-dia
+	if maxL < minL {
+		maxL = minL
 	}
-	if l+size > rc.Right {
-		l = rc.Right - size
+	if maxT < minT {
+		maxT = minT
 	}
-	if t+size > rc.Bottom {
-		t = rc.Bottom - size
+	if l < minL {
+		l = minL
+	} else if l > maxL {
+		l = maxL
+	}
+	if t < minT {
+		t = minT
+	} else if t > maxT {
+		t = maxT
 	}
 	return l, t
+}
+
+// ballSavePos 拖动结束后把窗口坐标立即写回配置（同步写，避免退出时异步落盘未完成），
+// 下次启动/重开浮动球时由 ballInitPos 原样恢复。
+func ballSavePos(hwnd uintptr) {
+	l, t := ballCurPos(hwnd)
+	if err := SaveBallPos(int(l), int(t)); err != nil {
+		ballLogf("保存位置失败: (%d, %d) %v", l, t, err)
+		return
+	}
+	ballLogf("已记住位置: (%d, %d)", l, t)
 }
 
 // ballQuickItems 从当前配置读取标记为快捷（Quick=true）的工具，作为原生菜单项（ID → 显示名）。
@@ -545,50 +701,38 @@ func ballShowMenu(hwnd uintptr) {
 // 位图渲染：Go 生成逐像素 alpha 的圆形球（预乘 BGRA，自上而下）
 // ============================================================
 
-// ballRender 返回 size*size 的预乘 BGRA 缓冲（top-down）
+// ballRender 返回 size*size 的预乘 BGRA 缓冲（top-down）：
+// 双层柔和投影 + 白色圆形底板 + 居中 logo。
 func ballRender(size int) []byte {
 	buf := make([]byte, size*size*4)
-
-	if ballLogoImg != nil {
-		// 纯 logo 模式：将图像缩放到 size x size，无背景无阴影
-		bounds := ballLogoImg.Bounds()
-		imgW, imgH := bounds.Dx(), bounds.Dy()
-		for y := 0; y < size; y++ {
-			for x := 0; x < size; x++ {
-				// 映射到图像坐标（居中显示）
-				ix := int(float64(x) / float64(size) * float64(imgW))
-				iy := int(float64(y) / float64(size) * float64(imgH))
-				if ix >= imgW {
-					ix = imgW - 1
-				}
-				if iy >= imgH {
-					iy = imgH - 1
-				}
-				cr, cg, cb, ca := ballLogoImg.At(bounds.Min.X+ix, bounds.Min.Y+iy).RGBA()
-				a := float64(ca) / 65535.0
-				o := (y*size + x) * 4
-				// 预乘 BGRA
-				buf[o] = byte(float64(cr) / 257.0 * a)
-				buf[o+1] = byte(float64(cg) / 257.0 * a)
-				buf[o+2] = byte(float64(cb) / 257.0 * a)
-				buf[o+3] = byte(ca >> 8)
-			}
-		}
-		return buf
+	c := float64(size-1) / 2
+	rad := ballRadiusF - 0.5
+	if rad < 1 {
+		rad = 1
 	}
 
-	// 回退圆球模式
-	c := float64(size-1) / 2
-	rad := float64(ballDiameterPx)/2 - math.Max(1, float64(ballDiameterPx)/32)
-	shadowOffY := math.Max(1.5, float64(ballShadowPad)*0.16)
-	blur := math.Max(3, float64(ballShadowPad)*0.72)
-	const shadowMax = 0.40
+	// 投影：双层柔和投影（近距离主阴影 + 大半径环境阴影），低透明度、大模糊，
+	// 与设计稿中「白色圆钮 + 轻阴影」的观感一致。
+	// blur 过大会被窗口边缘截断，上限由 ballShadowPadDIP 留白约束。
+	pad := float64(ballShadowPad)
+	keyOffY := math.Max(1.2, pad*0.16) // 主阴影轻微下移
+	keyBlur := math.Max(4.0, pad*0.45) // 主阴影模糊半径
+	const keyAlpha = 0.10              // 主阴影最大不透明度
+	ambOffY := math.Max(0.6, pad*0.06) // 环境阴影几乎不下移
+	ambBlur := math.Max(6.0, pad*0.85) // 环境阴影更大更散
+	const ambAlpha = 0.05              // 环境阴影最大不透明度
 
+	// 底板：纯白轻微渐变 + 极细内描边，保证在白墙纸上也有轮廓
+	rimW := math.Max(1, float64(ballDiameterPx)*0.028)
+
+	hasLogo := ballLogoImg != nil && !ballLogoRect.Empty()
+
+	// 无 logo 时回退绘制闪电
 	bolt := [][2]float64{
 		{0.10, -0.48}, {-0.28, 0.06}, {-0.02, 0.06},
 		{-0.12, 0.48}, {0.28, -0.10}, {0.02, -0.10},
 	}
-	s := rad * 1.5
+	s := rad * 1.15
 	boltPoly := make([][2]float64, len(bolt))
 	for i, pt := range bolt {
 		boltPoly[i] = [2]float64{c + pt[0]*s, c + pt[1]*s}
@@ -599,28 +743,31 @@ func ballRender(size int) []byte {
 			dx := float64(x) - c
 			dyBall := float64(y) - c
 			distBall := math.Sqrt(dx*dx + dyBall*dyBall)
+
 			var cov float64
 			switch {
-			case distBall <= rad-1:
+			case distBall <= rad-0.5:
 				cov = 1
-			case distBall >= rad+1:
-				cov = 0
-			default:
-				cov = rad + 1 - distBall
+			case distBall < rad+0.5:
+				cov = rad + 0.5 - distBall
 			}
-			dySh := float64(y) - (c + shadowOffY)
-			distSh := math.Sqrt(dx*dx + dySh*dySh)
-			var shA float64
-			if distSh <= rad {
-				shA = shadowMax
-			} else if distSh < rad+blur {
-				f := (rad + blur - distSh) / blur
-				shA = shadowMax * f * f
+
+			dySh := float64(y) - (c + keyOffY)
+			keyA := ballShadowAlpha(dx, dySh, rad, keyBlur, keyAlpha)
+			ambA := ballShadowAlpha(dx, float64(y)-(c+ambOffY), rad, ambBlur, ambAlpha)
+			// 双层叠加：1-(1-a)(1-b)，交叠处不会叠加发黑
+			shA := 1 - (1-keyA)*(1-ambA)
+
+			lr, lg, lb, la := 0.0, 0.0, 0.0, 0.0
+			if hasLogo {
+				lr, lg, lb, la = ballLogoSample(x, y, c)
 			}
-			if cov <= 0 && shA <= 0.004 {
+
+			if cov <= 0 && shA <= 0.004 && la <= 0 {
 				continue
 			}
-			var r, g, b float64
+
+			var sr, sg, sb float64
 			if cov > 0 {
 				t := (float64(y) - (c - rad)) / (2 * rad)
 				if t < 0 {
@@ -628,26 +775,125 @@ func ballRender(size int) []byte {
 				} else if t > 1 {
 					t = 1
 				}
-				r = lerp(62, 150, t)
-				g = lerp(110, 60, t)
-				b = lerp(255, 220, t)
-				hl := math.Max(0, 1-distBall/(rad*1.4)) * 0.35
-				r = clamp255(r + hl*120)
-				g = clamp255(g + hl*120)
-				b = clamp255(b + hl*120)
-				if pointInPoly(float64(x), float64(y), boltPoly) {
-					r, g, b = 250, 250, 255
+				sr = lerp(255, 251, t)
+				sg = lerp(255, 252, t)
+				sb = lerp(255, 254, t)
+				// 边缘内描边：极轻压暗，白底上也能看清圆形边界
+				if distBall > rad-rimW {
+					k := (distBall - (rad - rimW)) / rimW
+					if k > 1 {
+						k = 1
+					}
+					k *= 0.08
+					sr *= 1 - k
+					sg *= 1 - k
+					sb *= 1 - k
+				}
+				if !hasLogo && pointInPoly(float64(x), float64(y), boltPoly) {
+					sr, sg, sb = 48, 50, 58
 				}
 			}
-			aTotal := cov + (1-cov)*shA
+
+			// 预乘 alpha 合成：底板盖投影，logo 盖底板
+			a := cov + (1-cov)*shA
+			r := sr * cov
+			g := sg * cov
+			b := sb * cov
+			if la > 0 {
+				r = lr*la + r*(1-la)
+				g = lg*la + g*(1-la)
+				b = lb*la + b*(1-la)
+				a = la + a*(1-la)
+			}
+			if a <= 0.003 {
+				continue
+			}
 			o := (y*size + x) * 4
-			buf[o] = byte(b * cov)
-			buf[o+1] = byte(g * cov)
-			buf[o+2] = byte(r * cov)
-			buf[o+3] = byte(aTotal * 255)
+			buf[o] = byte(clamp255(b))
+			buf[o+1] = byte(clamp255(g))
+			buf[o+2] = byte(clamp255(r))
+			buf[o+3] = byte(clamp255(a * 255))
 		}
 	}
 	return buf
+}
+
+// ballShadowAlpha 计算单层圆形柔和阴影在相对圆心 (dx, dy) 处的不透明度：
+// 半径 rad 内为满值，向外 blur 像素用 smoothstep 过渡到 0，边缘无硬边。
+func ballShadowAlpha(dx, dy, rad, blur, maxAlpha float64) float64 {
+	d := math.Sqrt(dx*dx + dy*dy)
+	if d >= rad+blur {
+		return 0
+	}
+	f := (rad + blur - d) / blur
+	if f > 1 {
+		f = 1
+	}
+	return maxAlpha * f * f * (3 - 2*f)
+}
+
+// ballLogoSample 按底板比例将 logo 非透明内容居中缩放，返回预乘 RGB（0..255）与 alpha（0..1）。
+func ballLogoSample(x, y int, c float64) (r, g, b, a float64) {
+	rect := ballLogoRect
+	target := float64(ballDiameterPx) * ballLogoRatio
+	scale := math.Min(target/float64(rect.Dx()), target/float64(rect.Dy()))
+	w := float64(rect.Dx()) * scale
+	h := float64(rect.Dy()) * scale
+	left := c - w/2
+	top := c - h/2
+	px := float64(x) + 0.5
+	py := float64(y) + 0.5
+	if px < left || px >= left+w || py < top || py >= top+h {
+		return
+	}
+	// 目标像素中心 → 源内容坐标（像素中心在整数坐标）
+	sx := float64(rect.Min.X) + (px-left)/w*float64(rect.Dx()) - 0.5
+	sy := float64(rect.Min.Y) + (py-top)/h*float64(rect.Dy()) - 0.5
+	return ballSampleBilinear(ballLogoImg, sx, sy)
+}
+
+// ballSampleBilinear 对图像做双线性采样（在预乘空间插值，避免透明边缘发黑）。
+func ballSampleBilinear(img image.Image, sx, sy float64) (r, g, b, a float64) {
+	bounds := img.Bounds()
+	x0 := int(math.Floor(sx))
+	y0 := int(math.Floor(sy))
+	fx := sx - float64(x0)
+	fy := sy - float64(y0)
+	x1, y1 := x0+1, y0+1
+
+	x0 = ballClampInt(x0, bounds.Min.X, bounds.Max.X-1)
+	x1 = ballClampInt(x1, bounds.Min.X, bounds.Max.X-1)
+	y0 = ballClampInt(y0, bounds.Min.Y, bounds.Max.Y-1)
+	y1 = ballClampInt(y1, bounds.Min.Y, bounds.Max.Y-1)
+
+	r00, g00, b00, a00 := img.At(x0, y0).RGBA()
+	r10, g10, b10, a10 := img.At(x1, y0).RGBA()
+	r01, g01, b01, a01 := img.At(x0, y1).RGBA()
+	r11, g11, b11, a11 := img.At(x1, y1).RGBA()
+
+	topR := lerp(float64(r00), float64(r10), fx)
+	topG := lerp(float64(g00), float64(g10), fx)
+	topB := lerp(float64(b00), float64(b10), fx)
+	topA := lerp(float64(a00), float64(a10), fx)
+	botR := lerp(float64(r01), float64(r11), fx)
+	botG := lerp(float64(g01), float64(g11), fx)
+	botB := lerp(float64(b01), float64(b11), fx)
+	botA := lerp(float64(a01), float64(a11), fx)
+
+	return lerp(topR, botR, fy) / 257,
+		lerp(topG, botG, fy) / 257,
+		lerp(topB, botB, fy) / 257,
+		lerp(topA, botA, fy) / 65535
+}
+
+func ballClampInt(v, lo, hi int) int {
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
 }
 
 func lerp(a, b, t float64) float64 { return a + (b-a)*t }

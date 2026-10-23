@@ -165,6 +165,39 @@ export interface RoutineInfo {
 }
 
 /**
+ * SQLLogFile 单个 SQL 日志文件信息。
+ */
+export interface SQLLogFile {
+    "name": string;
+    "size": number;
+    "modTime": string;
+}
+
+/**
+ * SQLLogSettings SQL 日志的开关、目录与现存文件（供设置弹窗展示）。
+ */
+export interface SQLLogSettings {
+    "enabled": boolean;
+
+    /**
+     * 配置目录（空表示默认）
+     */
+    "dir": string;
+
+    /**
+     * 默认目录（程序目录下 logs），供界面提示
+     */
+    "defaultDir": string;
+
+    /**
+     * 实际写入目录
+     */
+    "resolvedDir": string;
+    "files": SQLLogFile[] | null;
+    "totalSize": number;
+}
+
+/**
  * ServerVersion 本地可用的一个 MySQL 版本
  */
 export interface ServerVersion {

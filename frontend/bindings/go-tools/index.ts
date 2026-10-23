@@ -17,6 +17,7 @@ export type {
     SvcEntry,
     SystemInfo,
     ToolConfig,
+    ToolSettings,
     UIMessage,
     VideoStatus
 } from "./models.js";

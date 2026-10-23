@@ -25,6 +25,9 @@ type LogConfig struct {
 // BallConfig 桌面浮动球设置
 type BallConfig struct {
 	Enabled bool `json:"enabled"` // 是否在启动时显示浮动球（设置页可即时显隐）
+	X       int  `json:"x"`       // 上次拖动后的窗口左上角 X（物理像素，含阴影留白）
+	Y       int  `json:"y"`       // 上次拖动后的窗口左上角 Y
+	HasPos  bool `json:"hasPos"`  // 是否已记录位置；false 时启动停靠工作区右下角
 }
 
 // GeneralConfig 应用通用设置
@@ -42,7 +45,7 @@ type ToolConfig struct {
 	Name       string `json:"name"`       // 显示标题
 	Path       string `json:"path"`       // 前端路由，如 /tools/timestamp（与 Event 二选一）
 	Event      string `json:"event"`      // 直接触发的事件（如 screenshot），空表示走 Path
-	Icon       string `json:"icon"`       // 图标名（Arco 图标，去掉 icon- 前缀亦可）
+	Icon       string `json:"icon"`       // 图标：Arco 图标名（如 camera）或图标库 class（如 icon-lianjie）
 	Single     bool   `json:"single"`     // 窗口单例
 	Fullscreen bool   `json:"fullscreen"` // 新窗口最大化启动
 	Width      int    `json:"width"`      // 视口宽（<=0 继承默认）
@@ -51,18 +54,26 @@ type ToolConfig struct {
 	Quick      bool   `json:"quick"`      // 是否出现在浮动球快捷菜单
 }
 
+// ToolSettings 单个工具的专属设置（按 ToolConfig.Key 索引，目前仅 mysql 使用）
+type ToolSettings struct {
+	SQLLogEnabled bool   `json:"sqlLogEnabled"` // 是否记录 SQL 执行日志（手动 SQL 与增删改/DDL）
+	SQLLogDir     string `json:"sqlLogDir"`     // SQL 日志目录；空 = 默认（程序目录下 logs）
+}
+
 // AppConfig 应用总配置
 type AppConfig struct {
-	Log     LogConfig     `json:"log"`
-	Ball    BallConfig    `json:"ball"`
-	General GeneralConfig `json:"general"`
-	Tools   []ToolConfig  `json:"tools"`
+	Log          LogConfig               `json:"log"`
+	Ball         BallConfig              `json:"ball"`
+	General      GeneralConfig           `json:"general"`
+	Tools        []ToolConfig            `json:"tools"`
+	ToolSettings map[string]ToolSettings `json:"toolSettings"` // 工具级设置，键为工具 Key（如 mysql）
 }
 
 var (
-	appCfgMu  sync.RWMutex
-	appCfg    AppConfig
-	appCfgSet bool
+	appCfgMu      sync.RWMutex
+	appCfgWriteMu sync.Mutex // 串行化整文件写入，避免并发保存（前端保存设置/拖动浮动球）互相覆盖
+	appCfg        AppConfig
+	appCfgSet     bool
 )
 
 // DefaultConfig 返回带默认日志设置与默认工具列表的配置。
@@ -71,22 +82,29 @@ func DefaultConfig() AppConfig {
 		Log:     LogConfig{Enabled: true, Level: "info", Path: ""},
 		Ball:    BallConfig{Enabled: false},
 		General: GeneralConfig{AutoStart: false, AppName: "Tools", AppLogo: "", Theme: "light"},
+		ToolSettings: map[string]ToolSettings{
+			// MySQL：默认开启 SQL 日志，目录留空走 DefaultSQLLogDir
+			"mysql": {SQLLogEnabled: true},
+		},
 		Tools: []ToolConfig{
 			{ID: "screenshot", Key: "screenshot", Name: "截图", Event: "screenshot", Icon: "camera", Quick: true},
-			{ID: "colorpicker", Key: "colorpicker", Name: "颜色取色器", Path: "/tools/colorpicker", Icon: "color-picker", Single: true, Width: 480, Height: 560, Quick: true},
+			{ID: "colorpicker", Key: "colorpicker", Name: "颜色取色器", Path: "/tools/colorpicker", Icon: "palette", Single: true, Width: 480, Height: 400, Quick: true},
 			{ID: "video", Key: "video", Name: "视频录制", Path: "/tools/video", Icon: "video-camera", Single: true, Fullscreen: true, Quick: true},
-			{ID: "qrcode", Key: "qrcode", Name: "二维码生成", Path: "/tools/qrcode", Icon: "qrcode", Quick: true},
-			{ID: "timestamp", Key: "timestamp", Name: "时间戳转换", Path: "/tools/timestamp", Icon: "clock-circle", Quick: true},
-			{ID: "strrandom", Key: "strrandom", Name: "随机字符串生成", Path: "/tools/strrandom", Icon: "random"},
+			{ID: "qrcode", Key: "qrcode", Name: "二维码生成", Path: "/tools/qrcode", Icon: "icon-erweima3"},
+			{ID: "timestamp", Key: "timestamp", Name: "时间戳转换", Path: "/tools/timestamp", Icon: "clock-circle"},
+			{ID: "strrandom", Key: "strrandom", Name: "随机字符串生成", Path: "/tools/strrandom", Icon: "icon-mofa"},
 			{ID: "encdec", Key: "encdec", Name: "文字加密解密", Path: "/tools/encdec", Icon: "lock"},
 			{ID: "hexconvert", Key: "hexconvert", Name: "进制转换", Path: "/tools/hexconvert", Icon: "swap"},
-			{ID: "imageBase64", Key: "imageBase64", Name: "图片base64", Path: "/tools/imageBase64", Icon: "image"},
-			{ID: "sniffer", Key: "sniffer", Name: "抓包工具", Path: "/tools/sniffer", Icon: "wifi", Single: true, Fullscreen: true},
-			{ID: "websocket", Key: "websocket", Name: "WebSocket调试", Path: "/tools/websocket", Icon: "connection", Fullscreen: true},
-			{ID: "usbserial", Key: "usbserial", Name: "USB调试", Path: "/tools/usbserial", Icon: "usb"},
+			{ID: "imageBase64", Key: "imageBase64", Name: "图片base64", Path: "/tools/imageBase64", Icon: "icon-img"},
+			{ID: "sniffer", Key: "sniffer", Name: "抓包工具", Path: "/tools/sniffer", Icon: "wifi", Single: true, Fullscreen: true, Quick: true},
+			{ID: "websocket", Key: "websocket", Name: "WebSocket调试", Path: "/tools/websocket", Icon: "icon-lianjie", Fullscreen: true},
+			{ID: "usbserial", Key: "usbserial", Name: "USB调试", Path: "/tools/usbserial", Icon: "icon-xinpian"},
 			{ID: "redis", Key: "redis", Name: "Redis管理", Path: "/tools/redis", Icon: "storage", Single: true, Fullscreen: true},
 			{ID: "mysql", Key: "mysql", Name: "MySQL管理", Path: "/tools/mysql", Icon: "code-block", Single: true, Fullscreen: true},
-			{ID: "settings", Key: "settings", Name: "设置", Path: "/tools/settings", Icon: "settings", Single: true},
+			{ID: "php", Key: "php", Name: "PHP管理", Path: "/tools/php", Icon: "icon-mofa", Single: true, Fullscreen: true},
+			{ID: "nginx", Key: "nginx", Name: "Nginx管理", Path: "/tools/nginx", Icon: "share-external", Single: true, Fullscreen: true},
+			{ID: "npm", Key: "npm", Name: "npm管理", Path: "/tools/npm", Icon: "drive-file", Single: true, Fullscreen: true},
+			{ID: "settings", Key: "settings", Name: "设置", Path: "/tools/settings", Icon: "settings", Single: true, Quick: true},
 		},
 	}
 }
@@ -124,8 +142,22 @@ func defaultLogDir() string {
 	return filepath.Join(base, "go-tools", "logs")
 }
 
-// normalizeConfig 补齐缺省值（级别非法回退 info；工具 ID 缺失用 Key 兜底；AppName 空回退 "Tools"）。
+// legacyToolIcons 旧版默认数据中不存在于 Arco 的图标 → 当前图标，避免历史配置图标空白。
+var legacyToolIcons = map[string]string{
+	"color-picker": "palette",
+	"random":       "icon-mofa",
+	"connection":   "icon-lianjie",
+	"usb":          "icon-xinpian",
+}
+
+// normalizeConfig 补齐缺省值（级别非法回退 info；工具 ID 缺失用 Key 兜底；旧图标修正；AppName 空回退 "Tools"；工具设置表非空）。
 func normalizeConfig(cfg *AppConfig) {
+	if cfg.ToolSettings == nil {
+		cfg.ToolSettings = map[string]ToolSettings{}
+	}
+	if _, ok := cfg.ToolSettings["mysql"]; !ok {
+		cfg.ToolSettings["mysql"] = ToolSettings{SQLLogEnabled: true}
+	}
 	switch cfg.Log.Level {
 	case "debug", "info", "warn", "error":
 	default:
@@ -142,6 +174,35 @@ func normalizeConfig(cfg *AppConfig) {
 	for i := range cfg.Tools {
 		if cfg.Tools[i].ID == "" {
 			cfg.Tools[i].ID = cfg.Tools[i].Key
+		}
+		if fixed, ok := legacyToolIcons[cfg.Tools[i].Icon]; ok {
+			cfg.Tools[i].Icon = fixed
+		}
+	}
+	// 补齐存量配置中缺失的新增默认工具（仅限 php/nginx/npm，尊重用户手动移除的其他工具）
+	for _, extra := range []struct{ id, key, name, path, icon string }{
+		{"php", "php", "PHP管理", "/tools/php", "icon-mofa"},
+		{"nginx", "nginx", "Nginx管理", "/tools/nginx", "share-external"},
+		{"npm", "npm", "npm管理", "/tools/npm", "drive-file"},
+	} {
+		found := false
+		for _, t := range cfg.Tools {
+			if t.Key == extra.key {
+				found = true
+				break
+			}
+		}
+		if !found {
+			// 插入到 settings 之前，保持工具列表观感一致
+			ins := len(cfg.Tools)
+			for i, t := range cfg.Tools {
+				if t.Key == "settings" {
+					ins = i
+					break
+				}
+			}
+			newTool := ToolConfig{ID: extra.id, Key: extra.key, Name: extra.name, Path: extra.path, Icon: extra.icon, Single: true, Fullscreen: true}
+			cfg.Tools = append(cfg.Tools[:ins:ins], append([]ToolConfig{newTool}, cfg.Tools[ins:]...)...)
 		}
 	}
 }
@@ -160,6 +221,9 @@ func LoadAppConfig() AppConfig {
 				cfg.General = loaded.General
 				if len(loaded.Tools) > 0 {
 					cfg.Tools = loaded.Tools
+				}
+				if loaded.ToolSettings != nil {
+					cfg.ToolSettings = loaded.ToolSettings
 				}
 			}
 		}
@@ -185,6 +249,32 @@ func CurrentConfig() AppConfig {
 
 // SaveAppConfig 规范化并持久化配置，同时更新当前缓存；返回文件路径。
 func SaveAppConfig(cfg AppConfig) (string, error) {
+	appCfgWriteMu.Lock()
+	defer appCfgWriteMu.Unlock()
+	return writeAppConfigLocked(cfg)
+}
+
+// SaveBallPos 仅更新浮动球位置并落盘：读改写处于同一写锁内，
+// 不会覆盖其他设置的并发修改。
+func SaveBallPos(x, y int) error {
+	appCfgWriteMu.Lock()
+	defer appCfgWriteMu.Unlock()
+
+	appCfgMu.RLock()
+	cfg, set := appCfg, appCfgSet
+	appCfgMu.RUnlock()
+	if !set {
+		cfg = LoadAppConfig()
+	}
+	cfg.Ball.X = x
+	cfg.Ball.Y = y
+	cfg.Ball.HasPos = true
+	_, err := writeAppConfigLocked(cfg)
+	return err
+}
+
+// writeAppConfigLocked 调用方需持有 appCfgWriteMu：规范化 → 落盘 → 更新缓存。
+func writeAppConfigLocked(cfg AppConfig) (string, error) {
 	normalizeConfig(&cfg)
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {

@@ -13,6 +13,16 @@
                         <a-doption value="fullscreen">
                             <template #icon><icon-fullscreen /></template>切换全屏
                         </a-doption>
+                        <a-doption value="theme">
+                            <template #icon>
+                                <icon-sun v-if="themeMode === 'dark'" />
+                                <icon-moon v-else />
+                            </template>
+                            {{ themeMode === 'dark' ? '切换浅色模式' : '切换暗黑模式' }}
+                        </a-doption>
+                        <a-doption value="settings">
+                            <template #icon><icon-settings /></template>设置
+                        </a-doption>
                     </template>
                 </a-dropdown>
                 <div class="tb-btn" title="最小化" @click="minimise"><icon-minus /></div>
@@ -27,9 +37,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { Window } from "@wailsio/runtime";
+import { applyTheme, currentTheme } from "@/utils/theme";
 
 /**
  * 空白布局：用于 Wails 原生新窗口（/win 前缀）。
@@ -37,7 +48,11 @@ import { Window } from "@wailsio/runtime";
  * 全屏时该标题栏随内容铺满显示器，菜单依旧可见。
  */
 const route = useRoute();
+const router = useRouter();
 const title = computed(() => (route.meta?.menu_name as string) || "go-tools");
+
+// 当前主题模式：用于菜单项图标与文案（暗黑 <-> 浅色快速切换，“跟随系统”按当前实际深浅切换）
+const themeMode = ref(currentTheme());
 
 const reload = () => location.reload();
 // 用最大化实现“铺满显示器”，避免排他全屏把自绘标题栏顶出屏幕
@@ -46,6 +61,14 @@ const minimise = () => Window.Minimise();
 const toggleMaximise = () => Window.ToggleMaximise();
 const close = () => Window.Close();
 
+const toggleTheme = () => {
+    // auto 模式下按系统实际偏好落地为固定主题，再在浅色/暗黑间切换
+    const dark = themeMode.value === "dark" || (themeMode.value === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const next = dark ? "light" : "dark";
+    applyTheme(next);
+    themeMode.value = next;
+};
+
 const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     switch (v) {
         case "reload":
@@ -53,6 +76,12 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
             break;
         case "fullscreen":
             toggleFullscreen();
+            break;
+        case "theme":
+            toggleTheme();
+            break;
+        case "settings":
+            router.push("/win/tools/settings");
             break;
     }
 };

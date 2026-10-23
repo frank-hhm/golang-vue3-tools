@@ -1,6 +1,7 @@
 import { App, Plugin } from 'vue';
 import LayoutBody from '@/components/layouts/LayoutBody.vue'
 import selectIconModal from '@/components/select-modal/icon/index.vue'
+import BodyViewer from '@/components/body-viewer/index.vue'
 
 export const ComponentsPlugin: Plugin = {
     install(app: App) {
@@ -9,7 +10,9 @@ export const ComponentsPlugin: Plugin = {
         //  - type="arco"：Arco Design 图标库，emit 图标名（如 camera / clock-circle）
         app.component('select-icon-modal', selectIconModal);
         app.component('layout-body', LayoutBody);
+        // body-viewer：报文查看器，支持 美化 / 原生 / 预览 / 可视化 四种视图
+        app.component('body-viewer', BodyViewer);
 
     },
 };
-export {  LayoutBody , selectIconModal};
+export {  LayoutBody , selectIconModal, BodyViewer};

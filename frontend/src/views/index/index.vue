@@ -13,7 +13,7 @@
                 <span>欢迎回来！</span>
               </template>
               <template #extra>
-                <a-button size="mini" :loading="sysLoading" @click="refreshSysInfo">
+                <a-button :loading="sysLoading" @click="refreshSysInfo">
                   <template #icon><icon-refresh /></template>
                 </a-button>
               </template>
@@ -77,6 +77,9 @@
                   <a-radio value="all">全部</a-radio>
                   <a-radio value="redis">Redis</a-radio>
                   <a-radio value="mysql">MySQL</a-radio>
+                  <a-radio value="php">PHP</a-radio>
+                  <a-radio value="nginx">Nginx</a-radio>
+                  <a-radio value="npm">Npm</a-radio>
                 </a-radio-group>
               </template>
               <div class="svc-cards" v-if="filteredServices.length">
@@ -84,7 +87,9 @@
                   <div class="svc-card-top">
                     <div class="svc-logo" :class="s.type === 'redis' ? 'logo-redis' : 'logo-mysql'">
                       <span v-if="s.type === 'redis'" class="icon icon-icon-redis" />
-                      <span v-else class="icon icon-MySQL" />
+                      <span v-if="s.type === 'php'" class="icon icon-php" />
+                      <span v-if="s.type === 'mysql'" class="icon icon-MySQL" />
+                      <span v-if="s.type === 'nginx'" class="icon icon-nginx" />
                     </div>
                     <div class="svc-meta">
                       <div class="svc-name">{{ s.name }}</div>
@@ -130,6 +135,20 @@
 
       <a-col :span="8">
 
+        <!-- ========== 右侧：当前时间 ========== -->
+        <a-card class="clock-card">
+          <template #title>
+            <span>当前时间</span>
+          </template>
+          <div class="clock-body">
+            <div class="clock-circle"><icon-clock-circle /></div>
+            <div class="clock-info">
+              <div class="clock-time">{{ clockTime }}</div>
+              <div class="clock-date">{{ clockDate }}</div>
+            </div>
+          </div>
+        </a-card>
+
         <!-- ========== 右侧：快捷操作 ========== -->
         <a-card>
           <template #title>
@@ -147,7 +166,7 @@
               :content="item.shortcut ? item.name + ' (' + item.shortcut + ')' : item.name">
               <div class="tool-cell" @click="onToolClick(item)">
                 <div class="tool-icon-wrap">
-                  <i v-if="isIconfont(item.icon)" class="icon tool-icon" :class="item.icon" />
+                  <i v-if="isIconfontIcon(item.icon)" class="icon tool-icon" :class="item.icon" />
                   <component v-else :is="iconComp(item.icon) || 'IconApps'" class="tool-icon" />
                 </div>
               </div>
@@ -166,6 +185,7 @@ import { Events } from "@wailsio/runtime";
 import { IconCheckCircleFill, IconExclamationCircleFill } from "@arco-design/web-vue/es/icon";
 import { useToolEvents, type ToolItem } from "./events";
 import { useToolWindow } from "./useToolWindow";
+import { arcoIconComp as iconComp, isIconfontIcon, normalizeToolIcon } from "@/utils/tool-icon";
 
 interface ToolRow extends ToolItem {
   id?: string;
@@ -181,24 +201,22 @@ const GoTools = (getCurrentInstance() as any)?.appContext.config.globalPropertie
 /* ==================== 工具列表 ==================== */
 const toolsList = ref<ToolRow[]>([]);
 
-function iconComp(icon?: string): string | null {
-  if (!icon) return null;
-  const pascal = String(icon).split(/[-_\s]+/).filter(Boolean).map((s) => s[0].toUpperCase() + s.slice(1)).join("");
-  return pascal ? "Icon" + pascal : null;
-}
-function isIconfont(icon?: string): boolean {
-  return !!icon && String(icon).indexOf("icon-") === 0;
-}
+/** 上次加载的工具列表签名：设置页自动保存会频繁广播事件，内容未变时跳过赋值 */
+let toolsSig = "";
 
 async function loadTools() {
   try {
     const cfg = await GoTools?.GetConfig();
     const list: any[] = cfg?.tools || [];
-    toolsList.value = list.map((t) => ({
+    const next = list.map((t) => ({
       id: t.id, key: t.key, name: t.name, path: t.path || undefined,
       event: t.event || undefined, single: !!t.single, fullscreen: !!t.fullscreen,
-      width: t.width || undefined, height: t.height || undefined, icon: t.icon, shortcut: t.shortcut,
+      width: t.width || undefined, height: t.height || undefined, icon: normalizeToolIcon(t.icon), shortcut: t.shortcut,
     }));
+    const sig = JSON.stringify(next);
+    if (sig === toolsSig) return;
+    toolsSig = sig;
+    toolsList.value = next;
   } catch { /* */ }
 }
 
@@ -221,7 +239,7 @@ function activateById(id: string) {
 /* ==================== 系统信息 ==================== */
 const sysInfo = ref<any>(null);
 const sysLoading = ref(false);
-const svcFilter = ref<"all" | "redis" | "mysql">("all");
+const svcFilter = ref<"all" | "redis" | "mysql" | "php" | "nginx" | "npm">("all");
 const svcToggling = ref<string | null>(null);
 
 const filteredServices = computed(() => {
@@ -239,12 +257,18 @@ async function refreshSysInfo() {
 async function toggleService(s: any) {
   svcToggling.value = s.id;
   try {
+    const stopMap: Record<string, string> = {
+      redis: "RedisSrvStop", mysql: "MySQLSrvStop", php: "PhpSrvStop", nginx: "NginxSrvStop", npm: "NpmSrvStop",
+    };
+    const startMap: Record<string, string> = {
+      redis: "RedisSrvStart", mysql: "MySQLSrvStart", php: "PhpSrvStart", nginx: "NginxSrvStart", npm: "NpmSrvStart",
+    };
     if (s.running) {
-      if (s.type === "redis") await GoTools?.RedisSrvStop(s.id);
-      else await GoTools?.MySQLSrvStop(s.id);
+      const fn = (GoTools as any)?.[stopMap[s.type] || ""];
+      if (fn) await fn(s.id);
     } else {
-      if (s.type === "redis") await GoTools?.RedisSrvStart(s.id);
-      else await GoTools?.MySQLSrvStart(s.id);
+      const fn = (GoTools as any)?.[startMap[s.type] || ""];
+      if (fn) await fn(s.id);
     }
     await refreshSysInfo();
   } catch (e) { /* */ }
@@ -264,6 +288,20 @@ function fmtUptime(sec: number): string {
   if (d > 0) return `${d}天${h}时`; if (h > 0) return `${h}时${m}分`; return `${m}分`;
 }
 
+/* ==================== 当前时间 ==================== */
+const now = ref(new Date());
+const WEEK_NAMES = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+const clockTime = computed(() => {
+  const d = now.value;
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+});
+const clockDate = computed(() => {
+  const d = now.value;
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${WEEK_NAMES[d.getDay()]}`;
+});
+
 /* ==================== 生命周期 ==================== */
 const cancels: Array<() => void> = [];
 function listen(name: string, cb: (id: string) => void) {
@@ -274,16 +312,21 @@ function listen(name: string, cb: (id: string) => void) {
 }
 
 let sysTimer: ReturnType<typeof setInterval> | null = null;
+let clockTimer: ReturnType<typeof setInterval> | null = null;
 
 onMounted(async () => {
   await loadTools();
   refreshSysInfo();
   sysTimer = setInterval(refreshSysInfo, 5000);
+  clockTimer = setInterval(() => { now.value = new Date(); }, 1000);
   listen("ball:action", activateById);
   listen("tool:activate", activateById);
+  // 设置页保存工具列表后刷新快捷操作（新增/删除/改名称/改图标等）
+  listen("config:saved", () => { void loadTools(); });
 });
 onUnmounted(() => {
   if (sysTimer) clearInterval(sysTimer);
+  if (clockTimer) clearInterval(clockTimer);
   cancels.forEach((f) => { try { f(); } catch { /* */ } });
   cancels.length = 0;
 });
@@ -304,7 +347,7 @@ onUnmounted(() => {
   gap: var(--base-padding);
   padding: var(--base-padding);
   background: var(--color-bg-2);
-  border-radius: var(--base-radius-large);
+  border-radius: var(--base-radius-default);
   border: 1px solid var(--color-border-1);
   transition: box-shadow 0.2s;
 }
@@ -397,8 +440,8 @@ onUnmounted(() => {
 
 .svc-card {
   background: var(--color-bg-2);
-  border: 1px solid var(--color-border-2);
-  border-radius: var(--base-radius-large);
+  border: 1px solid var(--color-border-1);
+  border-radius: var(--base-radius-default);
   padding: var(--base-padding);
   transition: all 0.2s;
   cursor: default;
@@ -506,6 +549,50 @@ onUnmounted(() => {
 }
 
 /* ---- 右侧卡片 ---- */
+
+/* 当前时间卡片 */
+.clock-card {
+  margin-bottom: var(--base-margin);
+}
+
+.clock-body {
+  display: flex;
+  align-items: center;
+  gap: var(--base-padding);
+}
+
+.clock-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--base-radius-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--base-size-large-x);
+  flex-shrink: 0;
+  background: rgba(var(--arcoblue-6), 0.12);
+  color: rgb(var(--arcoblue-6));
+}
+
+.clock-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.clock-time {
+  font-weight: bold;
+  font-size: 28px;
+  line-height: 1.2;
+  color: var(--color-text-1);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+
+.clock-date {
+  margin-top: var(--base-radius-small);
+  font-size: var(--base-size-small);
+  color: var(--color-text-3);
+}
 
 .tools-grid {
   display: grid;

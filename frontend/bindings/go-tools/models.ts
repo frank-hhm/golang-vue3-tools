@@ -9,6 +9,11 @@ export interface AppConfig {
     "ball": BallConfig;
     "general": GeneralConfig;
     "tools": ToolConfig[] | null;
+
+    /**
+     * 工具级设置，键为工具 Key（如 mysql）
+     */
+    "toolSettings": { [_ in string]?: ToolSettings } | null;
 }
 
 /**
@@ -19,6 +24,21 @@ export interface BallConfig {
      * 是否在启动时显示浮动球（设置页可即时显隐）
      */
     "enabled": boolean;
+
+    /**
+     * 上次拖动后的窗口左上角 X（物理像素，含阴影留白）
+     */
+    "x": number;
+
+    /**
+     * 上次拖动后的窗口左上角 Y
+     */
+    "y": number;
+
+    /**
+     * 是否已记录位置；false 时启动停靠工作区右下角
+     */
+    "hasPos": boolean;
 }
 
 /**
@@ -84,7 +104,7 @@ export interface SvcEntry {
     "id": string;
 
     /**
-     * redis | mysql
+     * redis | mysql | php | nginx | npm
      */
     "type": string;
     "name": string;
@@ -142,7 +162,7 @@ export interface ToolConfig {
     "event": string;
 
     /**
-     * 图标名（Arco 图标，去掉 icon- 前缀亦可）
+     * 图标：Arco 图标名（如 camera）或图标库 class（如 icon-lianjie）
      */
     "icon": string;
 
@@ -175,6 +195,21 @@ export interface ToolConfig {
      * 是否出现在浮动球快捷菜单
      */
     "quick": boolean;
+}
+
+/**
+ * ToolSettings 单个工具的专属设置（按 ToolConfig.Key 索引，目前仅 mysql 使用）
+ */
+export interface ToolSettings {
+    /**
+     * 是否记录 SQL 执行日志（手动 SQL 与增删改/DDL）
+     */
+    "sqlLogEnabled": boolean;
+
+    /**
+     * SQL 日志目录；空 = 默认（程序目录下 logs）
+     */
+    "sqlLogDir": string;
 }
 
 /**

@@ -1,3 +1,5 @@
+//go:build windows
+
 package main
 
 import (
@@ -6,6 +8,9 @@ import (
 	"time"
 
 	"go-tools/tools/mysql"
+	"go-tools/tools/nginx"
+	"go-tools/tools/npm"
+	"go-tools/tools/php"
 	"go-tools/tools/redis"
 	"go-tools/tools/screenshot"
 	"go-tools/tools/sniffer"
@@ -50,6 +55,9 @@ func init() {
 	application.RegisterEvent[string]("ball:action")
 	application.RegisterEvent[string]("tool:activate")
 	application.RegisterEvent[mysql.InstallProgress]("mysql:install")
+	application.RegisterEvent[php.InstallProgress]("php:install")
+	application.RegisterEvent[nginx.InstallProgress]("nginx:install")
+	application.RegisterEvent[npm.InstallProgress]("npm:install")
 }
 
 func main() {
@@ -57,6 +65,11 @@ func main() {
 	startupCfg := LoadAppConfig()
 	logDir := InitLogger(startupCfg.Log)
 	opLogf("app", "=== go-tools 启动 === 日志目录: %s (enabled=%v level=%s)", logDir, startupCfg.Log.Enabled, startupCfg.Log.Level)
+
+	// 应用 MySQL 工具级设置（SQL 执行日志开关与目录）
+	mysqlSettings := startupCfg.ToolSettings["mysql"]
+	sqlLogDir := mysql.ConfigureSQLLog(mysqlSettings.SQLLogEnabled, mysqlSettings.SQLLogDir)
+	opLogf("mysql", "SQL 日志: enabled=%v dir=%s", mysqlSettings.SQLLogEnabled, sqlLogDir)
 
 	// Create an instance of the app structure
 	appInstance := NewApp()
@@ -104,6 +117,17 @@ func main() {
 
 	// 注入事件发射器，使 mysql 包可将安装进度实时推送给前端
 	mysql.SetEmitter(func(name string, data ...any) {
+		app.Event.Emit(name, data...)
+	})
+
+	// 注入事件发射器，使 php/nginx/npm 包可将安装进度、全局包操作实时推送给前端
+	php.SetEmitter(func(name string, data ...any) {
+		app.Event.Emit(name, data...)
+	})
+	nginx.SetEmitter(func(name string, data ...any) {
+		app.Event.Emit(name, data...)
+	})
+	npm.SetEmitter(func(name string, data ...any) {
 		app.Event.Emit(name, data...)
 	})
 

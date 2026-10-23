@@ -12,6 +12,8 @@ export type {
     QueryResult,
     RemoteVersion,
     RoutineInfo,
+    SQLLogFile,
+    SQLLogSettings,
     ServerVersion,
     TableInfo,
     TableSchema,

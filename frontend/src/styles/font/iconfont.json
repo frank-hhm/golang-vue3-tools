@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "33867131",
+      "name": "ngnix",
+      "font_class": "ngnix",
+      "unicode": "e7b8",
+      "unicode_decimal": 59320
+    },
+    {
+      "icon_id": "39418305",
+      "name": "npm",
+      "font_class": "npm",
+      "unicode": "e8b6",
+      "unicode_decimal": 59574
+    },
+    {
       "icon_id": "612098",
       "name": "php",
       "font_class": "php",

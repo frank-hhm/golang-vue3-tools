@@ -9,7 +9,7 @@
                     }">
                         <template #title>连接</template>
                         <template #extra>
-                            <a-button @click="openAddModal()">
+                            <a-button size="small" title="新增连接" @click="openAddModal()">
                                 新增连接
                             </a-button>
                         </template>
@@ -37,16 +37,16 @@
                     </a-card>
                 </a-col>
                 <a-col class="side-cols mt6" :span="24">
-                    <a-card class="side-card " size="small" :body-style="{
+                    <a-card class="side-card  " size="small" :body-style="{
                         padding: 0
                     }">
                         <template #title>本地服务</template>
                         <template #extra>
                             <div class="srv-head-actions">
-                                <a-button title="新建实例" @click="openInstModal()">
+                                <a-button size="small" title="新建实例" @click="openInstModal()">
                                     新建实例
                                 </a-button>
-                                <a-button title="版本管理" @click="openVersionsModal()">
+                                <a-button size="small" title="版本管理" @click="openVersionsModal()">
                                     版本管理
                                 </a-button>
                             </div>
@@ -85,188 +85,213 @@
             </a-row>
         </a-col>
         <a-col :span="18" class="main-col">
-            <a-card class="main-panel"  v-if="openTabs.length === 0">
+            <a-card class="main-panel empty-card" v-if="openTabs.length === 0">
                 <!-- 空状态 -->
-                <div class="empty-state">
-                    <icon-empty :size="56" class="empty-icon" />
-                    <div class="empty-text">可以从左边选择并打开连接</div>
-                    <a-button @click="openAddModal()">
+                <a-empty description="可以从左边选择并打开连接">
+                    <a-button type="primary" @click="openAddModal()">
                         <template #icon><icon-plus /></template>添加新连接
                     </a-button>
-                </div>
+                </a-empty>
             </a-card>
 
-                <template v-else>
-                    <!-- 已打开连接标签：每个连接是一个 a-tab-pane，子标签与视图内容都渲染在 pane 内 -->
-                    <a-tabs type="card" :active-key="st.activeTab" :editable="true"
-                        @change="(v: any) => switchTab(String(v))" @delete="(v: any) => closeTab(String(v))" justify>
-                        <a-tab-pane v-for="t in openTabs" :key="t.id" :title="t.name" :closable="true">
-                            <!-- 子标签 -->
-                            <div class="sub-tab-bar">
-                                <a-radio-group v-model="st.activeSubTab" type="button" size="medium"
-                                    @change="onSubTabChange">
-                                    <a-radio value="status"><icon-dashboard /> 状态</a-radio>
-                                    <a-radio value="keys"><icon-list /> 键详情</a-radio>
-                                    <a-radio value="slowlog"><icon-clock-circle /> 慢日志</a-radio>
-                                    <a-radio value="monitor"><icon-scan /> 监控命令</a-radio>
-                                </a-radio-group>
-                            </div>
-
-                            <div class="tab-content">
-                                <!-- 状态 -->
-                                <div v-show="st.activeSubTab === 'status'" class="status-view">
-                                    <a-button size="mini" type="text" @click="loadStatus()"><template
-                                            #icon><icon-refresh /></template>刷新</a-button>
-                                    <div class="status-head">
-                                        <span class="status-addr">{{ st.status?.host || activeTabName }}</span>
-                                        <a-tag size="small" color="red">v{{ st.status?.version || '?' }}</a-tag>
-                                        <a-tag size="small" color="orange">{{ st.status?.mode || 'standalone' }}</a-tag>
-                                        <a-tag size="small" color="purple">{{ st.status?.role || 'master' }}</a-tag>
-                                    </div>
-                                    <div class="status-grid">
-                                        <div class="stat-card">
-                                            <div class="stat-label">运行时间</div>
-                                            <div class="stat-value">{{ formatUptime(st.status?.uptimeSeconds || 0) }}
-                                            </div>
-                                        </div>
-                                        <div class="stat-card">
-                                            <div class="stat-label">已连客户端</div>
-                                            <div class="stat-value">{{ st.status?.connectedClients ?? 0 }}</div>
-                                        </div>
-                                        <div class="stat-card">
-                                            <div class="stat-label">键总数</div>
-                                            <div class="stat-value">{{ st.status?.totalKeys ?? 0 }}</div>
-                                        </div>
-                                        <div class="stat-card">
-                                            <div class="stat-label">内存使用</div>
-                                            <div class="stat-value">{{ st.status?.usedMemoryHuman || '0' }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 键详情 -->
-                                <div v-show="st.activeSubTab === 'keys'" class="keys-view">
-                                    <div class="key-list-panel">
-                                        <div class="key-toolbar">
-                                            <a-space>
-                                                <a-input v-model="st.keyFilter" size="mini" placeholder="筛选键 (支持 * 通配)"
-                                                    allow-clear @press-enter="reloadKeys()">
-                                                    <template #prefix><icon-search /></template>
-                                                </a-input>
-                                                <a-button size="mini" @click="reloadKeys()"><template
-                                                        #icon><icon-refresh /></template></a-button>
-                                                <a-button size="mini" @click="openAddKey()"><template
-                                                        #icon><icon-plus /></template></a-button>
-                                                <a-button size="mini" @click="openBatchKey()">批量生成</a-button>
-                                            </a-space>
-                                        </div>
-                                        <div class="key-list">
-                                            <div v-for="k in st.keys" :key="k.key" class="key-item"
-                                                :class="{ active: k.key === st.selectedKey }" @click="selectKey(k.key)">
-                                                <span class="type-badge" :class="'t-' + k.type">{{ (k.type[0] ||
-                                                    '?').toUpperCase() }}</span>
-                                                <span class="key-name" :title="k.key">{{ k.key }}</span>
-                                                <icon-delete class="key-del" @click.stop="delKey(k.key)" />
-                                            </div>
-                                            <div v-if="st.keys.length === 0" class="conn-empty">无键</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="key-detail-panel">
-                                        <div v-if="!st.selectedKey" class="conn-empty" style="margin-top: 40px">请选择左侧键查看
-                                        </div>
-                                        <template v-else>
-                                            <div class="kd-toolbar">
-                                                <span class="type-badge big" :class="'t-' + st.keyValue.type">{{
-                                                    st.keyValue.type }}</span>
-                                                <span class="kd-key">{{ st.selectedKey }}</span>
-                                                <a-button size="mini" @click="selectKey(st.selectedKey)"><template
-                                                        #icon><icon-refresh /></template></a-button>
-                                                <a-tag size="small" color="arcoblue">TTL {{ formatTTL(st.keyValue.ttl)
-                                                }}</a-tag>
-                                                <a-button v-if="st.keyValue.type === 'string'" size="mini"
-                                                    @click="toggleEdit()">
-                                                    <template #icon><icon-edit /></template>{{ st.editing ? '取消' : '编辑'
-                                                    }}
-                                                </a-button>
-                                                <a-button v-if="st.editing" size="mini" type="primary" status="success"
-                                                    @click="saveKey()">
-                                                    <template #icon><icon-save /></template>保存
-                                                </a-button>
-                                                <a-button size="mini" @click="copyValue()"><template
-                                                        #icon><icon-copy /></template>复制值</a-button>
-                                                <a-button size="mini" status="danger"
-                                                    @click="delKey(st.selectedKey)"><template
-                                                        #icon><icon-delete /></template></a-button>
-                                            </div>
-
-                                            <div class="kd-body">
-                                                <!-- string -->
-                                                <template v-if="st.keyValue.type === 'string'">
-                                                    <a-textarea v-if="st.editing" v-model="st.editStr"
-                                                        :auto-size="{ minRows: 6 }" />
-                                                    <div v-else class="kv-lines">
-                                                        <div v-for="(ln, i) in strLines" :key="i" class="kv-line">
-                                                            <span class="ln-no">{{ i + 1 }}</span>
-                                                            <span class="ln-txt">{{ ln }}</span>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                                <!-- hash -->
-                                                <a-table v-else-if="st.keyValue.type === 'hash'" :columns="hashCols"
-                                                    :data="hashData" :pagination="false" size="small" />
-                                                <!-- list -->
-                                                <a-table v-else-if="st.keyValue.type === 'list'" :columns="listCols"
-                                                    :data="listData" :pagination="false" size="small" />
-                                                <!-- set -->
-                                                <a-table v-else-if="st.keyValue.type === 'set'" :columns="setCols"
-                                                    :data="setData" :pagination="false" size="small" />
-                                                <!-- zset -->
-                                                <a-table v-else-if="st.keyValue.type === 'zset'" :columns="zsetCols"
-                                                    :data="zsetData" :pagination="false" size="small" />
-                                                <div v-else class="conn-empty">不支持的类型: {{ st.keyValue.type }}</div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <!-- 慢日志 -->
-                                <div v-show="st.activeSubTab === 'slowlog'" class="slowlog-view">
-                                    <a-button size="mini" type="text" @click="loadSlowlog()"><template
-                                            #icon><icon-refresh /></template>刷新</a-button>
-                                    <a-table :columns="slowCols" :data="slowData" :pagination="false" size="small"
-                                        :scroll="{ y: 460 }" />
-                                </div>
-
-                                <!-- 监控命令 -->
-                                <div v-show="st.activeSubTab === 'monitor'" class="monitor-view">
-                                    <div class="mon-toolbar">
-                                        <a-button v-if="!st.monitoring" size="mini" type="primary"
-                                            @click="startMonitor()"><template
-                                                #icon><icon-play-arrow /></template>开始监控</a-button>
-                                        <a-button v-else size="mini" type="primary" status="warning"
-                                            @click="stopMonitor()"><template
-                                                #icon><icon-pause /></template>停止</a-button>
-                                        <a-button size="mini" @click="st.monitorLines = []"><template
-                                                #icon><icon-delete /></template>清空</a-button>
-                                        <span class="mon-count">共 {{ st.monitorLines.length }} 条</span>
-                                    </div>
-                                    <div class="mon-list">
-                                        <div v-for="(m, i) in st.monitorLines" :key="i" class="mon-line">
-                                            <span class="mon-time">{{ m.time }}</span>
-                                            <span class="mon-meta" v-if="m.db || m.client">[{{ m.db }} {{ m.client
-                                            }}]</span>
-                                            <span class="mon-cmd">{{ m.cmd }}</span>
-                                        </div>
-                                        <div v-if="st.monitorLines.length === 0" class="conn-empty"
-                                            style="margin-top: 30px">
-                                            点击「开始监控」实时查看命令</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a-tab-pane>
-                    </a-tabs>
+            <!-- 已打开连接：用 a-card 承载，连接标签(openTabs)为 #title 的 a-radio-group，子标签为 #extra 的 a-radio-group -->
+            <a-card v-else class="main-panel conn-card" :body-style="{ padding: 0 }">
+                <template #title>
+                    <a-radio-group v-model="st.activeTab" type="button" size="medium"
+                        @change="(v: any) => switchTab(String(v))">
+                        <a-radio v-for="t in openTabs" :key="t.id" :value="t.id">
+                            <span class="tab-label" :title="t.name">{{ t.name }}</span>
+                            <icon-close class="tab-close" @click.stop="closeTab(t.id)" />
+                        </a-radio>
+                    </a-radio-group>
                 </template>
+                <template #extra>
+                    <!-- 子标签 -->
+                    <a-radio-group v-model="st.activeSubTab" type="button" size="medium" @change="onSubTabChange">
+                        <a-radio value="status"><icon-dashboard /> 状态</a-radio>
+                        <a-radio value="keys"><icon-list /> 键详情</a-radio>
+                        <a-radio value="slowlog"><icon-clock-circle /> 慢日志</a-radio>
+                        <a-radio value="monitor"><icon-scan /> 监控命令</a-radio>
+                    </a-radio-group>
+                </template>
+
+                <div class="tab-content">
+                    <!-- 状态 -->
+                    <a-card v-show="st.activeSubTab === 'status'" class="status-card">
+                        <template #title>
+                            <a-space>
+                                <span class="status-addr">{{ st.status?.host || activeTabName }}</span>
+                                <a-tag size="small" color="red">v{{ st.status?.version || '?' }}</a-tag>
+                                <a-tag size="small" color="orange">{{ st.status?.mode || 'standalone' }}</a-tag>
+                                <a-tag size="small" color="purple">{{ st.status?.role || 'master' }}</a-tag>
+                            </a-space>
+                        </template>
+                        <template #extra>
+                            <a-button size="small" @click="loadStatus()"><template #icon><icon-refresh /></template>刷新</a-button>
+                        </template>
+                        <div class="stat-cards">
+                            <div class="stat-card">
+                                <div class="stat-circle stat-circle-up"><icon-clock-circle /></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">运行时间</div>
+                                    <div class="stat-value">{{ formatUptime(st.status?.uptimeSeconds || 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-circle stat-circle-client"><icon-user /></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">已连客户端</div>
+                                    <div class="stat-value">{{ st.status?.connectedClients ?? 0 }}</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-circle stat-circle-key"><icon-list /></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">键总数</div>
+                                    <div class="stat-value">{{ st.status?.totalKeys ?? 0 }}</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-circle stat-circle-mem"><icon-thunderbolt /></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">内存使用</div>
+                                    <div class="stat-value">{{ st.status?.usedMemoryHuman || '0' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a-card>
+
+                    <!-- 键详情 -->
+                    <div v-show="st.activeSubTab === 'keys'" class="keys-view">
+                        <a-card class="key-list-panel" :body-style="{ padding: 0 }">
+                            <template #title>
+                                <a-space>
+                                    <a-input v-model="st.keyFilter" size="mini" placeholder="筛选键 (支持 * 通配)" allow-clear
+                                        @press-enter="reloadKeys()">
+                                        <template #prefix><icon-search /></template>
+                                    </a-input>
+                                    <a-button size="mini" @click="reloadKeys()"><template
+                                            #icon><icon-refresh /></template></a-button>
+                                    <a-button size="mini" @click="openAddKey()"><template
+                                            #icon><icon-plus /></template></a-button>
+                                    <a-button size="mini" @click="openBatchKey()">批量生成</a-button>
+                                </a-space>
+                            </template>
+                            <div class="key-list">
+                                <div v-for="k in st.keys" :key="k.key" class="key-item"
+                                    :class="{ active: k.key === st.selectedKey }" @click="selectKey(k.key)">
+                                    
+                                    <a-tag color="pinkpurple" size="small">{{ (k.type[0] || '?').toUpperCase() }}</a-tag>
+                                    <div class="key-name" :title="k.key">{{ k.key }}</div>
+                                    <icon-delete class="key-del" @click.stop="delKey(k.key)" />
+                                </div>
+                                <a-empty v-if="st.keys.length === 0" :image="false" description="无键" />
+                            </div>
+                        </a-card>
+
+                        <a-card class="key-detail-panel" :body-style="{ padding: 0 }">
+                            <template #title>
+                                <div v-if="!st.selectedKey" class="conn-empty">
+                                    请选择左侧键查看
+                                </div>
+                                <a-space v-else>
+                                    <a-tag color="pinkpurple">{{
+                                        st.keyValue.type }}</a-tag>
+                                    <div class="kd-key">{{ st.selectedKey }}</div>
+                                    <a-tag size="small" color="arcoblue">TTL {{ formatTTL(st.keyValue.ttl)
+                                    }}</a-tag>
+                                </a-space>
+                            </template>
+                            <template #extra>
+                                <a-space v-if="st.selectedKey">
+                                    <a-button size="small" @click="selectKey(st.selectedKey)"><template
+                                            #icon><icon-refresh /></template></a-button>
+                                    <a-button v-if="st.keyValue.type === 'string'" size="small" @click="toggleEdit()">
+                                        <template #icon><icon-edit /></template>{{ st.editing ? '取消' : '编辑'
+                                        }}
+                                    </a-button>
+                                    <a-button v-if="st.editing" size="small" type="primary" status="success"
+                                        @click="saveKey()">
+                                        <template #icon><icon-save /></template>保存
+                                    </a-button>
+                                    <a-button size="small" @click="copyValue()"><template
+                                            #icon><icon-copy /></template>复制值</a-button>
+                                    <a-button size="small" status="danger" @click="delKey(st.selectedKey)"><template
+                                            #icon><icon-delete /></template></a-button>
+                                </a-space>
+                            </template>
+                            <div class="kd-body">
+                                <!-- string -->
+                                <template v-if="st.keyValue.type === 'string'">
+                                    <a-textarea v-if="st.editing" v-model="st.editStr" :auto-size="{ minRows: 6 }" />
+                                    <div v-else class="kv-lines">
+                                        <div v-for="(ln, i) in strLines" :key="i" class="kv-line">
+                                            <span class="ln-no">{{ i + 1 }}</span>
+                                            <span class="ln-txt">{{ ln }}</span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <!-- hash -->
+                                <a-table v-else-if="st.keyValue.type === 'hash'" :columns="hashCols" :data="hashData"
+                                    :pagination="false" size="small" />
+                                <!-- list -->
+                                <a-table v-else-if="st.keyValue.type === 'list'" :columns="listCols" :data="listData"
+                                    :pagination="false" size="small" />
+                                <!-- set -->
+                                <a-table v-else-if="st.keyValue.type === 'set'" :columns="setCols" :data="setData"
+                                    :pagination="false" size="small" />
+                                <!-- zset -->
+                                <a-table v-else-if="st.keyValue.type === 'zset'" :columns="zsetCols" :data="zsetData"
+                                    :pagination="false" size="small" />
+                                <div v-else class="conn-empty">不支持的类型: {{ st.keyValue.type }}</div>
+                            </div>
+                        </a-card>
+                    </div>
+
+                    <!-- 慢日志 -->
+                    <a-card v-show="st.activeSubTab === 'slowlog'" class="slowlog-view">
+                        <template #title>
+                            <div>慢日志</div>
+                        </template>
+                        <template #extra>
+                            <a-space>
+                                <a-button size="small" @click="loadSlowlog()"><template
+                                        #icon><icon-refresh /></template>刷新</a-button>
+                            </a-space>
+                        </template>
+                        <div class="table-wrap">
+                            <a-table :columns="slowCols" :data="slowData" :pagination="false" size="small" />
+                        </div>
+                    </a-card>
+
+                    <!-- 监控命令 -->
+                    <a-card v-show="st.activeSubTab === 'monitor'" class="monitor-view">
+                        <template #title>
+                            <span class="mon-count">共 {{ st.monitorLines.length }} 条</span>
+                        </template>
+                        <template #extra>
+                            <a-space>
+                                <a-button v-if="!st.monitoring" @click="startMonitor()"><template
+                                        #icon><icon-play-arrow /></template>开始监控</a-button>
+                                <a-button v-else status="warning" @click="stopMonitor()"><template
+                                        #icon><icon-pause /></template>停止</a-button>
+                                <a-button @click="st.monitorLines = []"><template
+                                        #icon><icon-delete /></template>清空</a-button>
+                            </a-space>
+                        </template>
+                        <div class="mon-list">
+                            <div v-for="(m, i) in st.monitorLines" :key="i" class="mon-line">
+                                <span class="mon-time">{{ m.time }}</span>
+                                <span class="mon-meta" v-if="m.db || m.client">[{{ m.db }} {{ m.client
+                                }}]</span>
+                                <span class="mon-cmd">{{ m.cmd }}</span>
+                            </div>
+                            <div v-if="st.monitorLines.length === 0" class="conn-empty" style="margin-top: 30px">
+                                点击「开始监控」实时查看命令</div>
+                        </div>
+                    </a-card>
+                </div>
+            </a-card>
         </a-col>
     </a-row>
 
@@ -351,69 +376,86 @@
             </a-form-item>
             <div style="color: var(--color-text-3); font-size: var(--base-size-small)">将生成：{{ batchForm.keyPrefix
                 }}{{ batchForm.start }} ~ {{ batchForm.keyPrefix }}{{ batchForm.end }}（共 {{
-                Math.max(0, batchForm.end - batchForm.start + 1) }} 个），值为 前缀+序号</div>
+                    Math.max(0, batchForm.end - batchForm.start + 1) }} 个），值为 前缀+序号</div>
         </a-form>
     </a-modal>
 
     <!-- 本地服务：版本管理 -->
-    <a-modal v-model:visible="versionsVisible" title="Redis 版本管理" :width="640" :footer="false">
-        <div class="ver-title">已安装版本</div>
-        <div class="ver-scroll">
-            <div v-for="v in localVersions" :key="v.version + v.source" class="ver-item">
-                <a-tag size="small"
-                    :color="v.source === 'bundled' ? 'green' : (v.source === 'downloaded' ? 'arcoblue' : 'orange')">{{
-                        srcLabel(v.source) }}</a-tag>
-                <span class="ver-name">Redis {{ v.version }}</span>
-                <span class="ver-path" :title="v.path">{{ v.path }}</span>
-                <a-button size="mini" type="text" status="danger" :disabled="v.source === 'bundled'"
-                    @click="removeVersion(v)">删除</a-button>
-            </div>
-            <div v-if="localVersions.length === 0" class="conn-empty">尚未安装任何版本，可从下方在线安装或添加本机目录</div>
-        </div>
-        <div class="ver-actions">
-            <a-input v-model="localDirInput" size="small" placeholder="本机 redis-server.exe 所在目录" allow-clear />
-            <a-button size="small" @click="chooseLocalDir"><template #icon><icon-folder /></template>选目录</a-button>
-            <a-button size="small" @click="addLocalDir">添加</a-button>
-        </div>
-        <div class="ver-hint">离线安装：将 redis zip 放入 <span class="mono">{{ srvServersDir }}</span> 后点「安装」即可</div>
-        <a-divider margin="12px" />
-        <div class="ver-title">在线版本（GitHub redis-windows 发行版，&gt;=7.0）
-            <a-button size="mini" type="text" :loading="remoteLoading" @click="loadRemoteVersions">
-                <template #icon><icon-refresh /></template>刷新
-            </a-button>
-        </div>
-        <div class="ver-scroll">
-            <div v-for="r in remoteVersions" :key="r.version" class="ver-item">
-                <span class="ver-name">Redis {{ r.version }}</span>
-                <span class="ver-path">{{ r.size ? (r.size / 1024 / 1024).toFixed(0) + ' MB' : '' }}</span>
-                <a-button size="mini" type="primary"
-                    :disabled="!!installProgress[r.version] || installedSet.has(r.version)"
-                    @click="installVersion(r)">{{ installedSet.has(r.version) ? '已安装' : '安装' }}</a-button>
-            </div>
-            <div v-if="remoteVersions.length === 0" class="conn-empty">{{ remoteLoading ? '加载中…' : '点「刷新」获取版本列表'
-                }}</div>
-        </div>
-        <div v-for="(p, ver) in installProgress" :key="'p' + ver" class="inst-prog">
-            <div class="inst-prog-row">
-                <span class="ver-name">{{ ver }}</span>
-                <a-progress :percent="(p.percent || 0) / 100" size="small"
-                    :status="p.stage === 'error' ? 'danger' : 'normal'" style="flex: 1" />
-                <span class="inst-stage">{{ stageText(p) }}</span>
-                <a-button v-if="p.stage === 'error'" size="mini" status="danger" @click="retryInstall(ver as string)">
-                    <template #icon><icon-refresh /></template>重试
-                </a-button>
-            </div>
-            <div v-if="p.stage === 'error' && p.note" class="inst-err">{{ p.note }}</div>
-        </div>
-        <a-divider margin="12px" />
-        <div class="ver-title">安装日志
-            <a-button size="mini" type="text" @click="installLogs = []"><template
-                    #icon><icon-delete /></template>清空</a-button>
-        </div>
-        <div class="ver-scroll inst-log">
-            <div v-for="(l, i) in installLogs" :key="i" class="inst-log-line">{{ l }}</div>
-            <div v-if="installLogs.length === 0" class="conn-empty">暂无安装记录</div>
-        </div>
+    <a-modal v-model:visible="versionsVisible" title="Redis 版本管理" :width="680" :footer="false">
+        <a-space direction="vertical" fill :size="12">
+            <!-- 已安装版本 -->
+            <a-card size="small" :body-style="{ padding: '8px 12px' }">
+                <template #title><span class="ver-sec-title"><icon-storage /> 已安装版本</span></template>
+                <div class="ver-scroll">
+                    <div v-for="v in localVersions" :key="v.version + v.source" class="ver-item">
+                        <a-tag size="small"
+                            :color="v.source === 'bundled' ? 'green' : (v.source === 'downloaded' ? 'arcoblue' : 'orange')">{{
+                                srcLabel(v.source) }}</a-tag>
+                        <span class="ver-name">Redis {{ v.version }}</span>
+                        <span class="ver-path" :title="v.path">{{ v.path }}</span>
+                        <a-button size="mini" type="text" status="danger" :disabled="v.source === 'bundled'"
+                            @click="removeVersion(v)">删除</a-button>
+                    </div>
+                    <a-empty v-if="localVersions.length === 0" :image="false" description="尚未安装任何版本，可从下方在线安装或添加本机目录" />
+                </div>
+                <div class="ver-actions">
+                    <a-input v-model="localDirInput" size="small" placeholder="本机 redis-server.exe 所在目录" allow-clear />
+                    <a-button size="small" @click="chooseLocalDir"><template
+                            #icon><icon-folder /></template>选目录</a-button>
+                    <a-button size="small" type="primary" @click="addLocalDir">添加</a-button>
+                </div>
+                <div class="ver-hint">离线安装：将 redis zip 放入 <span class="mono">{{ srvServersDir }}</span> 后点「安装」即可</div>
+            </a-card>
+
+            <!-- 在线版本 -->
+            <a-card size="small" :body-style="{ padding: '8px 12px' }">
+                <template #title>
+                    <span class="ver-sec-title"><icon-cloud /> 在线版本（GitHub redis-windows 发行版，&gt;=7.0）</span>
+                </template>
+                <template #extra>
+                    <a-button size="mini" type="text" :loading="remoteLoading" @click="loadRemoteVersions">
+                        <template #icon><icon-refresh /></template>刷新
+                    </a-button>
+                </template>
+                <div class="ver-scroll">
+                    <div v-for="r in remoteVersions" :key="r.version" class="ver-item">
+                        <span class="ver-name">Redis {{ r.version }}</span>
+                        <span class="ver-path">{{ r.size ? (r.size / 1024 / 1024).toFixed(0) + ' MB' : '' }}</span>
+                        <a-button size="mini" type="primary"
+                            :disabled="!!installProgress[r.version] || installedSet.has(r.version)"
+                            @click="installVersion(r)">{{ installedSet.has(r.version) ? '已安装' : '安装' }}</a-button>
+                    </div>
+                    <a-empty v-if="remoteVersions.length === 0" :image="false"
+                        :description="remoteLoading ? '加载中…' : '点「刷新」获取版本列表'" />
+                </div>
+                <div v-for="(p, ver) in installProgress" :key="'p' + ver" class="inst-prog">
+                    <div class="inst-prog-row">
+                        <span class="ver-name">{{ ver }}</span>
+                        <a-progress :percent="(p.percent || 0) / 100" size="small"
+                            :status="p.stage === 'error' ? 'danger' : 'normal'" style="flex: 1" />
+                        <span class="inst-stage">{{ stageText(p) }}</span>
+                        <a-button v-if="p.stage === 'error'" size="mini" status="danger"
+                            @click="retryInstall(ver as string)">
+                            <template #icon><icon-refresh /></template>重试
+                        </a-button>
+                    </div>
+                    <div v-if="p.stage === 'error' && p.note" class="inst-err">{{ p.note }}</div>
+                </div>
+            </a-card>
+
+            <!-- 安装日志 -->
+            <a-card size="small" :body-style="{ padding: '8px 12px' }">
+                <template #title><span class="ver-sec-title"><icon-history /> 安装日志</span></template>
+                <template #extra>
+                    <a-button size="mini" type="text" @click="installLogs = []"><template
+                            #icon><icon-delete /></template>清空</a-button>
+                </template>
+                <div class="ver-scroll inst-log">
+                    <div v-for="(l, i) in installLogs" :key="i" class="inst-log-line">{{ l }}</div>
+                    <a-empty v-if="installLogs.length === 0" :image="false" description="暂无安装记录" />
+                </div>
+            </a-card>
+        </a-space>
     </a-modal>
 
     <!-- 本地服务：实例编辑 -->
@@ -1210,34 +1252,17 @@ onUnmounted(() => {
     overflow: hidden;
 }
 
-.srv-head-actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-}
-
-.conn-list {
+/* 左栏 a-list 撑满卡片高度并各自滚动 */
+.side-card :deep(.arco-list) {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
 }
 
-.conn-item {
+.srv-head-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: var(--base-padding) var(--base-radius-large);
-    border-radius: var(--base-radius-default);
-    cursor: pointer;
-    font-size: var(--base-size-small);
-}
-
-.conn-item:hover {
-    background: var(--color-fill-3);
-}
-
-.conn-item.active {
-    background: var(--color-primary-light-1);
+    gap: 2px;
 }
 
 .conn-name {
@@ -1258,19 +1283,6 @@ onUnmounted(() => {
     padding: var(--base-padding);
 }
 
-.led {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #c9cdd4;
-    flex-shrink: 0;
-}
-
-.led.on {
-    background: #00b42a;
-    box-shadow: 0 0 4px #00b42a;
-}
-
 /* 主区域 */
 .main-panel {
     width: 100%;
@@ -1288,73 +1300,53 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 0;
 }
 
-.empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+/* 空状态：主卡片内容垂直居中 */
+.empty-card :deep(.arco-card-body) {
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    color: var(--color-text-3);
 }
 
-.empty-icon {
-    color: var(--color-text-4);
+/* 连接标签卡片：#title 内的连接单选与关闭图标 */
+.conn-card :deep(.arco-card-header-title) {
+    flex-wrap: wrap;
 }
 
-.empty-text {
-    font-size: var(--base-size-default);
-}
-
-/* 连接标签：a-tabs 作为主区域卡片的弹性主体，内容渲染在每个 a-tab-pane 内并撑满高度 */
-.conn-tabs {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.conn-tabs :deep(.arco-tabs-nav) {
-    padding: var(--base-padding) var(--base-padding) 0;
-}
-
-.conn-tabs :deep(.arco-tabs-content) {
-    flex: 1;
-    min-height: 0;
-    padding: 0;
-}
-
-.conn-tabs :deep(.arco-tabs-content-list) {
-    height: 100%;
-}
-
-.conn-tabs :deep(.arco-tabs-pane) {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+.tab-label {
+    max-width: 140px;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
 }
 
-.sub-tab-bar {
-    padding: var(--base-padding);
-    border-bottom: 1px solid var(--color-border-2);
+.tab-close {
+    margin-left: 6px;
+    font-size: var(--base-size-small);
+    opacity: 0.6;
+}
+
+.tab-close:hover {
+    opacity: 1;
+    color: rgb(var(--red-6));
 }
 
 .tab-content {
     flex: 1;
-    overflow: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-padding);
     padding: var(--base-padding);
+    height: calc(100% - var(--base-padding) * 2);
+    overflow: hidden;
 }
 
 /* 状态 */
-.status-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: var(--base-margin) 0;
+.status-card {
+    height: 100%;
 }
 
 .status-addr {
@@ -1362,65 +1354,114 @@ onUnmounted(() => {
     font-weight: 700;
 }
 
-.status-grid {
+/* 运行信息统计卡片：彩色圆形图标 + 标题 + 大数字 */
+.stat-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--base-padding);
 }
 
 .stat-card {
-    background: var(--color-fill-1);
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-default);
+    display: flex;
+    align-items: center;
+    gap: var(--base-padding);
     padding: var(--base-padding);
+    background: var(--color-bg-1);
+    border: 1px solid var(--color-border-1);
+    border-radius: var(--base-radius-default);
+    transition: box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-2-bottom);
+}
+
+.stat-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--base-radius-default);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--base-size-large-x);
+    flex-shrink: 0;
+}
+
+.stat-circle-up {
+    background: rgba(var(--orange-6), 0.12);
+    color: rgb(var(--orange-6));
+}
+
+.stat-circle-client {
+    background: rgba(var(--cyan-6), 0.12);
+    color: rgb(var(--cyan-6));
+}
+
+.stat-circle-key {
+    background: rgba(var(--purple-6), 0.12);
+    color: rgb(var(--purple-6));
+}
+
+.stat-circle-mem {
+    background: rgba(var(--arcoblue-6), 0.12);
+    color: rgb(var(--arcoblue-6));
+}
+
+.stat-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .stat-label {
-    color: var(--color-text-3);
     font-size: var(--base-size-small);
+    color: var(--color-text-3);
 }
 
 .stat-value {
-    font-size: var(--base-size-large-x);
-    font-weight: 700;
-    margin-top: var(--base-padding);
+    font-weight: bold;
+    font-size: var(--base-size-default);
+    line-height: 1.2;
+    color: var(--color-text-1);
+    margin-top: var(--base-margin);
 }
 
 /* 键详情 */
 .keys-view {
+    flex: 1;
+    min-height: 0;
     display: flex;
-    gap: 12px;
-    height: 100%;
-    min-height: 480px;
+    gap: var(--base-padding);
 }
 
 .key-list-panel {
     width: 300px;
     flex-shrink: 0;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-default);
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
-.key-toolbar {
+/* 左右两栏卡片主体撑满并内部滚动 */
+.key-list-panel :deep(.arco-card-body),
+.key-detail-panel :deep(.arco-card-body) {
+    flex: 1;
+    min-height: 0;
     display: flex;
-    gap: 4px;
-    padding: var(--base-radius-default);
-    border-bottom: 1px solid var(--color-border-2);
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .key-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
 .key-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: var(--base-radius-default) var(--base-padding);
+    gap: var(--base-padding);
+    padding: var(--base-padding);
     font-size: var(--base-size-small);
     cursor: pointer;
     border-bottom: 1px solid var(--color-fill-1);
@@ -1454,16 +1495,12 @@ onUnmounted(() => {
     display: inline-block;
     min-width: 18px;
     text-align: center;
-    font-size: var(--base-size-small);
+    font-size: 11px;
     font-weight: 700;
     color: #fff;
-    border-radius: var(--base-radius-small);
-    padding: var(--base-radius-small) var(--base-radius-default);
+    border-radius: 3px;
+    padding: 1px 4px;
     text-transform: uppercase;
-}
-
-.type-badge.big {
-    font-size: var(--base-size-small);
 }
 
 .t-string {
@@ -1493,25 +1530,13 @@ onUnmounted(() => {
 .key-detail-panel {
     flex: 1;
     min-width: 0;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-default);
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
-.kd-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: var(--base-padding);
-    border-bottom: 1px solid var(--color-border-2);
-    flex-wrap: wrap;
-}
-
 .kd-key {
     font-weight: 600;
-    max-width: 40%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1519,6 +1544,7 @@ onUnmounted(() => {
 
 .kd-body {
     flex: 1;
+    min-height: 0;
     overflow: auto;
     padding: var(--base-padding);
 }
@@ -1547,13 +1573,29 @@ onUnmounted(() => {
     word-break: break-all;
 }
 
-/* 慢日志 */
-.slowlog-view {
-    padding: var(--base-radius-default);
+/* 慢日志 / 通用子视图：撑满剩余高度，工具栏固定、内容区滚动 */
+.slowlog-view,
+.monitor-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.view-toolbar {
+    flex-shrink: 0;
+    margin-bottom: var(--base-padding);
+}
+
+.table-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
 }
 
 /* 监控 */
 .mon-toolbar {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1566,14 +1608,15 @@ onUnmounted(() => {
 }
 
 .mon-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     border: 1px solid var(--color-border-2);
     border-radius: var(--base-radius-default);
-    background: #1d1e1f;
-    color: #e5e6eb;
+    background: var(--color-bg-1);
+    color: var(--color-text-1);
     font-family: Consolas, monospace;
     font-size: var(--base-size-small);
-    height: 480px;
-    overflow-y: auto;
     padding: var(--base-padding);
 }
 
@@ -1603,13 +1646,12 @@ onUnmounted(() => {
 /* srv-list 复用 conn-list 的 flex 行为，无需额外限高 */
 
 /* ---- 版本管理弹窗 ---- */
-.ver-title {
-    font-weight: 600;
-    font-size: var(--base-size-small);
-    margin: var(--base-padding) 0 var(--base-radius-default);
-    display: flex;
+.ver-sec-title {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    font-weight: 600;
+    font-size: var(--base-size-default);
 }
 
 .ver-scroll {
@@ -1651,6 +1693,10 @@ onUnmounted(() => {
     margin-top: var(--base-padding);
 }
 
+.ver-actions :deep(.arco-input-wrapper) {
+    flex: 1;
+}
+
 .ver-hint {
     font-size: var(--base-size-small);
     color: var(--color-text-3);
@@ -1689,10 +1735,11 @@ onUnmounted(() => {
     white-space: pre-wrap;
 }
 
-/* 安装日志 */
+/* 安装日志：随主题自适应的控制台风格面板 */
 .inst-log {
     max-height: 130px;
-    background: #1d2129;
+    background: var(--color-fill-1);
+    border: 1px solid var(--color-border-2);
     border-radius: var(--base-radius-default);
     padding: var(--base-radius-default) var(--base-radius-large);
 }
@@ -1700,7 +1747,7 @@ onUnmounted(() => {
 .inst-log-line {
     font-family: Consolas, monospace;
     font-size: var(--base-size-small);
-    color: #c9cdd4;
+    color: var(--color-text-2);
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-all;

@@ -1,3 +1,5 @@
+//go:build windows
+
 package main
 
 import (
@@ -7,6 +9,9 @@ import (
 	"time"
 
 	"go-tools/tools/mysql"
+	"go-tools/tools/nginx"
+	"go-tools/tools/npm"
+	"go-tools/tools/php"
 	"go-tools/tools/redis"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -45,7 +50,7 @@ type PortEntry struct {
 // SvcEntry 由本程序管理的本地服务实例状态
 type SvcEntry struct {
 	ID      string `json:"id"`
-	Type    string `json:"type"` // redis | mysql
+	Type    string `json:"type"` // redis | mysql | php | nginx | npm
 	Name    string `json:"name"`
 	Port    int    `json:"port"`
 	Running bool   `json:"running"`
@@ -147,6 +152,36 @@ func collectServiceStatus() []SvcEntry {
 				running = st.Running
 			}
 			out = append(out, SvcEntry{ID: inst.ID, Type: "mysql", Name: inst.Name, Port: inst.Port, Running: running, Version: inst.Version})
+		}
+	}
+	// PHP instances
+	if phpInsts, _ := php.ListInstances(); phpInsts != nil {
+		for _, inst := range phpInsts {
+			running := false
+			if st, err := php.GetInstanceStatus(inst.ID); err == nil {
+				running = st.Running
+			}
+			out = append(out, SvcEntry{ID: inst.ID, Type: "php", Name: inst.Name, Port: inst.Port, Running: running, Version: inst.Version})
+		}
+	}
+	// Nginx instances
+	if nginxInsts, _ := nginx.ListInstances(); nginxInsts != nil {
+		for _, inst := range nginxInsts {
+			running := false
+			if st, err := nginx.GetInstanceStatus(inst.ID); err == nil {
+				running = st.Running
+			}
+			out = append(out, SvcEntry{ID: inst.ID, Type: "nginx", Name: inst.Name, Port: inst.Port, Running: running, Version: inst.Version})
+		}
+	}
+	// npm 静态站点 instances
+	if npmInsts, _ := npm.ListInstances(); npmInsts != nil {
+		for _, inst := range npmInsts {
+			running := false
+			if st, err := npm.GetInstanceStatus(inst.ID); err == nil {
+				running = st.Running
+			}
+			out = append(out, SvcEntry{ID: inst.ID, Type: "npm", Name: inst.Name, Port: inst.Port, Running: running, Version: inst.Version})
 		}
 	}
 	return out
