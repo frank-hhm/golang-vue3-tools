@@ -2055,3 +2055,65 @@
 2026-10-23 20:30:08.513 [INFO] [ball] 恢复上次位置: (98, 744)
 2026-10-23 20:30:08.513 [INFO] [config] 开机自启已同步: enabled=true
 2026-10-23 20:30:28.989 [INFO] [window] 新建窗口: /win/tools/screenshot?fs=0 (截图预览) single=true fullscreen=false 1000x718
+2026-10-23 20:40:28.910 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-23 20:40:30.828 [INFO] [window] 复用单例窗口: /win/tools/screenshot?fs=0 (截图预览)
+2026-10-23 20:40:33.021 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-23 20:40:34.724 [INFO] [window] 复用单例窗口: /win/tools/screenshot?fs=0 (截图预览)
+2026-10-23 20:46:40.112 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-23 20:46:40.118 [INFO] [mysql] SQL 日志: enabled=true dir=E:\go-tools-bak\bin\logs
+2026-10-23 20:46:40.240 [INFO] [ball] BallOpen 调用
+2026-10-23 20:46:40.242 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-23 20:46:40.244 [INFO] [tray] 系统托盘已创建
+2026-10-23 20:46:40.244 [INFO] [ball] 恢复上次位置: (98, 744)
+2026-10-23 20:46:40.245 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-23 20:48:20.005 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-23 20:48:20.011 [INFO] [mysql] SQL 日志: enabled=true dir=E:\go-tools-bak\logs
+2026-10-23 20:48:20.019 [INFO] [ball] BallOpen 调用
+2026-10-23 20:48:20.020 [INFO] [hotkey] 已注册 0 个全局热键
+2026-10-23 20:48:20.021 [INFO] [tray] 系统托盘已创建
+2026-10-23 20:48:20.021 [INFO] [ball] 恢复上次位置: (98, 744)
+2026-10-23 20:48:20.021 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-23 20:48:24.312 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-23 20:48:32.072 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-23 20:48:32.077 [INFO] [mysql] SQL 日志: enabled=true dir=E:\go-tools-bak\bin\logs
+2026-10-23 20:48:32.085 [INFO] [ball] BallOpen 调用
+2026-10-23 20:48:32.086 [INFO] [hotkey] 已注册 0 个全局热键
+2026-10-23 20:48:32.087 [INFO] [tray] 系统托盘已创建
+2026-10-23 20:48:32.087 [INFO] [ball] 恢复上次位置: (98, 744)
+2026-10-23 20:48:32.087 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-23 20:48:36.159 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-23 20:49:28.672 [INFO] [tray] 托盘菜单：真正退出
+2026-10-23 20:49:34.041 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-23 20:49:50.381 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-23 20:50:54.143 [INFO] [window] 新建窗口: /win/tools/mysql (MySQL管理) single=true fullscreen=true 1000x718
+2026-10-23 20:50:57.391 [INFO] [window] 新建窗口: /win/tools/nginx (Nginx管理) single=true fullscreen=false 1200x800
+2026-10-23 20:51:00.407 [INFO] [window] 新建窗口: /win/tools/nginx (Nginx管理) single=true fullscreen=false 1200x800
+2026-10-23 20:51:25.904 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-23 20:51:25.910 [INFO] [mysql] SQL 日志: enabled=true dir=E:\go-tools-bak\bin\logs
+2026-10-23 20:51:25.915 [INFO] [ball] BallOpen 调用
+2026-10-23 20:51:25.915 [INFO] [hotkey] 已注册 1 个全局热键
+2026-10-23 20:51:25.917 [INFO] [tray] 系统托盘已创建
+2026-10-23 20:51:25.918 [INFO] [ball] 恢复上次位置: (98, 744)
+2026-10-23 20:51:25.918 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-23 20:51:29.245 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-23 20:51:30.541 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-23 20:51:34.997 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-23 20:51:37.870 [INFO] [window] 新建窗口: /win/tools/screenshot?fs=0 (截图预览) single=true fullscreen=false 1000x718
+2026-10-23 20:52:18.328 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-23 20:52:18.333 [INFO] [mysql] SQL 日志: enabled=true dir=E:\go-tools-bak\bin\logs
+2026-10-23 20:52:18.338 [INFO] [ball] BallOpen 调用
+2026-10-23 20:52:18.339 [INFO] [hotkey] 已注册 0 个全局热键
+2026-10-23 20:52:18.340 [INFO] [tray] 系统托盘已创建
+2026-10-23 20:52:18.340 [INFO] [ball] 恢复上次位置: (98, 744)
+2026-10-23 20:52:18.340 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-23 20:52:20.152 [INFO] [tray] 主窗口关闭请求已拦截：隐藏到托盘
+2026-10-23 20:52:22.685 [INFO] [hotkey] 全局热键触发 -> screenshot
+2026-10-23 20:52:25.122 [INFO] [window] 新建窗口: /win/tools/screenshot?fs=0 (截图预览) single=true fullscreen=false 1000x718
+2026-10-23 20:52:52.628 [INFO] [app] === go-tools 启动 === 日志目录: E:\go-tools-bak\Log (enabled=true level=info)
+2026-10-23 20:52:52.634 [INFO] [mysql] SQL 日志: enabled=true dir=E:\go-tools-bak\bin\logs
+2026-10-23 20:52:52.640 [INFO] [ball] BallOpen 调用
+2026-10-23 20:52:52.641 [INFO] [hotkey] 已注册 0 个全局热键
+2026-10-23 20:52:52.642 [INFO] [tray] 系统托盘已创建
+2026-10-23 20:52:52.642 [INFO] [config] 开机自启已同步: enabled=true
+2026-10-23 20:52:52.643 [INFO] [ball] 恢复上次位置: (98, 744)
+2026-10-23 20:52:54.248 [INFO] [window] 新建窗口: /win/tools/settings (设置) single=true fullscreen=false 1000x718
