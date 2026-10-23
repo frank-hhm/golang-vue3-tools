@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 	"runtime"
-	"sort"
 	"time"
 
 	"go-tools/tools/mysql"
@@ -15,27 +14,31 @@ import (
 	"go-tools/tools/redis"
 
 	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/net"
-	"github.com/shirou/gopsutil/v3/process"
 )
 
 // SystemInfo 系统概览信息（供前端面板展示）
 type SystemInfo struct {
-	Hostname    string      `json:"hostname"`
-	OS          string      `json:"os"`
-	Platform    string      `json:"platform"`
-	Uptime      uint64      `json:"uptime"`
-	CPUUsage    float64     `json:"cpuUsage"`
-	CPUCores    int         `json:"cpuCores"`
-	MemTotal    uint64      `json:"memTotal"`
-	MemUsed     uint64      `json:"memUsed"`
-	MemPercent  float64     `json:"memPercent"`
-	Goroutines  int         `json:"goroutines"`
-	AppMemAlloc uint64      `json:"appMemAlloc"`
-	Listeners   []PortEntry `json:"listeners"`
-	Services    []SvcEntry  `json:"services"`
+	Hostname    string     `json:"hostname"`
+	OS          string     `json:"os"`
+	Platform    string     `json:"platform"`
+	Uptime      uint64     `json:"uptime"`
+	CPUUsage    float64    `json:"cpuUsage"`
+	CPUCores    int        `json:"cpuCores"`
+	MemTotal    uint64     `json:"memTotal"`
+	MemUsed     uint64     `json:"memUsed"`
+	MemPercent  float64    `json:"memPercent"`
+	DiskTotal   uint64     `json:"diskTotal"`
+	DiskUsed    uint64     `json:"diskUsed"`
+	DiskPercent float64    `json:"diskPercent"`
+	NetSent     uint64     `json:"netSent"` // 启动以来累计发送字节
+	NetRecv     uint64     `json:"netRecv"` // 启动以来累计接收字节
+	Goroutines  int        `json:"goroutines"`
+	AppMemAlloc uint64     `json:"appMemAlloc"`
+	Services    []SvcEntry `json:"services"`
 }
 
 // PortEntry 一个监听端口
@@ -88,48 +91,23 @@ func (a *App) GetSystemInfo() (*SystemInfo, error) {
 	runtime.ReadMemStats(&ms)
 	info.AppMemAlloc = ms.Alloc
 
-	// 监听端口
-	conns, err := net.Connections("tcp")
-	if err == nil {
-		seen := map[uint32]bool{}
-		for _, c := range conns {
-			if c.Status != "LISTEN" {
-				continue
-			}
-			key := c.Laddr.Port*10 + uint32(c.Pid)
-			if seen[key] {
-				continue
-			}
-			seen[key] = true
-			proc := ""
-			if c.Pid > 0 {
-				if p, err := os_findProcess(c.Pid); err == nil {
-					proc = p
-				}
-			}
-			addr := fmt.Sprintf("%s:%d", c.Laddr.IP, c.Laddr.Port)
-			info.Listeners = append(info.Listeners, PortEntry{
-				Proto: "tcp", Port: int(c.Laddr.Port), PID: int(c.Pid), Process: proc, Address: addr,
-			})
-		}
-		sort.Slice(info.Listeners, func(i, j int) bool {
-			return info.Listeners[i].Port < info.Listeners[j].Port
-		})
+	// 磁盘（C: 盘使用率）
+	if du, err := disk.Usage("C:"); err == nil {
+		info.DiskTotal = du.Total
+		info.DiskUsed = du.Used
+		info.DiskPercent = du.UsedPercent
+	}
+
+	// 网络累计字节
+	if nc, err := net.IOCounters(false); err == nil && len(nc) > 0 {
+		info.NetSent = nc[0].BytesSent
+		info.NetRecv = nc[0].BytesRecv
 	}
 
 	// 本程序管理的服务实例
 	info.Services = collectServiceStatus()
 
 	return info, nil
-}
-
-// os_findProcess 获取 PID 对应的进程名
-func os_findProcess(pid int32) (string, error) {
-	p, err := process.NewProcess(pid)
-	if err != nil {
-		return "", err
-	}
-	return p.Name()
 }
 
 func collectServiceStatus() []SvcEntry {
@@ -186,6 +164,3 @@ func collectServiceStatus() []SvcEntry {
 	}
 	return out
 }
-
-// 过滤掉 ephemeral 端口范围（Windows 默认 49152-65535）
-var _ = sort.Ints // keep sort import

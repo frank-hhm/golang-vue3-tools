@@ -11,6 +11,8 @@ export interface OpenToolWindowOptions {
     width?: number;
     /** 新窗口视口高度，<=0 或未设定则继承默认尺寸 */
     height?: number;
+    /** 禁用全屏/最大化：为 true 时新窗口标题栏隐藏最大化按钮与“切换全屏”菜单 */
+    disableFullscreen?: boolean;
 }
 
 /**
@@ -36,7 +38,11 @@ export function useToolWindow() {
         title: string,
         options: OpenToolWindowOptions = {}
     ) => {
-        const { single = false, fullscreen = false, width = 0, height = 0 } = options;
+        const { single = false, fullscreen = false, width = 0, height = 0, disableFullscreen = false } = options;
+        // “禁用全屏”通过 URL query 传递（fs=0），由 BlankLayout 读取，无需改动后端方法签名
+        const fullPath = disableFullscreen
+            ? path + (path.includes("?") ? "&" : "?") + "fs=0"
+            : path;
         try {
             if (typeof $GoTools?.OpenToolWindow !== "function") {
                 throw new Error("OpenToolWindow 不可用");
@@ -44,7 +50,7 @@ export function useToolWindow() {
             // 新窗口统一用 /win 前缀的空白布局路由（标题栏/菜单由 BlankLayout 自绘）
             // width/height 为 0 时后端继承默认尺寸
             await $GoTools.OpenToolWindow(
-                "/win" + path,
+                "/win" + fullPath,
                 title,
                 !!single,
                 !!fullscreen,
@@ -53,7 +59,7 @@ export function useToolWindow() {
             );
         } catch (e) {
             console.warn("新窗口打开失败，回退到当前窗口路由:", e);
-            await router.push(path);
+            await router.push(fullPath);
         }
     };
 

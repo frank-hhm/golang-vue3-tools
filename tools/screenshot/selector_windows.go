@@ -287,6 +287,107 @@ func (st *selectorState) containsLocked(x, y int32) bool {
 
 var gState *selectorState
 
+// FrozenFrame 是最近一次选区流程开始时冻结的整屏画面（BGRA，自上而下）。
+// selectRegionWindows 退出后由调用方裁剪截取——保证“选区时看到什么就截到什么”
+// （含当时可见的 tooltip/气泡），避免事后重抓实时屏时提示已消失。
+// 仅在下一次选区/取色开始前有效，之后可能被覆盖或置 nil。
+var FrozenFrame struct {
+	Img *image.RGBA
+}
+
+// writeBGRAtoRGBA 把 GDI 抓屏得到的 BGRA 字节写入 image.RGBA 的 Pix（RGBA 顺序），
+// 同时把 alpha 置 255。GDI 内存布局为 B,G,R,A，而 Go image.RGBA 为 R,G,B,A，
+// 直接按字节 copy 会导致红蓝通道互换（蓝色图标变橙、整体偏色）。
+func writeBGRAtoRGBA(dst, src []byte) {
+	n := len(src)
+	if len(dst) < n {
+		n = len(dst)
+	}
+	for i := 0; i+3 < n; i += 4 {
+		dst[i+0] = src[i+2] // R
+		dst[i+1] = src[i+1] // G
+		dst[i+2] = src[i+0] // B
+		dst[i+3] = 255      // A
+	}
+}
+
+// allZeroBytes 判断像素缓冲是否全 0（抓屏失败的典型特征）。
+func allZeroBytes(b []byte) bool {
+	for _, v := range b {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// blitScreenTo 把当前屏幕 BitBlt 进临时 DIB 并拷回 dst。
+// 返回 false 表示调用链失败或像素全 0（锁屏/UAC 安全桌面切换等瞬间
+// GDI 抓屏会“成功但全黑”，不校验就会产出空白截图）。
+func blitScreenTo(screenDC uintptr, bmi *BITMAPINFO, dst []byte) bool {
+	tmpDC := createCompatibleDC(screenDC)
+	if tmpDC == 0 {
+		return false
+	}
+	defer deleteDC(tmpDC)
+	var bits *byte
+	hTmp := createDIBSection(screenDC, bmi, &bits)
+	if hTmp == 0 || bits == nil {
+		return false
+	}
+	defer deleteObject(hTmp)
+	old := selectObject(tmpDC, hTmp)
+	ok := bitBlt(tmpDC, 0, 0, int32(bmi.BmiHeader.BiWidth), int32(-bmi.BmiHeader.BiHeight), screenDC, 0, 0, SRCCOPY)
+	src := unsafe.Slice(bits, len(dst))
+	copy(dst, src)
+	selectObject(tmpDC, old)
+	if !ok {
+		return false
+	}
+	return !allZeroBytes(dst)
+}
+
+// captureFrozenScreen 抓一帧整屏到 *image.RGBA（BGRA 自上而下）。
+// 含一次“全 0 重试”，仍失败/全 0 时返回 nil，由调用方回退其他抓屏方式。
+func captureFrozenScreen() *image.RGBA {
+	sw := getSystemMetrics(SM_CXSCREEN)
+	sh := getSystemMetrics(SM_CYSCREEN)
+	if sw <= 0 || sh <= 0 {
+		return nil
+	}
+	screenDC := getDC(0)
+	if screenDC == 0 {
+		return nil
+	}
+	defer releaseDC(0, screenDC)
+
+	n := int(sw) * int(sh) * 4
+	pix := make([]byte, n)
+
+	bmi := &BITMAPINFO{}
+	bmi.BmiHeader.BiSize = uint32(unsafe.Sizeof(bmi.BmiHeader))
+	bmi.BmiHeader.BiWidth = sw
+	bmi.BmiHeader.BiHeight = -sh
+	bmi.BmiHeader.BiPlanes = 1
+	bmi.BmiHeader.BiBitCount = 32
+	bmi.BmiHeader.BiCompression = 0
+
+	ok := blitScreenTo(screenDC, bmi, pix)
+	if !ok {
+		// 偶发全黑/失败：稍等片刻再重试一次
+		time.Sleep(120 * time.Millisecond)
+		ok = blitScreenTo(screenDC, bmi, pix)
+	}
+	if !ok {
+		selLogf("captureFrozenScreen：抓屏失败或像素全 0，返回 nil")
+		return nil
+	}
+
+	img := image.NewRGBA(image.Rect(0, 0, int(sw), int(sh)))
+	writeBGRAtoRGBA(img.Pix, pix)
+	return img
+}
+
 // selectorTimerID 选区遮罩窗口的兜底超时定时器 ID（与取色器不同 ID，同包共享 WM_TIMER 常量）。
 const selectorTimerID = uintptr(0x5E10)
 
@@ -575,22 +676,17 @@ func prepareRender() *renderCtx {
 	bmi.BmiHeader.BiBitCount = 32
 	bmi.BmiHeader.BiCompression = 0
 
-	// 一次性抓屏：临时 DIB + BitBlt，把像素复制进 rawBits。
-	tmpDC := createCompatibleDC(screenDC)
-	if tmpDC == 0 {
+	// 一次性抓屏：带“全 0 重试”——锁屏/UAC 等瞬间 GDI 会抓到全黑，
+	// 不重试就会整轮选区都基于空白底图。
+	ok := blitScreenTo(screenDC, bmi, rc.rawBits)
+	if !ok {
+		time.Sleep(120 * time.Millisecond)
+		ok = blitScreenTo(screenDC, bmi, rc.rawBits)
+	}
+	if !ok {
+		selLogf("prepareRender：抓屏失败或像素全 0")
 		return nil
 	}
-	defer deleteDC(tmpDC)
-	var bits *byte
-	hTmp := createDIBSection(screenDC, bmi, &bits)
-	if hTmp == 0 || bits == nil {
-		return nil
-	}
-	defer deleteObject(hTmp)
-	old := selectObject(tmpDC, hTmp)
-	bitBlt(tmpDC, 0, 0, sw, sh, screenDC, 0, 0, SRCCOPY)
-	copy(rc.rawBits, unsafe.Slice(bits, n))
-	selectObject(tmpDC, old)
 
 	// 预生成压暗底图（只做一次）。
 	copy(rc.dimBits, rc.rawBits)
@@ -988,6 +1084,9 @@ func selectRegionWindows() (image.Rectangle, bool, error) {
 	// 步骤 0：在遮罩窗口显示之前先“冻结”一帧屏幕，构建渲染上下文。
 	// 必须在建窗/显示之前完成抓屏，否则会把自身画布抓进去（自捕获）。
 	// 此后每帧重绘都基于这份静态底图，无需重复抓屏/建位图/压暗，显著提升响应速度。
+	// 先短暂等待再冻结：悬停 tooltip / 弹出菜单有约 300~500ms 显示延迟，
+	// 立即抓屏会漏掉这些提示内容（表现为“选区时看得见、成品图里没有”）。
+	time.Sleep(250 * time.Millisecond)
 	gRender = prepareRender()
 	if gRender == nil {
 		selLogf("步骤 0 失败：prepareRender 无法构建渲染上下文")
@@ -1083,11 +1182,24 @@ func selectRegionWindows() (image.Rectangle, bool, error) {
 	destroyWindow(hwnd)
 	selLogf("步骤 6：窗口已销毁")
 
+	// 保存冻结帧供调用方裁剪（所见即所得）。此时遮罩窗口已销毁，
+	// 若渲染上下文缺失或冻结帧异常（全 0），兜底补抓一帧实时屏；
+	// 仍拿不到有效帧时保持 nil，由调用方回退到实时抓屏。
+	if gRender != nil && gRender.w > 0 && gRender.h > 0 && !allZeroBytes(gRender.rawBits) {
+		frozen := image.NewRGBA(image.Rect(0, 0, gRender.w, gRender.h))
+		writeBGRAtoRGBA(frozen.Pix, gRender.rawBits)
+		FrozenFrame.Img = frozen
+	} else {
+		FrozenFrame.Img = captureFrozenScreen()
+		selLogf("冻结帧不可用，兜底补抓实时屏 ok=%v", FrozenFrame.Img != nil)
+	}
+
 	// 步骤 7：输出最终结果。取消或无有效选区时 ok=false。
 	st.mu.Lock()
 	defer st.mu.Unlock()
 	if st.cancel || !st.hasSel {
 		selLogf("=== 结束：取消或无有效选区 (cancel=%v hasSel=%v) ===", st.cancel, st.hasSel)
+		FrozenFrame.Img = nil
 		return image.Rectangle{}, false, nil
 	}
 	rect := st.getRectLocked()

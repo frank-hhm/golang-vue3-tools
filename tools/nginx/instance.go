@@ -186,6 +186,49 @@ func instanceConfPath(id string) (string, error) {
 	return filepath.Join(dir, "conf", "nginx.conf"), nil
 }
 
+/* ============================ 默认站点 / 工具辅帮 ============================ */
+
+// dirBadChars 文件名中禁止的字符（同 PHP 包保持一致）
+var dirBadChars = strings.NewReplacer(
+	"<", "_", ">", "_", ":", "_", "\"", "_", "/", "_", "\\", "_", "|", "_", "?", "_", "*", "_",
+)
+
+// sanitizeDirName 将实例名转为安全目录名（保留中文，非法字符替换为下划线）
+func sanitizeDirName(s string) string {
+	s = strings.Trim(dirBadChars.Replace(strings.TrimSpace(s)), ". ")
+	if r := []rune(s); len(r) > 60 {
+		s = string(r[:60])
+	}
+	return s
+}
+
+// defaultDocRoot 默认站点目录：<exedir>/data/www/<实例名>，与 PHP 包保持一致
+func defaultDocRoot(id, name string) string {
+	base := ""
+	if exe, err := os.Executable(); err == nil {
+		base = filepath.Join(filepath.Dir(exe), "data", "www")
+	} else if d, err := goToolsDir(); err == nil {
+		base = filepath.Join(d, "www")
+	}
+	dir := sanitizeDirName(name)
+	if dir == "" {
+		dir = sanitizeDirName(id)
+	}
+	if dir == "" {
+		dir = "site"
+	}
+	return filepath.Join(base, dir)
+}
+
+// nginxConfSrcDir 返回 Nginx 安装目录下的 conf 子目录绝对路径（mime.types 等内置文件所在地）
+func nginxConfSrcDir(version string) string {
+	exe := nginxExe(version)
+	if exe == "" {
+		return ""
+	}
+	return filepath.Dir(exe) + "/conf" // 用正斜杠，写入 nginx.conf 后跨平台一致
+}
+
 /* ============================ 启动 / 停止 / 重载 ============================ */
 
 // StartInstance 启动实例：端口检查 → 准备 nginx.conf → 隐藏窗口拉起 → 等待端口就绪
@@ -217,7 +260,7 @@ func StartInstance(id string) error {
 	}
 	docRoot := cfg.DocRoot
 	if docRoot == "" {
-		docRoot = filepath.Join(prefix, "html")
+		docRoot = defaultDocRoot(cfg.ID, cfg.Name)
 		if err := os.MkdirAll(docRoot, 0o755); err != nil {
 			return err
 		}
@@ -259,7 +302,7 @@ func StartInstance(id string) error {
 	return fmt.Errorf("启动超时：15s 内端口 %d 未监听，请查看日志：\n%s", cfg.Port, errTail(prefix, 12))
 }
 
-// StopInstance 停止实例：nginx -s quit（优雅），兜底按 PID 结束进程树
+// StopInstance 停止实例：nginx -s quit（优雅），兆底仅杀本实例进窋树
 func StopInstance(id string) error {
 	cfg, err := findInstance(id)
 	if err != nil {
@@ -271,6 +314,7 @@ func StopInstance(id string) error {
 	}
 	prefix, _ := instanceDir(id)
 	confPath, _ := instanceConfPath(id)
+	// 尝试优雅停止
 	if exe := nginxExe(cfg.Version); exe != "" {
 		cmd := exec.Command(exe, "-p", prefix, "-c", confPath, "-s", "quit")
 		cmd.Dir = filepath.Dir(exe)
@@ -281,11 +325,8 @@ func StopInstance(id string) error {
 		select {
 		case <-p.done:
 		case <-time.After(8 * time.Second):
-			if pids := nginxPids(); len(pids) > 0 {
-				for _, pid := range pids {
-					_ = killTree(pid)
-				}
-			} else if p.cmd.Process != nil {
+			// 超时：仅杀本实例 master 及其子进窋（不波及同机其他实例）
+			if p.cmd.Process != nil {
 				_ = killTree(p.cmd.Process.Pid)
 			}
 			select {
@@ -299,8 +340,9 @@ func StopInstance(id string) error {
 		}
 		srvRunMu.Unlock()
 	}
-	if tcpUp(cfg.Port) {
-		if pids := nginxPids(); len(pids) > 0 {
+	// 端口仍占用且未跟踪到进窋（外部 nginx 启动的实例）：仅杀匹配本实例 prefix 的进窋
+	if tcpUp(cfg.Port) && prefix != "" {
+		if pids := nginxPidsForPrefix(prefix); len(pids) > 0 {
 			for _, pid := range pids {
 				_ = killTree(pid)
 			}
@@ -388,7 +430,7 @@ func GetInstanceStatus(id string) (InstanceStatus, error) {
 	st.ConfigPath = filepath.Join(prefix, "conf", "nginx.conf")
 	st.DocRoot = cfg.DocRoot
 	if st.DocRoot == "" {
-		st.DocRoot = filepath.Join(prefix, "html")
+		st.DocRoot = defaultDocRoot(cfg.ID, cfg.Name)
 	}
 	st.Running = tcpUp(cfg.Port)
 	pids := nginxPids()
@@ -477,11 +519,20 @@ func ensureConf(cfg *InstanceConfig, prefix, confPath string) error {
 	}
 	docRoot := cfg.DocRoot
 	if docRoot == "" {
-		docRoot = filepath.Join(prefix, "html")
+		docRoot = defaultDocRoot(cfg.ID, cfg.Name)
+		_ = os.MkdirAll(docRoot, 0o755)
 	}
 	workers := cfg.Workers
 	if workers <= 0 {
 		workers = 1
+	}
+	// 计估计对路径到 Nginx 安装目录的 conf 子目录，使 include 指令不依赖 prefix
+	confSrc := nginxConfSrcDir(cfg.Version)
+	mimePath := "mime.types"
+	fastcgiPath := "fastcgi_params"
+	if confSrc != "" {
+		mimePath = filepath.ToSlash(filepath.Join(confSrc, "mime.types"))
+		fastcgiPath = filepath.ToSlash(filepath.Join(confSrc, "fastcgi_params"))
 	}
 	var b strings.Builder
 	b.WriteString(confMarker + "\n")
@@ -491,7 +542,7 @@ func ensureConf(cfg *InstanceConfig, prefix, confPath string) error {
 	b.WriteString("events {\n    worker_connections  1024;\n}\n")
 	b.WriteString("http {\n")
 	fmt.Fprintf(&b, "    access_log      \"%s\";\n", filepath.ToSlash(filepath.Join(prefix, "logs", "access.log")))
-	b.WriteString("    include       mime.types;\n")
+	fmt.Fprintf(&b, "    include       \"%s\";\n", mimePath)
 	b.WriteString("    default_type  application/octet-stream;\n")
 	b.WriteString("    sendfile        on;\n")
 	b.WriteString("    keepalive_timeout  65;\n")
@@ -505,12 +556,12 @@ func ensureConf(cfg *InstanceConfig, prefix, confPath string) error {
 	b.WriteString("            fastcgi_pass   127.0.0.1:9000;\n")
 	b.WriteString("            fastcgi_index  index.php;\n")
 	b.WriteString("            fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;\n")
-	b.WriteString("            include        fastcgi_params;\n        }\n")
+	fmt.Fprintf(&b, "            include        \"%s\";\n        }\n", fastcgiPath)
 	if cfg.StubStatus {
 		b.WriteString("        location = /stub_status {\n            stub_status;\n            access_log off;\n        }\n")
 	}
 	b.WriteString("        error_page   500 502 503 504  /50x.html;\n")
-	b.WriteString("        location = /50x.html {\n            root   html;\n        }\n")
+	fmt.Fprintf(&b, "        location = /50x.html {\n            root   \"%s\";\n        }\n", filepath.ToSlash(filepath.Join(prefix, "html")))
 	b.WriteString("    }\n")
 	if cfg.SSLPort > 0 {
 		b.WriteString("    server {\n")
@@ -549,7 +600,7 @@ func GetConfigText(id string) (string, error) {
 	return string(data), nil
 }
 
-// SaveConfigText 写回实例 nginx.conf（先备份原文件为 nginx.conf.bak）
+// SaveConfigText 写回实例 nginx.conf：先备份、写入、运行 nginx -t 校验，失败则回滚并返回错误。
 func SaveConfigText(id, text string) error {
 	confPath, err := instanceConfPath(id)
 	if err != nil {
@@ -561,10 +612,30 @@ func SaveConfigText(id, text string) error {
 	if !strings.HasSuffix(text, "\n") {
 		text += "\n"
 	}
+	// 备份原文件
+	var backup []byte
+	hasBackup := false
 	if old, err := os.ReadFile(confPath); err == nil && len(old) > 0 {
+		backup = old
+		hasBackup = true
 		_ = os.WriteFile(confPath+".bak", old, 0o644)
 	}
-	return os.WriteFile(confPath, []byte(text), 0o644)
+	// 写入新内容
+	if err := os.WriteFile(confPath, []byte(text), 0o644); err != nil {
+		return err
+	}
+	// 运行 nginx -t 校验
+	checkOut, checkErr := CheckConfig(id)
+	if checkErr != nil {
+		// 校验失败：回滚
+		if hasBackup {
+			_ = os.WriteFile(confPath, backup, 0o644)
+		} else {
+			_ = os.Remove(confPath)
+		}
+		return fmt.Errorf("配置校验失败（已回滚）：\n%s", checkOut)
+	}
+	return nil
 }
 
 /* ============================ 小工具 ============================ */

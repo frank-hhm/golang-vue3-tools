@@ -1,6 +1,6 @@
 ﻿<template>
   <layout-body height="full" :isBg="false">
-    <a-row :gutter="12">
+    <a-row :gutter="12" class="home-row">
       <a-col :span="16">
         <!-- ========== 左侧：系统信息 ========== -->
 
@@ -63,6 +63,37 @@
                     </div>
                   </div>
                 </div>
+                <div class="stat-card">
+                  <div class="stat-circle stat-circle-disk"><icon-drive-file /></div>
+                  <div class="stat-info">
+                    <div class="stat-head">
+                      <div class="stat-label">磁盘 C:</div>
+                      <div class="stat-sub">{{ sysInfo ? fmtBytes(sysInfo.diskUsed) + ' / ' +
+                        fmtBytes(sysInfo.diskTotal)
+                        : '' }}
+                      </div>
+                    </div>
+                    <div class="stat-value">{{ sysInfo ? sysInfo.diskPercent.toFixed(1) : '--' }}<span
+                        class="stat-unit">%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-circle stat-circle-net"><icon-swap /></div>
+                  <div class="stat-info">
+                    <div class="stat-head">
+                      <div class="stat-label">网络</div>
+                      <div class="stat-sub">{{ sysInfo ? '↑ ' + fmtBytes(sysInfo.netSent) + ' ↓ ' +
+                        fmtBytes(sysInfo.netRecv)
+                        : '' }}
+                      </div>
+                    </div>
+                    <div class="stat-value">{{ sysInfo ? fmtBytes(sysInfo.netSent + sysInfo.netRecv) : '--' }}<span
+                        class="stat-unit">
+                        累计</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </a-card>
           </a-col>
@@ -83,23 +114,22 @@
                 </a-radio-group>
               </template>
               <div class="svc-cards" v-if="filteredServices.length">
-                <div v-for="(s, i) in filteredServices" :key="i" class="svc-card">
+                <div v-for="(s, i) in filteredServices" :key="i" class="svc-card" title="点击查看实例详情"
+                  @click="openServiceDetail(s)">
                   <div class="svc-card-top">
-                    <div class="svc-logo" :class="s.type === 'redis' ? 'logo-redis' : 'logo-mysql'">
+                    <div class="svc-logo" :class="'logo-' + s.type">
                       <span v-if="s.type === 'redis'" class="icon icon-icon-redis" />
-                      <span v-if="s.type === 'php'" class="icon icon-php" />
-                      <span v-if="s.type === 'mysql'" class="icon icon-MySQL" />
-                      <span v-if="s.type === 'nginx'" class="icon icon-nginx" />
+                      <span v-else-if="s.type === 'php'" class="icon icon-php" />
+                      <span v-else-if="s.type === 'mysql'" class="icon icon-MySQL" />
+                      <span v-else-if="s.type === 'nginx'" class="icon icon-ngnix" />
+                      <span v-else-if="s.type === 'npm'" class="icon icon-npm" />
                     </div>
                     <div class="svc-meta">
-                      <div class="svc-name">{{ s.name }}</div>
-                      <div class="svc-desc">{{ s.type === 'redis' ? 'Redis' : 'MySQL' }} · v{{ s.version }} · :{{
-                        s.port
-                      }}
-                      </div>
+                      <div class="svc-name" :title="s.name">{{ s.name }}</div>
+                      <div class="svc-desc">{{ svcTypeLabel(s.type) }} · v{{ s.version }} · :{{ s.port }}</div>
                     </div>
                   </div>
-                  <div class="svc-card-bottom">
+                  <div class="svc-card-bottom" @click.stop>
                     <a-tag :color="s.running ? 'green' : 'gray'" size="small">
                       <template #icon>
                         <icon-check-circle-fill v-if="s.running" />
@@ -107,7 +137,7 @@
                       </template>
                       {{ s.running ? '已启用' : '已停止' }}
                     </a-tag>
-                    <a-switch :model-value="s.running" :loading="svcToggling === s.id" size="small" type="round"
+                    <a-switch :model-value="s.running" :loading="svcToggling === s.id" size="small"
                       @change="toggleService(s)" />
                   </div>
                 </div>
@@ -115,25 +145,10 @@
               <a-empty v-else description="暂无服务实例" />
             </a-card>
           </a-col>
-          <a-col :span="24">
-            <a-card v-if="sysInfo?.listeners?.length">
-              <!-- 端口列表 -->
-              <template #title>
-                <span class="svc-title">TCP 监听端口 ({{ sysInfo.listeners.length }})</span>
-              </template>
-              <a-list class="port-list" :border="false" :split="false">
-                <a-list-item v-for="(p, i) in sysInfo.listeners.slice(0, 30)" :key="i" class="port-row">
-                  <span class="port-num">{{ p.port }}</span>
-                  <span class="port-proc">{{ p.process || '-' }}</span>
-                  <span class="port-pid">PID {{ p.pid }}</span>
-                </a-list-item>
-              </a-list>
-            </a-card>
-          </a-col>
         </a-row>
       </a-col>
 
-      <a-col :span="8">
+      <a-col :span="8" class="right-col">
 
         <!-- ========== 右侧：当前时间 ========== -->
         <a-card class="clock-card">
@@ -150,16 +165,11 @@
         </a-card>
 
         <!-- ========== 右侧：快捷操作 ========== -->
-        <a-card>
+        <a-card class="tools-card">
           <template #title>
             <span>快捷操作</span>
           </template>
           <template #extra>
-            <a-tooltip content="设置">
-              <a-button @click="openSettings">
-                <template #icon><span class="icon icon-shezhi"></span></template>
-              </a-button>
-            </a-tooltip>
           </template>
           <div class="tools-grid">
             <a-tooltip v-for="(item, index) in toolsList" :key="item.id || index"
@@ -211,6 +221,7 @@ async function loadTools() {
     const next = list.map((t) => ({
       id: t.id, key: t.key, name: t.name, path: t.path || undefined,
       event: t.event || undefined, single: !!t.single, fullscreen: !!t.fullscreen,
+      disableFullscreen: !!t.disableFullscreen,
       width: t.width || undefined, height: t.height || undefined, icon: normalizeToolIcon(t.icon), shortcut: t.shortcut,
     }));
     const sig = JSON.stringify(next);
@@ -223,7 +234,7 @@ async function loadTools() {
 const onToolClick = (item: ToolRow) => {
   if (item.event) { toolEvents.runEvent(item.event as any); return; }
   if (item.path) {
-    openToolWindow(item.path, item.name, { single: item.single, fullscreen: item.fullscreen, width: item.width, height: item.height });
+    openToolWindow(item.path, item.name, { single: item.single, fullscreen: item.fullscreen, disableFullscreen: item.disableFullscreen, width: item.width, height: item.height });
   }
 };
 
@@ -247,6 +258,33 @@ const filteredServices = computed(() => {
   if (svcFilter.value === "all") return list;
   return list.filter((s: any) => s.type === svcFilter.value);
 });
+
+const SVC_TYPE_LABELS: Record<string, string> = {
+  redis: "Redis", mysql: "MySQL", php: "PHP", nginx: "Nginx", npm: "Npm",
+};
+function svcTypeLabel(t: string): string {
+  return SVC_TYPE_LABELS[t] || (t ? t.toUpperCase() : "-");
+}
+
+/** 服务类型 → 对应管理工具路由 */
+const SVC_TYPE_ROUTES: Record<string, string> = {
+  redis: "/tools/redis", mysql: "/tools/mysql", php: "/tools/php", nginx: "/tools/nginx", npm: "/tools/npm",
+};
+
+/** 点击服务卡片：打开对应工具窗口并带 ?inst= 定位实例；窗口已存在（单例复用）时靠事件通知其切换实例 */
+function openServiceDetail(s: any) {
+  const path = SVC_TYPE_ROUTES[s.type];
+  if (!path) return;
+  const item = toolsList.value.find((t) => t.key === s.type);
+  openToolWindow(path + "?inst=" + encodeURIComponent(s.id), item?.name || svcTypeLabel(s.type) + "管理", {
+    single: item?.single ?? true,
+    fullscreen: item?.fullscreen,
+    disableFullscreen: item?.disableFullscreen,
+    width: item?.width,
+    height: item?.height,
+  });
+  try { Events.Emit("tool:select-inst", { type: s.type, id: String(s.id) }); } catch { /* */ }
+}
 
 async function refreshSysInfo() {
   sysLoading.value = true;
@@ -387,6 +425,16 @@ onUnmounted(() => {
   color: rgb(var(--purple-6));
 }
 
+.stat-circle-disk {
+  background: rgba(var(--green-6), 0.12);
+  color: rgb(var(--green-6));
+}
+
+.stat-circle-net {
+  background: rgba(var(--arcoblue-6), 0.12);
+  color: rgb(var(--arcoblue-6));
+}
+
 .stat-info {
   flex: 1;
   min-width: 0;
@@ -436,6 +484,13 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--base-margin);
+  height: 240px;
+  /* 卡片按内容高度排列并顶部对齐：实例少/筛选后不被拉伸成空白高卡 */
+  grid-auto-rows: max-content;
+  align-content: start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
 }
 
 .svc-card {
@@ -443,13 +498,11 @@ onUnmounted(() => {
   border: 1px solid var(--color-border-1);
   border-radius: var(--base-radius-default);
   padding: var(--base-padding);
-  transition: all 0.2s;
-  cursor: default;
+  cursor: pointer;
 }
 
 .svc-card:hover {
   box-shadow: 0 4px 16px rgba(var(--primary-6), 0.08);
-  transform: translateY(-1px);
 }
 
 
@@ -481,6 +534,21 @@ onUnmounted(() => {
   color: rgb(var(--blue-6));
 }
 
+.logo-php {
+  background: rgba(var(--purple-6), 0.12);
+  color: rgb(var(--purple-6));
+}
+
+.logo-nginx {
+  background: rgba(var(--green-6), 0.12);
+  color: rgb(var(--green-6));
+}
+
+.logo-npm {
+  background: rgba(var(--red-6), 0.12);
+  color: rgb(var(--red-6));
+}
+
 .svc-meta {
   flex: 1;
   min-width: 0;
@@ -489,63 +557,24 @@ onUnmounted(() => {
 .svc-name {
   font-weight: 600;
   font-size: var(--base-size-default);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .svc-desc {
   font-size: var(--base-size-small);
   color: var(--color-text-3);
   margin-top: var(--base-radius-small);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .svc-card-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-/* 端口列表（a-list） */
-.port-list {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid var(--color-border-2);
-  border-radius: var(--base-radius-default);
-  background: var(--color-bg-2);
-}
-
-.port-list :deep(.arco-list-item) {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: var(--base-size-small);
-  font-family: Consolas, monospace;
-  padding: var(--base-radius-small) var(--base-padding);
-  border-bottom: 1px solid var(--color-border-1);
-  transition: background 0.1s;
-}
-
-.port-list :deep(.arco-list-item:last-child) {
-  border-bottom: none;
-}
-
-.port-list :deep(.arco-list-item:hover) {
-  background: var(--color-fill-2);
-}
-
-.port-num {
-  width: 50px;
-  font-weight: 600;
-  color: rgb(var(--primary-6));
-}
-
-.port-proc {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.port-pid {
-  color: var(--color-text-3);
 }
 
 /* ---- 右侧卡片 ---- */
@@ -594,10 +623,38 @@ onUnmounted(() => {
   color: var(--color-text-3);
 }
 
+/* 行继承主窗口可视高度（100vh − 40px 自绘标题栏 − 内容区/页面内边距），
+   使左右两列撞满整屏，右侧“快捷操作”卡片随之铺满到底，不留底部空白 */
+.home-row {
+  height: calc(100vh - 2 * var(--base-padding));
+}
+
+/* 右侧列：时间卡片固定高度，快捷操作卡片拉伸填满剩余空间 */
+.right-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tools-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tools-card :deep(.arco-card-body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .tools-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--base-padding);
+  flex: 1;
+  align-content: start;
 }
 
 .tool-cell {
@@ -605,6 +662,8 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* 正方形单元格随列宽自适应铺满卡片宽度 */
+  aspect-ratio: 1;
   padding: var(--base-padding);
   border-radius: var(--base-radius-default);
   cursor: pointer;

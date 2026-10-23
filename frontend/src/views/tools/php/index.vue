@@ -323,17 +323,20 @@
     </a-modal>
 
     <!-- 扩展管理 -->
-    <a-modal v-model:visible="extVisible" :title="`扩展管理 - ${cfgNameOf(extInstId)}`" :width="700" :footer="false"
-        unmount-on-close>
-        <a-input-search v-model="extFilter" placeholder="搜索扩展名" size="small" style="margin-bottom:8px;width:240px" />
-        <a-table :data="filteredExtensions" size="small" :pagination="false" row-key="name" :scroll="{ y: 600 }"
+    <a-modal v-model:visible="extVisible" :title="`扩展管理 - ${cfgNameOf(extInstId)}`" :width="780" :footer="false"
+        unmount-on-close :body-style="{ padding: '12px 16px', maxHeight: '82vh', overflowY: 'auto' }">
+        <div class="ext-section-head">
+            <span class="ext-section-title">本地扩展（php.ini 配置）</span>
+            <a-input-search v-model="extFilter" placeholder="搜索扩展名" size="small" style="width:200px" allow-clear />
+        </div>
+        <a-table :data="filteredExtensions" size="small" :pagination="false" row-key="name" :scroll="{ y: 260 }"
             :columns="[
-                { title: '扩展', dataIndex: 'name', width: 160 },
+                { title: '扩展', dataIndex: 'name', width: 140 },
                 { title: 'DLL', dataIndex: 'dll', ellipsis: true, tooltip: true },
-                { title: '内置', dataIndex: 'system', width: 70, slotName: 'system' },
-                { title: '有 DLL', dataIndex: 'available', width: 80, slotName: 'available' },
-                { title: '已启用', dataIndex: 'enabled', width: 90, slotName: 'enabled' },
-                { title: '已加载', dataIndex: 'loaded', width: 80, slotName: 'loaded' },
+                { title: '内置', dataIndex: 'system', width: 60, slotName: 'system' },
+                { title: '有 DLL', dataIndex: 'available', width: 72, slotName: 'available' },
+                { title: '已启用', dataIndex: 'enabled', width: 80, slotName: 'enabled' },
+                { title: '已加载', dataIndex: 'loaded', width: 72, slotName: 'loaded' },
             ]">
             <template #system="{ record }"><a-tag v-if="record.system" size="small">核心</a-tag></template>
             <template #available="{ record }"><a-tag v-if="record.available" color="green" size="small">√</a-tag></template>
@@ -345,7 +348,46 @@
             </template>
             <template #loaded="{ record }"><a-tag v-if="record.loaded" color="arcoblue" size="small">√</a-tag></template>
         </a-table>
-        <div class="offline-tip">切换开关会写入 php.ini；重启实例后"已加载"才会刷新。</div>
+        <div class="offline-tip">切换开关会写入 php.ini；重启实例后“已加载”才会刷新。</div>
+    
+        <a-divider style="margin: 12px 0" />
+    
+        <div class="ext-section-head">
+            <span class="ext-section-title"><icon-cloud /> 在线可下载安装（PECL Windows）</span>
+            <a-button size="mini" :loading="remoteExtsLoading" @click="loadRemoteExts(true)">
+                <template #icon><icon-refresh /></template>强制刷新
+            </a-button>
+        </div>
+        <a-spin :loading="remoteExtsLoading" style="width:100%">
+            <a-table :data="remoteExts" size="small" :pagination="false" row-key="name" :scroll="{ y: 200 }"
+                :columns="[
+                    { title: '扩展', dataIndex: 'label', width: 110 },
+                    { title: '说明', dataIndex: 'description', ellipsis: true, tooltip: true },
+                    { title: '状态', dataIndex: 'st', width: 150, slotName: 'st' },
+                    { title: '操作', dataIndex: 'ops', width: 110, slotName: 'ops' },
+                ]">
+                <template #st="{ record }">
+                    <a-tag v-if="record.busy" color="arcoblue" size="small">安装中…</a-tag>
+                    <a-tag v-else-if="record.installed" color="green" size="small">已安装{{ record.extVersion ? ' v'+record.extVersion : '' }}</a-tag>
+                    <a-tag v-else-if="record.fetching" size="small" color="gray">获取目录中…</a-tag>
+                    <a-tag v-else-if="record.matchable" color="orange" size="small">可下载{{ record.extVer ? ' v'+record.extVer : '' }}</a-tag>
+                    <a-tag v-else-if="record.seriesSeen" color="gray" size="small">当前 PHP 版本无匹配</a-tag>
+                    <a-tooltip v-else-if="record.reason" :content="record.reason">
+                        <a-tag size="small" color="gray">不可用</a-tag>
+                    </a-tooltip>
+                    <a-tag v-else size="small" color="gray">暂无</a-tag>
+                </template>
+                <template #ops="{ record }">
+                    <a-space :size="4">
+                        <a-button v-if="record.matchable && !record.installed" size="mini" type="primary"
+                            :disabled="record.busy" @click="installRemoteExt(record.name)">安装并启用</a-button>
+                        <a-button v-if="record.downloaded && !record.busy" size="mini" status="danger"
+                            @click="removeRemoteExt(record.name)">删除</a-button>
+                    </a-space>
+                </template>
+            </a-table>
+        </a-spin>
+        <div class="offline-tip">DLL 将安装到 PHP 版本 ext 目录；删除仅针对在线获取版本，内置 DLL 不可删除。安装完成后请重启实例生效。</div>
     </a-modal>
 
     <!-- 禁用函数 -->
@@ -375,6 +417,7 @@
 import { computed, getCurrentInstance, h, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Message, Modal } from "@arco-design/web-vue";
 import { Events } from "@wailsio/runtime";
+import { useRoute } from "vue-router";
 
 const GoTools = (getCurrentInstance() as any)?.appContext.config.globalProperties.$GoTools;
 
@@ -389,7 +432,9 @@ const logBoxRef = ref<HTMLElement | null>(null);
 const installLogRef = ref<HTMLElement | null>(null);
 let logTimer: any = null;
 let srvTimer: any = null;
+const route = useRoute();
 let offInstall: any = null;
+let offSelInst: any = null;
 
 const selCfg = computed(() => instances.value.find((i) => i.id === selectedId.value) || null);
 const selState = computed(() => (selectedId.value ? states[selectedId.value] : null));
@@ -420,6 +465,10 @@ const extVisible = ref(false);
 const extInstId = ref("");
 const extensions = ref<any[]>([]);
 const extFilter = ref("");
+const remoteExts = ref<any[]>([]);
+const remoteExtsLoading = ref(false);
+let extPollTimer: any = null;
+let offExtInstall: any = null;
 
 const disfnVisible = ref(false);
 const disfnInstId = ref("");
@@ -741,9 +790,11 @@ async function saveCommon(): Promise<boolean> {
 async function openExt(id: string) {
     extInstId.value = id;
     extensions.value = [];
+    remoteExts.value = [];
     extVisible.value = true;
     try { extensions.value = (await GoTools.PhpSrvExtensions(id)) || []; }
     catch (e: any) { Message.error("读取扩展列表失败: " + (e?.message || e)); extVisible.value = false; }
+    loadRemoteExts(false);
 }
 async function toggleExt(rec: any, enable: boolean) {
     try {
@@ -753,6 +804,47 @@ async function toggleExt(rec: any, enable: boolean) {
     } catch (e: any) {
         rec.enabled = !enable;
         Message.error("操作失败: " + (e?.message || e));
+    }
+}
+
+async function loadRemoteExts(force: boolean) {
+    if (!extInstId.value) return;
+    remoteExtsLoading.value = true;
+    try {
+        remoteExts.value = (await GoTools.PhpSrvExtCatalog(extInstId.value, force)) || [];
+        // 后台摸描未就绪时轮询
+        if (extPollTimer) { clearTimeout(extPollTimer); extPollTimer = null; }
+        if (remoteExts.value.some((e: any) => e.fetching)) {
+            extPollTimer = setTimeout(() => { loadRemoteExts(false); }, 2500);
+        }
+    } catch (e) { /* ignore */ }
+    remoteExtsLoading.value = false;
+}
+
+async function installRemoteExt(ext: string) {
+    const r = remoteExts.value.find((e: any) => e.name === ext);
+    if (r) r.busy = true;
+    try {
+        await GoTools.PhpSrvExtInstall(extInstId.value, ext, true);
+    } catch (e: any) {
+        if (r) r.busy = false;
+        Message.error("安装失败: " + (e?.message || e));
+    }
+}
+
+async function removeRemoteExt(ext: string) {
+    const r = remoteExts.value.find((e: any) => e.name === ext);
+    if (r) r.busy = true;
+    try {
+        await GoTools.PhpSrvExtRemove(extInstId.value, ext);
+        if (r) { r.installed = false; r.downloaded = false; r.enabled = false; }
+        if (r) r.busy = false;
+        Message.success(`扩展 ${ext} 已删除`);
+        // 刷新本地扩展列表
+        extensions.value = (await GoTools.PhpSrvExtensions(extInstId.value)) || [];
+    } catch (e: any) {
+        if (r) r.busy = false;
+        Message.error("删除失败: " + (e?.message || e));
     }
 }
 
@@ -797,8 +889,17 @@ function removeDisFn(f: string) {
 /* ============================ 生命周期 ============================ */
 onMounted(async () => {
     await loadInstances();
+    // 主页点击服务实例进入（?inst=）：选中该实例展示详情
+    const wantId = String(route.query.inst ?? "");
+    if (wantId && instances.value.some((i) => i.id === wantId)) selectInst(wantId);
     loadLocalVersions();
     srvTimer = setInterval(refreshStates, 3000);
+    // 单例窗口已打开时，主页再次点击其他实例 → 通过事件切换
+    offSelInst = Events.On("tool:select-inst", (ev: any) => {
+        const p = ev?.data ?? ev;
+        if (p?.type !== "php" || !p?.id) return;
+        if (instances.value.some((i) => i.id === String(p.id))) selectInst(String(p.id));
+    });
     offInstall = Events.On("php:install", (ev: any) => {
         const p = ev?.data ?? ev;
         if (!p || !p.version) return;
@@ -817,9 +918,32 @@ onMounted(async () => {
             installProgress[p.version] = p;
         }
     });
+    offExtInstall = Events.On("php:ext-install", (ev: any) => {
+        const p = ev?.data ?? ev;
+        if (!p || !p.version) return;
+        const ext = p.version;
+        const r = remoteExts.value.find((e: any) => e.name === ext);
+        if (p.stage === "done") {
+            if (r) { r.installed = true; r.downloaded = true; r.enabled = true; r.busy = false; }
+            pushInstallLog(`扩展 ${ext} 安装完成`);
+            // 刷新本地扩展列表
+            if (extVisible.value && extInstId.value) {
+                GoTools.PhpSrvExtensions(extInstId.value).then((list: any) => { extensions.value = list || []; }).catch(() => {});
+            }
+        } else if (p.stage === "error") {
+            if (r) r.busy = false;
+            pushInstallLog(`扩展 ${ext} 安装失败：${p.note || ""}`);
+            Message.error(`扩展 ${ext} 安装失败：${p.note || "未知错误"}`);
+        } else {
+            if (r) r.busy = true;
+        }
+    });
 });
 onUnmounted(() => {
     if (offInstall) offInstall();
+    if (offSelInst) offSelInst();
+    if (offExtInstall) offExtInstall();
+    if (extPollTimer) clearTimeout(extPollTimer);
     if (srvTimer) clearInterval(srvTimer);
     if (logTimer) clearInterval(logTimer);
 });
@@ -1203,5 +1327,23 @@ onUnmounted(() => {
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 8px;
+}
+
+/* 扩展管理分节头 */
+.ext-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ext-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--color-text-1);
 }
 </style>

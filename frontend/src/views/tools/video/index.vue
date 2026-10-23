@@ -901,7 +901,7 @@ onUnmounted(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-1);
+  background: var(--color-bg-2);
 }
 
 .main-panel :deep(.arco-card-body) {

@@ -839,7 +839,8 @@ export function OpenTCPClient(cfg: usbserial$0.ConnConfig): $CancellablePromise<
  * path 形如 "/tools/timestamp"；title 为新窗口标题；
  * single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
  * fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡）；
- * width/height 为新窗口视口尺寸，<=0 时继承默认尺寸（1000x718）。
+ * width/height 为新窗口视口尺寸，<=0 时继承默认尺寸（1000x718）；
+ * path 的 query 带 fs=0（工具配置“禁用全屏”）时，隐藏最大化按钮并禁止标题栏双击最大化。
  */
 export function OpenToolWindow(path: string, title: string, single: boolean, fullscreen: boolean, width: number, height: number): $CancellablePromise<void> {
     return $Call.ByID(144879371, path, title, single, fullscreen, width, height);
@@ -885,6 +886,34 @@ export function PhpSrvCommonlyDisabled(): $CancellablePromise<string[] | null> {
  */
 export function PhpSrvDisableFunctions(id: string): $CancellablePromise<string[] | null> {
     return $Call.ByID(2533445025, id);
+}
+
+/**
+ * PhpSrvExtCatalog 常用扩展在线清单（PECL）：已安装 / 可下载 / 下载中
+ */
+export function PhpSrvExtCatalog(id: string, force: boolean): $CancellablePromise<php$0.RemoteExtensionInfo[] | null> {
+    return $Call.ByID(1334155202, id, force);
+}
+
+/**
+ * PhpSrvExtInstall 异步下载安装扩展 dll 到版本 ext 目录，enable=true 顺带启用；进度经 php:ext-install 事件推送
+ */
+export function PhpSrvExtInstall(id: string, ext: string, enable: boolean): $CancellablePromise<void> {
+    return $Call.ByID(551275238, id, ext, enable);
+}
+
+/**
+ * PhpSrvExtRefresh 清空 PECL 线上索引缓存（配合 PhpSrvExtCatalog(force=true) 使用）
+ */
+export function PhpSrvExtRefresh(): $CancellablePromise<void> {
+    return $Call.ByID(2141616962);
+}
+
+/**
+ * PhpSrvExtRemove 删除由本工具下载的扩展 dll（内置扩展不可删）
+ */
+export function PhpSrvExtRemove(id: string, ext: string): $CancellablePromise<void> {
+    return $Call.ByID(4288749123, id, ext);
 }
 
 /**

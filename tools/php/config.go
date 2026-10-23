@@ -315,15 +315,19 @@ date.timezone = Asia/Shanghai
 `
 }
 
-// iniSetExtDir 把 extension_dir 设为版本目录的绝对 ext/ 路径（值加引号，避免路径含 ~ 或空格时解析失败）
+// iniSetExtDir 把 extension_dir 设为版本目录的绝对 ext/ 路径（值统一加引号，避免路径含 ~ 或空格时解析失败）
 func iniSetExtDir(text, phpDir string) (string, bool) {
-	dir := filepath.Join(phpDir, "ext")
-	cur := strings.Trim(iniGet(text, "extension_dir"), "\"' ")
-	if filepath.Clean(filepath.FromSlash(cur)) == filepath.Clean(dir) {
-		return text, false
+	dir := filepath.ToSlash(filepath.Join(phpDir, "ext"))
+	raw := strings.TrimSpace(iniGet(text, "extension_dir"))
+	// 仅当「已加引号」且路径正确时才跳过，否则重写（历史数据可能写入了未加引号的短路径）
+	if len(raw) >= 2 && (raw[0] == '"' || raw[0] == '\'') && strings.HasSuffix(raw, string(raw[0])) {
+		cur := filepath.Clean(filepath.FromSlash(raw[1 : len(raw)-1]))
+		if cur == filepath.Clean(dir) {
+			return text, false
+		}
 	}
 	lines := strings.Split(text, "\n")
-	lines = iniSet(lines, "extension_dir", "\""+filepath.ToSlash(dir)+"\"")
+	lines = iniSet(lines, "extension_dir", "\""+dir+"\"")
 	return strings.Join(lines, "\n"), true
 }
 
@@ -633,6 +637,15 @@ func iniLineValue(l string) string {
 	return ""
 }
 
+// isZendExt 需以 zend_extension 方式加载的扩展
+func isZendExt(name string) bool {
+	switch strings.ToLower(name) {
+	case "opcache", "xdebug", "sourceguardian", "ioncube_loader", "simde":
+		return true
+	}
+	return false
+}
+
 // SetExtension 启用/禁用扩展；返回 php 校验告警（不阻断，仅提示）
 func SetExtension(id, name string, enable bool) (string, error) {
 	cfg, err := findInstance(id)
@@ -685,8 +698,8 @@ func SetExtension(id, name string, enable bool) (string, error) {
 			}
 		}
 		line := "extension=" + extValue
-		if strings.EqualFold(name, "opcache") {
-			line = "zend_extension=" + extValue
+		if isZendExt(name) {
+			line = "zend_extension=" + extValue // opcache / xdebug 须用 zend_extension 加载
 		}
 		if idx >= 0 {
 			lines = append(lines[:idx+1], append([]string{line}, lines[idx+1:]...)...)

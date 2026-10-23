@@ -87,17 +87,6 @@ export interface LogConfig {
 }
 
 /**
- * PortEntry 一个监听端口
- */
-export interface PortEntry {
-    "proto": string;
-    "port": number;
-    "pid": number;
-    "process": string;
-    "address": string;
-}
-
-/**
  * SvcEntry 由本程序管理的本地服务实例状态
  */
 export interface SvcEntry {
@@ -126,9 +115,21 @@ export interface SystemInfo {
     "memTotal": number;
     "memUsed": number;
     "memPercent": number;
+    "diskTotal": number;
+    "diskUsed": number;
+    "diskPercent": number;
+
+    /**
+     * 启动以来累计发送字节
+     */
+    "netSent": number;
+
+    /**
+     * 启动以来累计接收字节
+     */
+    "netRecv": number;
     "goroutines": number;
     "appMemAlloc": number;
-    "listeners": PortEntry[] | null;
     "services": SvcEntry[] | null;
 }
 
@@ -175,6 +176,11 @@ export interface ToolConfig {
      * 新窗口最大化启动
      */
     "fullscreen": boolean;
+
+    /**
+     * 禁用全屏/最大化：隐藏工具窗口标题栏的最大化按钮与“切换全屏”菜单
+     */
+    "disableFullscreen": boolean;
 
     /**
      * 视口宽（<=0 继承默认）

@@ -71,11 +71,11 @@
                             H: {{ hsv.h }}°&nbsp;&nbsp;S: {{ hsv.s }}%&nbsp;&nbsp;V: {{ hsv.v }}%
                         </span>
                     </div>
-                    <div class="cp-modes">
+                    <!-- <div class="cp-modes">
                         <span class="cp-mode-sub">
                             H: {{ hsl.h }}°&nbsp;&nbsp;S: {{ hsl.s }}%&nbsp;&nbsp;L: {{ hsl.l }}%
                         </span>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 
@@ -351,9 +351,10 @@ onMounted(() => {
 <style scoped>
 /* 卡片铺满窗口：高度由 fitWindow 按内容自适应，内部不产生冗余空白 */
 .cp-card {
-    height: 100%;
+    height:calc( 100% - 2px);
     display: flex;
     flex-direction: column;
+    background: var(--color-bg-1);
 }
 
 .cp-card :deep(.arco-card-body) {
@@ -394,9 +395,9 @@ onMounted(() => {
     position: relative;
     flex: 1;
     min-width: 0;
-    min-height: 180px;
-    border-radius: var(--base-radius-default);
-    border: 1px solid var(--color-border-2);
+    height: 128px;
+    border-radius: var(--base-radius-small);
+    border: 1px solid var(--color-border-1);
     cursor: crosshair;
     touch-action: none;
 }
@@ -416,7 +417,7 @@ onMounted(() => {
     position: relative;
     width: 18px;
     flex: none;
-    border-radius: var(--base-radius-default);
+    border-radius: var(--base-radius-small);
     cursor: pointer;
     touch-action: none;
     background: linear-gradient(to bottom,
@@ -450,10 +451,10 @@ onMounted(() => {
     flex: none;
     display: flex;
     gap: 0;
-    border: 1px solid var(--color-border-2);
-    border-radius: var(--base-radius-default);
+    border: 1px solid var(--color-border-1);
+    border-radius: var(--base-radius-small);
     overflow: hidden;
-    height: 36px;
+    height: 16px;
 }
 
 .cp-swatch {

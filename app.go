@@ -296,7 +296,8 @@ func (a *App) Greet(name string) string {
 // path 形如 "/tools/timestamp"；title 为新窗口标题；
 // single 为 true 时为该路由登记窗口名，已存在则直接复用（展示+取消最小化+聚焦），不重复创建；
 // fullscreen 为 true 时新窗口最大化铺满显示器（非排他全屏，避免顶部自绘标题栏被遮挡）；
-// width/height 为新窗口视口尺寸，<=0 时继承默认尺寸（1000x718）。
+// width/height 为新窗口视口尺寸，<=0 时继承默认尺寸（1000x718）；
+// path 的 query 带 fs=0（工具配置“禁用全屏”）时，隐藏最大化按钮并禁止标题栏双击最大化。
 func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen bool, width int, height int) error {
 	if a.app == nil {
 		return fmt.Errorf("应用尚未初始化")
@@ -336,9 +337,19 @@ func (a *App) OpenToolWindow(path string, title string, single bool, fullscreen 
 		},
 		URL: "/#" + path,
 	}
-	// 单例窗口：以路由路径作为唯一名称，已存在则聚焦复用
+	// “禁用全屏”（前端拼 fs=0）：除 BlankLayout 隐藏最大化按钮外，
+	// 再移除 WS_MAXIMIZEBOX 样式——Win32 对标题栏双击（WM_NCLBUTTONDBLCLK）的
+	// 默认处理会检查该样式，去掉后双击拖拽区也不再最大化
+	if strings.Contains(path, "fs=0") {
+		opts.MaximiseButtonState = application.ButtonHidden
+	}
+	// 单例窗口：以路由路径（去掉 ?query，如 ?inst=/?fs=0）作为唯一名称，已存在则聚焦复用
 	if single {
-		name := "win:" + path
+		cleanPath := path
+		if qi := strings.Index(cleanPath, "?"); qi >= 0 {
+			cleanPath = cleanPath[:qi]
+		}
+		name := "win:" + cleanPath
 		if w, ok := a.app.Window.GetByName(name); ok {
 			w.Show()
 			w.UnMinimise()
@@ -831,6 +842,22 @@ func (a *App) PhpSrvSetExtension(id, name string, enable bool) (string, error) {
 
 // PhpSrvLoadedExtensions 实测已加载扩展名列表（php -m）
 func (a *App) PhpSrvLoadedExtensions(id string) ([]string, error) { return php.LoadedExtensions(id) }
+
+// PhpSrvExtCatalog 常用扩展在线清单（PECL）：已安装 / 可下载 / 下载中
+func (a *App) PhpSrvExtCatalog(id string, force bool) ([]php.RemoteExtensionInfo, error) {
+	return php.ExtCatalog(id, force)
+}
+
+// PhpSrvExtRefresh 清空 PECL 线上索引缓存（配合 PhpSrvExtCatalog(force=true) 使用）
+func (a *App) PhpSrvExtRefresh() { php.RefreshExtCatalog() }
+
+// PhpSrvExtInstall 异步下载安装扩展 dll 到版本 ext 目录，enable=true 顺带启用；进度经 php:ext-install 事件推送
+func (a *App) PhpSrvExtInstall(id, ext string, enable bool) error {
+	return php.InstallExtension(id, ext, enable)
+}
+
+// PhpSrvExtRemove 删除由本工具下载的扩展 dll（内置扩展不可删）
+func (a *App) PhpSrvExtRemove(id, ext string) error { return php.RemoveExtension(id, ext) }
 
 // PhpSrvDisableFunctions 读取实例禁用函数列表
 func (a *App) PhpSrvDisableFunctions(id string) ([]string, error) { return php.DisableFunctions(id) }

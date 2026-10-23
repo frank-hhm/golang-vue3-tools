@@ -8,6 +8,7 @@ export type {
     InstanceConfig,
     InstanceStatus,
     PHPInfo,
+    RemoteExtensionInfo,
     RemoteVersion,
     ServerVersion
 } from "./models.js";

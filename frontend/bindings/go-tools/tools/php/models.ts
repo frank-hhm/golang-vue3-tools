@@ -134,6 +134,96 @@ export interface PHPInfo {
 }
 
 /**
+ * RemoteExtensionInfo 一个可在 PECL 上获取的常用扩展
+ */
+export interface RemoteExtensionInfo {
+    /**
+     * 扩展名，如 redis
+     */
+    "name": string;
+
+    /**
+     * 展示名
+     */
+    "label": string;
+
+    /**
+     * 用途说明
+     */
+    "description": string;
+
+    /**
+     * ext 目录已存在 php_<name>.dll
+     */
+    "installed": boolean;
+
+    /**
+     * php.ini 已启用
+     */
+    "enabled": boolean;
+
+    /**
+     * dll 由 go-tools 下载（可删除）
+     */
+    "downloaded": boolean;
+
+    /**
+     * 已存在时的文件名
+     */
+    "dll": string;
+
+    /**
+     * 已存在时记录的扩展版本
+     */
+    "extVersion": string;
+
+    /**
+     * 线上索引获取中
+     */
+    "fetching": boolean;
+
+    /**
+     * 线上存在匹配当前 PHP 版本的包
+     */
+    "matchable": boolean;
+
+    /**
+     * 线上有该扩展的 Windows 包（未必含当前 PHP 版本）
+     */
+    "seriesSeen": boolean;
+
+    /**
+     * 线上包覆盖的 PHP 产品线，如 8.0, 8.1, 8.2
+     */
+    "available": string;
+
+    /**
+     * 匹配到的扩展版本
+     */
+    "extVer": string;
+
+    /**
+     * 匹配到的包地址
+     */
+    "url": string;
+
+    /**
+     * 包大小
+     */
+    "size": number;
+
+    /**
+     * 无法安装的原因
+     */
+    "reason": string;
+
+    /**
+     * 正在下载 / 安装
+     */
+    "busy": boolean;
+}
+
+/**
  * RemoteVersion 线上可安装版本
  */
 export interface RemoteVersion {

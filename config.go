@@ -40,18 +40,19 @@ type GeneralConfig struct {
 
 // ToolConfig 单个工具项（首页列表 / 浮动球快捷 / 全局热键 共用）
 type ToolConfig struct {
-	ID         string `json:"id"`         // 稳定唯一标识（编辑/删除用）
-	Key        string `json:"key"`        // 内置功能标识（对应工具类型）
-	Name       string `json:"name"`       // 显示标题
-	Path       string `json:"path"`       // 前端路由，如 /tools/timestamp（与 Event 二选一）
-	Event      string `json:"event"`      // 直接触发的事件（如 screenshot），空表示走 Path
-	Icon       string `json:"icon"`       // 图标：Arco 图标名（如 camera）或图标库 class（如 icon-lianjie）
-	Single     bool   `json:"single"`     // 窗口单例
-	Fullscreen bool   `json:"fullscreen"` // 新窗口最大化启动
-	Width      int    `json:"width"`      // 视口宽（<=0 继承默认）
-	Height     int    `json:"height"`     // 视口高（<=0 继承默认）
-	Shortcut   string `json:"shortcut"`   // 全局热键，如 "Ctrl+Alt+S"，空表示未设置
-	Quick      bool   `json:"quick"`      // 是否出现在浮动球快捷菜单
+	ID                string `json:"id"`                // 稳定唯一标识（编辑/删除用）
+	Key               string `json:"key"`               // 内置功能标识（对应工具类型）
+	Name              string `json:"name"`              // 显示标题
+	Path              string `json:"path"`              // 前端路由，如 /tools/timestamp（与 Event 二选一）
+	Event             string `json:"event"`             // 直接触发的事件（如 screenshot），空表示走 Path
+	Icon              string `json:"icon"`              // 图标：Arco 图标名（如 camera）或图标库 class（如 icon-lianjie）
+	Single            bool   `json:"single"`            // 窗口单例
+	Fullscreen        bool   `json:"fullscreen"`        // 新窗口最大化启动
+	DisableFullscreen bool   `json:"disableFullscreen"` // 禁用全屏/最大化：隐藏工具窗口标题栏的最大化按钮与“切换全屏”菜单
+	Width             int    `json:"width"`             // 视口宽（<=0 继承默认）
+	Height            int    `json:"height"`            // 视口高（<=0 继承默认）
+	Shortcut          string `json:"shortcut"`          // 全局热键，如 "Ctrl+Alt+S"，空表示未设置
+	Quick             bool   `json:"quick"`             // 是否出现在浮动球快捷菜单
 }
 
 // ToolSettings 单个工具的专属设置（按 ToolConfig.Key 索引，目前仅 mysql 使用）
@@ -87,24 +88,23 @@ func DefaultConfig() AppConfig {
 			"mysql": {SQLLogEnabled: true},
 		},
 		Tools: []ToolConfig{
-			{ID: "screenshot", Key: "screenshot", Name: "截图", Event: "screenshot", Icon: "camera", Quick: true},
-			{ID: "colorpicker", Key: "colorpicker", Name: "颜色取色器", Path: "/tools/colorpicker", Icon: "palette", Single: true, Width: 480, Height: 400, Quick: true},
+			{ID: "screenshot", Key: "screenshot", Name: "截图", Event: "screenshot", Icon: "camera", Shortcut: "Ctrl+Alt+A", Quick: true},
+			{ID: "colorpicker", Key: "colorpicker", Name: "颜色取色器", Path: "/tools/colorpicker", Icon: "icon-mofa", Single: true, Width: 480, Height: 560, Quick: true},
 			{ID: "video", Key: "video", Name: "视频录制", Path: "/tools/video", Icon: "video-camera", Single: true, Fullscreen: true, Quick: true},
 			{ID: "qrcode", Key: "qrcode", Name: "二维码生成", Path: "/tools/qrcode", Icon: "icon-erweima3"},
 			{ID: "timestamp", Key: "timestamp", Name: "时间戳转换", Path: "/tools/timestamp", Icon: "clock-circle"},
-			{ID: "strrandom", Key: "strrandom", Name: "随机字符串生成", Path: "/tools/strrandom", Icon: "icon-mofa"},
+			{ID: "strrandom", Key: "strrandom", Name: "随机字符串生成", Path: "/tools/strrandom", Icon: "icon-yanfa"},
 			{ID: "encdec", Key: "encdec", Name: "文字加密解密", Path: "/tools/encdec", Icon: "lock"},
 			{ID: "hexconvert", Key: "hexconvert", Name: "进制转换", Path: "/tools/hexconvert", Icon: "swap"},
 			{ID: "imageBase64", Key: "imageBase64", Name: "图片base64", Path: "/tools/imageBase64", Icon: "icon-img"},
 			{ID: "sniffer", Key: "sniffer", Name: "抓包工具", Path: "/tools/sniffer", Icon: "wifi", Single: true, Fullscreen: true, Quick: true},
 			{ID: "websocket", Key: "websocket", Name: "WebSocket调试", Path: "/tools/websocket", Icon: "icon-lianjie", Fullscreen: true},
 			{ID: "usbserial", Key: "usbserial", Name: "USB调试", Path: "/tools/usbserial", Icon: "icon-xinpian"},
-			{ID: "redis", Key: "redis", Name: "Redis管理", Path: "/tools/redis", Icon: "storage", Single: true, Fullscreen: true},
-			{ID: "mysql", Key: "mysql", Name: "MySQL管理", Path: "/tools/mysql", Icon: "code-block", Single: true, Fullscreen: true},
-			{ID: "php", Key: "php", Name: "PHP管理", Path: "/tools/php", Icon: "icon-mofa", Single: true, Fullscreen: true},
-			{ID: "nginx", Key: "nginx", Name: "Nginx管理", Path: "/tools/nginx", Icon: "share-external", Single: true, Fullscreen: true},
-			{ID: "npm", Key: "npm", Name: "npm管理", Path: "/tools/npm", Icon: "drive-file", Single: true, Fullscreen: true},
-			{ID: "settings", Key: "settings", Name: "设置", Path: "/tools/settings", Icon: "settings", Single: true, Quick: true},
+			{ID: "redis", Key: "redis", Name: "Redis管理", Path: "/tools/redis", Icon: "icon-icon-redis", Single: true, Fullscreen: true},
+			{ID: "mysql", Key: "mysql", Name: "MySQL管理", Path: "/tools/mysql", Icon: "icon-MySQL", Single: true, Fullscreen: true},
+			{ID: "php", Key: "php", Name: "PHP管理", Path: "/tools/php", Icon: "icon-php", Single: true, Width: 1200, Height: 800},
+			{ID: "nginx", Key: "nginx", Name: "Nginx管理", Path: "/tools/nginx", Icon: "icon-ngnix", Single: true, Width: 1200, Height: 800},
+			{ID: "npm", Key: "npm", Name: "Npm管理", Path: "/tools/npm", Icon: "icon-npm", Single: true, Width: 1200, Height: 800},
 		},
 	}
 }
@@ -181,9 +181,9 @@ func normalizeConfig(cfg *AppConfig) {
 	}
 	// 补齐存量配置中缺失的新增默认工具（仅限 php/nginx/npm，尊重用户手动移除的其他工具）
 	for _, extra := range []struct{ id, key, name, path, icon string }{
-		{"php", "php", "PHP管理", "/tools/php", "icon-mofa"},
-		{"nginx", "nginx", "Nginx管理", "/tools/nginx", "share-external"},
-		{"npm", "npm", "npm管理", "/tools/npm", "drive-file"},
+		{"php", "php", "PHP管理", "/tools/php", "icon-php"},
+		{"nginx", "nginx", "Nginx管理", "/tools/nginx", "icon-ngnix"},
+		{"npm", "npm", "Npm管理", "/tools/npm", "icon-npm"},
 	} {
 		found := false
 		for _, t := range cfg.Tools {
@@ -201,7 +201,7 @@ func normalizeConfig(cfg *AppConfig) {
 					break
 				}
 			}
-			newTool := ToolConfig{ID: extra.id, Key: extra.key, Name: extra.name, Path: extra.path, Icon: extra.icon, Single: true, Fullscreen: true}
+			newTool := ToolConfig{ID: extra.id, Key: extra.key, Name: extra.name, Path: extra.path, Icon: extra.icon, Single: true, Width: 1200, Height: 800}
 			cfg.Tools = append(cfg.Tools[:ins:ins], append([]ToolConfig{newTool}, cfg.Tools[ins:]...)...)
 		}
 	}

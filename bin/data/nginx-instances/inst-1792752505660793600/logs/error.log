@@ -1,0 +1,6 @@
+2026/10/23 18:48:33 [error] 35204#29176: *6 directory index of "E:/go-tools-bak/bin/data/www/测试/" is forbidden, client: 127.0.0.1, server: localhost, request: "GET / HTTP/1.1", host: "127.0.0.1:8091", referrer: "http://wails.localhost:9245/"
+2026/10/23 18:48:39 [error] 35204#29176: *6 directory index of "E:/go-tools-bak/bin/data/www/测试/" is forbidden, client: 127.0.0.1, server: localhost, request: "GET / HTTP/1.1", host: "127.0.0.1:8091", referrer: "http://wails.localhost:9245/"
+2026/10/23 18:48:46 [notice] 23412#30896: signal process started
+2026/10/23 18:48:47 [notice] 22048#20032: signal process started
+2026/10/23 18:49:06 [notice] 28540#17380: signal process started
+2026/10/23 19:55:52 [notice] 6416#22204: signal process started

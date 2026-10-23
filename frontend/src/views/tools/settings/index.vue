@@ -246,19 +246,24 @@
                     <div class="hint">支持 Arco 图标名（如 camera）与图标库 icon-xxx（如 icon-lianjie），点击右侧“图标”选择。</div>
                 </a-form-item>
                 <a-row :gutter="12">
-                    <a-col :span="8">
+                    <a-col :span="6">
                         <a-form-item field="quick" label="浮动球快捷">
                             <a-switch v-model="editForm.quick" />
                         </a-form-item>
                     </a-col>
-                    <a-col :span="8">
+                    <a-col :span="6">
                         <a-form-item field="single" label="单例窗口">
                             <a-switch v-model="editForm.single" />
                         </a-form-item>
                     </a-col>
-                    <a-col :span="8">
+                    <a-col :span="6">
                         <a-form-item field="fullscreen" label="全屏启动">
                             <a-switch v-model="editForm.fullscreen" />
+                        </a-form-item>
+                    </a-col>
+                    <a-col :span="6">
+                        <a-form-item field="disableFullscreen" label="禁用全屏">
+                            <a-switch v-model="editForm.disableFullscreen" />
                         </a-form-item>
                     </a-col>
                 </a-row>
@@ -310,9 +315,11 @@ interface BuiltinDef {
     icon: string;
     single?: boolean;
     fullscreen?: boolean;
+    disableFullscreen?: boolean;
     width?: number;
     height?: number;
     quick?: boolean;
+    shortcut?: string;
 }
 
 type BuiltinExtra = Omit<BuiltinDef, "key" | "name" | "icon">;
@@ -324,7 +331,7 @@ function builtin(key: string, name: string, extra: BuiltinExtra = {}): BuiltinDe
 
 /** 内置功能目录：新增下拉与“恢复默认列表”共用，避免默认数据分叉 */
 const BUILTINS: BuiltinDef[] = [
-    builtin("screenshot", "截图", { event: "screenshot", quick: true }),
+    builtin("screenshot", "截图", { event: "screenshot", quick: true, shortcut: "Ctrl+Alt+A", disableFullscreen: true }),
     builtin("colorpicker", "颜色取色器", { path: "/tools/colorpicker", single: true, width: 480, height: 560, quick: true }),
     builtin("video", "视频录制", { path: "/tools/video", single: true, fullscreen: true, quick: true }),
     builtin("qrcode", "二维码生成", { path: "/tools/qrcode" }),
@@ -338,12 +345,15 @@ const BUILTINS: BuiltinDef[] = [
     builtin("usbserial", "USB调试", { path: "/tools/usbserial" }),
     builtin("redis", "Redis管理", { path: "/tools/redis", single: true, fullscreen: true }),
     builtin("mysql", "MySQL管理", { path: "/tools/mysql", single: true, fullscreen: true }),
+    builtin("php", "PHP管理", { path: "/tools/php", single: true, width: 1200, height: 800 }),
+    builtin("nginx", "Nginx管理", { path: "/tools/nginx", single: true, width: 1200, height: 800 }),
+    builtin("npm", "Npm管理", { path: "/tools/npm", single: true, width: 1200, height: 800 }),
     builtin("settings", "设置", { path: "/tools/settings", single: true, quick: true }),
 ];
 
 interface ToolRow {
     id: string; key: string; name: string; path: string; event: string; icon: string;
-    single: boolean; fullscreen: boolean; width: number; height: number; shortcut: string; quick: boolean;
+    single: boolean; fullscreen: boolean; disableFullscreen: boolean; width: number; height: number; shortcut: string; quick: boolean;
 }
 
 /** 完整配置（保存时整体回传） */
@@ -411,6 +421,7 @@ function normTool(t: any): ToolRow {
         icon: normalizeToolIcon(t.icon),
         single: !!t.single,
         fullscreen: !!t.fullscreen,
+        disableFullscreen: !!t.disableFullscreen,
         width: t.width || 0,
         height: t.height || 0,
         shortcut: t.shortcut || "",
@@ -443,7 +454,7 @@ const editForm = reactive<ToolRow>(normTool({}));
 
 function openAdd() {
     editIndex.value = -1;
-    Object.assign(editForm, normTool({ id: "", key: "", name: "", path: "", event: "", icon: "", single: false, fullscreen: false, width: 0, height: 0, shortcut: "", quick: false }));
+    Object.assign(editForm, normTool({ id: "", key: "", name: "", path: "", event: "", icon: "", single: false, fullscreen: false, disableFullscreen: false, width: 0, height: 0, shortcut: "", quick: false }));
     editVisible.value = true;
 }
 
@@ -470,6 +481,7 @@ function onBuiltinChange(val: any) {
     if (editIndex.value < 0) {
         editForm.single = !!b.single;
         editForm.fullscreen = !!b.fullscreen;
+        editForm.disableFullscreen = !!b.disableFullscreen;
         editForm.width = b.width || 0;
         editForm.height = b.height || 0;
         editForm.quick = !!b.quick;
@@ -574,8 +586,9 @@ async function openLogDir() {
     }
 }
 
-/** 默认工具列表（由 BUILTINS 派生，与后端 DefaultConfig 对齐，用于“恢复默认列表”） */
-const DEFAULT_TOOLS: ToolRow[] = BUILTINS.map((b) => ({
+/** 默认工具列表（由 BUILTINS 派生，与后端 DefaultConfig 对齐，用于“恢复默认列表”）
+ * 排除 settings（与当前数据一致，设置仍可从浮动球/标题栏入口进入），并携带默认快捷键 */
+const DEFAULT_TOOLS: ToolRow[] = BUILTINS.filter((b) => b.key !== "settings").map((b) => ({
     id: b.key,
     key: b.key,
     name: b.name,
@@ -584,9 +597,10 @@ const DEFAULT_TOOLS: ToolRow[] = BUILTINS.map((b) => ({
     icon: b.icon,
     single: !!b.single,
     fullscreen: !!b.fullscreen,
+    disableFullscreen: !!b.disableFullscreen,
     width: b.width || 0,
     height: b.height || 0,
-    shortcut: "",
+    shortcut: b.shortcut || "",
     quick: !!b.quick,
 }));
 
@@ -781,7 +795,7 @@ onBeforeUnmount(() => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    background: var(--color-bg-1);
+    background: var(--color-bg-2);
 }
 
 .main-panel :deep(.arco-card-body) {

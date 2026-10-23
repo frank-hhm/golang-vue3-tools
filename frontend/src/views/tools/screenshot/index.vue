@@ -47,8 +47,9 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, onMounted, ref } from "vue";
+import { getCurrentInstance, onMounted, onUnmounted, ref } from "vue";
 import { Message } from "@arco-design/web-vue";
+import { Events } from "@wailsio/runtime";
 
 const {
     proxy: { $GoTools },
@@ -59,12 +60,30 @@ const STORAGE_KEY = "tool:screenshot";
 
 const image = ref("");
 
-onMounted(() => {
+/** 从共享 localStorage 读取最新截图（新建窗口初始化 & 外部重新截图时刷新） */
+const reloadFromStorage = () => {
     try {
         image.value = localStorage.getItem(STORAGE_KEY) || "";
     } catch {
         /* localStorage 不可用时忽略 */
     }
+};
+
+let offUpdated: (() => void) | null = null;
+
+onMounted(() => {
+    reloadFromStorage();
+    // 主窗口热键/快捷重新截图后广播：本窗口（单例已存在）据此刷新预览
+    try {
+        const r = Events.On("screenshot:updated", () => { reloadFromStorage(); });
+        if (typeof r === "function") offUpdated = r as () => void;
+    } catch {
+        /* */
+    }
+});
+onUnmounted(() => {
+    offUpdated?.();
+    offUpdated = null;
 });
 
 /** 重新触发区域截图并刷新预览 */
@@ -177,7 +196,7 @@ const copyImage = async () => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    background: var(--color-bg-1);
+    background: var(--color-bg-2);
 }
 
 .main-panel :deep(.arco-card-body) {

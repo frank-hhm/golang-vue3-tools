@@ -4,33 +4,17 @@
         <div class="win-titlebar">
             <div class="tb-title">{{ title }}</div>
             <div class="tb-actions">
-                <a-dropdown trigger="click" position="br" @select="onMenuSelect">
-                    <div class="tb-menu">视图<icon-down class="tb-caret" /></div>
-                    <template #content>
-                        <a-doption value="reload">
-                            <template #icon><icon-refresh /></template>重新加载
-                        </a-doption>
-                        <a-doption value="fullscreen">
-                            <template #icon><icon-fullscreen /></template>切换全屏
-                        </a-doption>
-                        <a-doption value="theme">
-                            <template #icon>
-                                <icon-sun v-if="themeMode === 'dark'" />
-                                <icon-moon v-else />
-                            </template>
-                            {{ themeMode === 'dark' ? '切换浅色模式' : '切换暗黑模式' }}
-                        </a-doption>
-                        <a-doption value="settings">
-                            <template #icon><icon-settings /></template>设置
-                        </a-doption>
-                    </template>
-                </a-dropdown>
-                <div class="tb-btn" title="最小化" @click="minimise"><icon-minus /></div>
-                <div class="tb-btn" title="最大化 / 还原" @click="toggleMaximise"><icon-expand /></div>
-                <div class="tb-btn tb-close" title="关闭" @click="close"><icon-close /></div>
+                <a-space>
+                    <a-switch size="small" v-model:checked="themeMode" @change="toggleTheme" />
+                    <a-button size="small" @click="reload"><icon-refresh /></a-button>
+                    <a-button size="small" v-if="!isSettingsPage" @click="toggleSettings"><icon-settings /></a-button>
+                    <a-button size="small" v-if="!noFullscreen" @click="toggleFullscreen"><icon-fullscreen /></a-button>
+                    <a-button size="small" @click="minimise"><icon-minus /></a-button>
+                    <a-button size="small" @click="close"><icon-close /></a-button>
+                </a-space>
             </div>
         </div>
-        <div class="win-content">
+        <div class="win-content" :class="{ 'no-pad': noPadding }">
             <router-view />
         </div>
     </div>
@@ -38,9 +22,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { Window } from "@wailsio/runtime";
 import { applyTheme, currentTheme } from "@/utils/theme";
+import { useToolWindow } from "@/views/index/useToolWindow";
 
 /**
  * 空白布局：用于 Wails 原生新窗口（/win 前缀）。
@@ -48,8 +33,15 @@ import { applyTheme, currentTheme } from "@/utils/theme";
  * 全屏时该标题栏随内容铺满显示器，菜单依旧可见。
  */
 const route = useRoute();
-const router = useRouter();
+const { openToolWindow } = useToolWindow();
 const title = computed(() => (route.meta?.menu_name as string) || "go-tools");
+
+// 当前页即设置页时，视图菜单不再重复展示“设置”入口
+const isSettingsPage = computed(() => route.path.includes("/tools/settings"));
+// 工具配置“禁用全屏”（URL query fs=0）：隐藏最大化按钮与“切换全屏”菜单
+const noFullscreen = computed(() => String(route.query.fs ?? "") === "0");
+// 内容区内边距：默认给；取色器等需要内容铺满边缘的工具页去掉 padding
+const noPadding = computed(() => route.path.includes("/tools/colorpicker"));
 
 // 当前主题模式：用于菜单项图标与文案（暗黑 <-> 浅色快速切换，“跟随系统”按当前实际深浅切换）
 const themeMode = ref(currentTheme());
@@ -81,10 +73,14 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
             toggleTheme();
             break;
         case "settings":
-            router.push("/win/tools/settings");
+            toggleSettings();
             break;
     }
 };
+
+// 打开设置：走单例工具窗口，不在当前窗口跳转；设置窗口已存在时由后端直接复用（显示+取消最小化+聚焦）
+const toggleSettings = () => openToolWindow("/tools/settings", "设置", { single: true });
+
 </script>
 
 <style scoped>
@@ -94,7 +90,7 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     top: 0;
     width: 100%;
     height: 100%;
-    background: var(--color-bg-body);
+    background: var(--color-bg-1);
 }
 
 .win-titlebar {
@@ -107,11 +103,12 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #1d2129;
-    color: #fff;
+    background: var(--color-bg-1);
+    color: var(--color-text-1);
     user-select: none;
     -webkit-app-region: drag;
     app-region: drag;
+    border-bottom: 1px solid var(--color-border-1);
 }
 
 .tb-title {
@@ -125,6 +122,7 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     align-items: center;
     -webkit-app-region: no-drag;
     app-region: no-drag;
+    margin-right: var(--base-padding);
 }
 
 .tb-menu {
@@ -136,6 +134,7 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     cursor: pointer;
     font-size: var(--base-size-medium);
 }
+
 .tb-menu:hover {
     background: rgba(255, 255, 255, 0.12);
 }
@@ -153,9 +152,11 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     cursor: pointer;
     font-size: var(--base-size-default);
 }
+
 .tb-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(var(--primary-6), 0.12);
 }
+
 .tb-close:hover {
     background: rgb(var(--red-6));
     color: #fff;
@@ -169,5 +170,10 @@ const onMenuSelect = (v: string | number | Record<string, any> | undefined) => {
     bottom: 0;
     padding: var(--base-padding);
     overflow-y: auto;
+}
+
+/* 取色器等铺满型工具页：去掉内容区留白 */
+.win-content.no-pad {
+    padding: 0;
 }
 </style>

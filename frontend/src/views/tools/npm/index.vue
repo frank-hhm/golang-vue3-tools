@@ -315,6 +315,7 @@
 import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Message, Modal } from "@arco-design/web-vue";
 import { Events } from "@wailsio/runtime";
+import { useRoute } from "vue-router";
 
 const GoTools = (getCurrentInstance() as any)?.appContext.config.globalProperties.$GoTools;
 
@@ -328,7 +329,9 @@ const logLines = ref<string[]>([]);
 const logBoxRef = ref<HTMLElement | null>(null);
 let logTimer: any = null;
 let srvTimer: any = null;
+const route = useRoute();
 let offInstall: any = null;
+let offSelInst: any = null;
 
 const selCfg = computed(() => instances.value.find((i) => i.id === selectedId.value) || null);
 const selState = computed(() => (selectedId.value ? states[selectedId.value] : null));
@@ -676,8 +679,17 @@ function uninstallPkg(rec: any) {
 /* ============================ 生命周期 ============================ */
 onMounted(async () => {
     await loadInstances();
+    // 主页点击服务实例进入（?inst=）：选中该站点展示详情
+    const wantId = String(route.query.inst ?? "");
+    if (wantId && instances.value.some((i) => i.id === wantId)) selectInst(wantId);
     loadLocalVersions();
     srvTimer = setInterval(refreshStates, 3000);
+    // 单例窗口已打开时，主页再次点击其他实例 → 通过事件切换
+    offSelInst = Events.On("tool:select-inst", (ev: any) => {
+        const p = ev?.data ?? ev;
+        if (p?.type !== "npm" || !p?.id) return;
+        if (instances.value.some((i) => i.id === String(p.id))) selectInst(String(p.id));
+    });
     offInstall = Events.On("npm:install", (ev: any) => {
         const p = ev?.data ?? ev;
         if (!p || !p.version) return;
@@ -702,6 +714,7 @@ onMounted(async () => {
 });
 onUnmounted(() => {
     if (offInstall) offInstall();
+    if (offSelInst) offSelInst();
     if (srvTimer) clearInterval(srvTimer);
     if (logTimer) clearInterval(logTimer);
 });

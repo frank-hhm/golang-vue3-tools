@@ -1,0 +1,12 @@
+[
+  {
+    "id": "inst-1792752505660793600",
+    "name": "测试",
+    "version": "1.25.5",
+    "port": 8091,
+    "sslPort": 0,
+    "docRoot": "",
+    "workers": 0,
+    "stubStatus": true
+  }
+]

@@ -141,6 +141,16 @@ func main() {
 		// Window sized to the golden ratio (1000 / 618 ≈ 1.618).
 		Width:  1000,
 		Height: 718,
+		// 无边框：主窗口顶部改用前端 BasicLayout 自绘深色标题栏（与工具窗口 BlankLayout 一致），
+		// 右上角仅保留“设置”入口与“关闭”按钮（关闭仍隐藏到托盘）。
+		Frameless: true,
+		// 禁用双击标题栏最大化：移除 WS_MAXIMIZEBOX 样式（Win32 双击拖拽区的默认处理会检查该样式），
+		// 主窗口固定为非最大化尺寸，自适应交给前端布局
+		MaximiseButtonState: application.ButtonHidden,
+		Windows: application.WindowsWindow{
+			// 启用 WebView2 非客户区支持，使 app-region: drag 自绘标题栏可拖动
+			NonClientRegionSupport: true,
+		},
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,

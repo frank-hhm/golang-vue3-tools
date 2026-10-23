@@ -17,6 +17,8 @@ export interface ToolItem {
   single?: boolean;
   /** 新窗口是否铺满显示器（最大化启动）；默认 false（未配置则沿用常规尺寸） */
   fullscreen?: boolean;
+  /** 禁用全屏/最大化：为 true 时新窗口标题栏隐藏最大化按钮与“切换全屏”菜单 */
+  disableFullscreen?: boolean;
   /** 新窗口视口宽度；未设定（<=0）则继承默认尺寸 */
   width?: number;
   /** 新窗口视口高度；未设定（<=0）则继承默认尺寸 */

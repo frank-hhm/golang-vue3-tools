@@ -19,6 +19,8 @@ export function CaptureRegion(x: number, y: number, width: number, height: numbe
 
 /**
  * CaptureSelectedRegion 弹出区域选区，确认后：
+ *   - 从选区开始时“冻结”的那帧画面裁剪（所见即所得：选区时能看见的
+ *     tooltip/气泡/提示也会包含在成品图里，而不是事后重抓实时屏——那时提示已消失）；
  *   - 将截图以图像形式写入系统剪贴板（可直接 Ctrl+V 粘贴）；
  *   - 按 format 返回 base64 数据（"png" 或 "jpg"/"jpeg"，空值默认 png）。
  * 

@@ -181,6 +181,7 @@
 import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Message, Modal } from "@arco-design/web-vue";
 import { Events } from "@wailsio/runtime";
+import { useRoute } from "vue-router";
 
 const GoTools = (getCurrentInstance() as any)?.appContext.config.globalProperties.$GoTools;
 
@@ -220,6 +221,8 @@ const instForm = reactive<SrvInstanceConfig>({
 const installedSet = computed(() => new Set<string>(localVersions.value.map((v: any) => v.version)));
 
 let offInstall: any = null;
+const route = useRoute();
+let offSelInst: any = null;
 let srvTimer: any = null;
 
 function pushInstallLog(txt: string) {
@@ -397,10 +400,23 @@ async function openLogs(inst: SrvInstanceConfig) {
   }, 2000);
 }
 
-onMounted(() => {
-  loadSrvInstances();
+onMounted(async () => {
+  await loadSrvInstances();
+  // 主页点击服务实例进入（?inst=）：直接打开该实例的日志/状态详情
+  const wantId = String(route.query.inst ?? "");
+  if (wantId) {
+    const target = srvInstances.value.find((i) => i.id === wantId);
+    if (target) openLogs(target);
+  }
   loadLocalVersions();
   srvTimer = setInterval(refreshSrvStates, 3000);
+  // 单例窗口已打开时，主页再次点击其他实例 → 通过事件切换
+  offSelInst = Events.On("tool:select-inst", (ev: any) => {
+    const p = ev?.data ?? ev;
+    if (p?.type !== "mysql" || !p?.id) return;
+    const target = srvInstances.value.find((i) => i.id === String(p.id));
+    if (target) openLogs(target);
+  });
   offInstall = Events.On("mysql:install", (ev: any) => {
     const p = ev?.data ?? ev;
     if (!p || !p.version) return;
@@ -428,6 +444,7 @@ onUnmounted(() => {
   if (srvTimer) clearInterval(srvTimer);
   if (logsTimer) clearInterval(logsTimer);
   if (offInstall) offInstall();
+  if (offSelInst) offSelInst();
 });
 </script>
 

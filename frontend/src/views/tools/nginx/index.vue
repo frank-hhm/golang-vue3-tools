@@ -30,7 +30,7 @@
                                     <a-doption value="check"><icon-safe /> 配置检查</a-doption>
                                     <a-doption value="conf"><icon-settings /> nginx.conf</a-doption>
                                     <a-doption value="open"><icon-launch /> 打开站点</a-doption>
-                                    <a-doption value="logs"><icon-face-folder-open /> 日志</a-doption>
+                                    <a-doption value="logs"><icon-file /> 日志</a-doption>
                                     <a-doption value="edit"><icon-edit /> 编辑</a-doption>
                                     <a-doption value="del"><icon-delete /> 删除</a-doption>
                                 </template>
@@ -87,9 +87,23 @@
                 </div>
                 <div class="log-head">
                     <span>错误/访问日志（实时）</span>
-                    <a-button size="mini" @click="logLines = []">
-                        <template #icon><icon-delete /></template>清空
-                    </a-button>
+                    <a-space :size="6">
+                        <a-button size="mini" :disabled="!selState?.running" @click="openSite(selCfg?.port ?? 0)">
+                            <template #icon><icon-launch /></template>打开站点
+                        </a-button>
+                        <a-button size="mini" :disabled="!selState?.running" @click="doReload">
+                            <template #icon><icon-sync /></template>重载
+                        </a-button>
+                        <a-button size="mini" @click="openConf(selectedId)">
+                            <template #icon><icon-settings /></template>nginx.conf
+                        </a-button>
+                        <a-button size="mini" @click="doCheck(selectedId)">
+                            <template #icon><icon-safe /></template>配置检查
+                        </a-button>
+                        <a-button size="mini" @click="logLines = []">
+                            <template #icon><icon-delete /></template>清空
+                        </a-button>
+                    </a-space>
                 </div>
                 <div ref="logBoxRef" class="ls-log">
                     <div v-for="(l, i) in logLines" :key="i" class="ls-line">{{ l }}</div>
@@ -115,7 +129,7 @@
             <a-form-item field="sslPort" label="HTTPS 端口（0 = 不启用）">
                 <a-input-number v-model="instForm.sslPort" :min="0" :max="65535" />
             </a-form-item>
-            <a-form-item field="docRoot" label="站点根目录（空 = 实例目录 html/）">
+            <a-form-item field="docRoot" label="站点根目录（留空 = 程序目录 data/www/实例名）">
                 <a-input-search v-model="instForm.docRoot" placeholder="如 D:\www\site" search-button
                     button-text="选择目录" @click-btn="chooseDocRoot" />
             </a-form-item>
@@ -129,10 +143,11 @@
     </a-modal>
 
     <!-- 版本管理 -->
-    <a-modal v-model:visible="versionsVisible" title="Nginx 版本管理" :width="780" :footer="false" unmount-on-close>
+    <a-modal v-model:visible="versionsVisible" title="Nginx 版本管理" :width="780" :footer="false" unmount-on-close
+        :body-style="{ padding: '12px 16px', maxHeight: '72vh', overflowY: 'auto' }">
         <div class="ver-block">
             <div class="ver-title">本地可用版本</div>
-            <a-table :data="localVersions" size="small" :pagination="false" row-key="version"
+            <a-table :data="localVersions" size="small" :pagination="false" row-key="version" :scroll="{ y: 200 }"
                 :columns="[
                     { title: '版本', dataIndex: 'version' },
                     { title: '来源', dataIndex: 'source', width: 90, slotName: 'source' },
@@ -166,7 +181,7 @@
                 <a-button size="mini" :loading="remoteLoading" @click="loadRemoteVersions">刷新</a-button>
             </div>
             <a-spin :loading="remoteLoading" style="width:100%">
-                <a-table :data="remoteVersions" size="small" :pagination="{ pageSize: 8 }" row-key="version"
+                <a-table :data="remoteVersions" size="small" :pagination="false" row-key="version" :scroll="{ y: 220 }"
                     :columns="[
                         { title: '版本', dataIndex: 'version', width: 110 },
                         { title: '产品线', dataIndex: 'release', width: 90 },
@@ -221,6 +236,7 @@
 import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Message, Modal } from "@arco-design/web-vue";
 import { Events } from "@wailsio/runtime";
+import { useRoute } from "vue-router";
 
 const GoTools = (getCurrentInstance() as any)?.appContext.config.globalProperties.$GoTools;
 
@@ -234,7 +250,9 @@ const logLines = ref<string[]>([]);
 const logBoxRef = ref<HTMLElement | null>(null);
 let logTimer: any = null;
 let srvTimer: any = null;
+const route = useRoute();
 let offInstall: any = null;
+let offSelInst: any = null;
 
 const selCfg = computed(() => instances.value.find((i) => i.id === selectedId.value) || null);
 const selState = computed(() => (selectedId.value ? states[selectedId.value] : null));
@@ -511,8 +529,17 @@ async function saveConfText() {
 /* ============================ 生命周期 ============================ */
 onMounted(async () => {
     await loadInstances();
+    // 主页点击服务实例进入（?inst=）：选中该实例展示详情
+    const wantId = String(route.query.inst ?? "");
+    if (wantId && instances.value.some((i) => i.id === wantId)) selectInst(wantId);
     loadLocalVersions();
     srvTimer = setInterval(refreshStates, 3000);
+    // 单例窗口已打开时，主页再次点击其他实例 → 通过事件切换
+    offSelInst = Events.On("tool:select-inst", (ev: any) => {
+        const p = ev?.data ?? ev;
+        if (p?.type !== "nginx" || !p?.id) return;
+        if (instances.value.some((i) => i.id === String(p.id))) selectInst(String(p.id));
+    });
     offInstall = Events.On("nginx:install", (ev: any) => {
         const p = ev?.data ?? ev;
         if (!p || !p.version) return;
@@ -537,6 +564,7 @@ onMounted(async () => {
 });
 onUnmounted(() => {
     if (offInstall) offInstall();
+    if (offSelInst) offSelInst();
     if (srvTimer) clearInterval(srvTimer);
     if (logTimer) clearInterval(logTimer);
 });

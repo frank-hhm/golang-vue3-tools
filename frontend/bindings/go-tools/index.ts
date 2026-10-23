@@ -13,7 +13,6 @@ export type {
     BallConfig,
     GeneralConfig,
     LogConfig,
-    PortEntry,
     SvcEntry,
     SystemInfo,
     ToolConfig,

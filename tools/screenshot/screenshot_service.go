@@ -514,6 +514,8 @@ func max(a, b int) int {
 }
 
 // CaptureSelectedRegion 弹出区域选区，确认后：
+//   - 从选区开始时“冻结”的那帧画面裁剪（所见即所得：选区时能看见的
+//     tooltip/气泡/提示也会包含在成品图里，而不是事后重抓实时屏——那时提示已消失）；
 //   - 将截图以图像形式写入系统剪贴板（可直接 Ctrl+V 粘贴）；
 //   - 按 format 返回 base64 数据（"png" 或 "jpg"/"jpeg"，空值默认 png）。
 //
@@ -528,10 +530,23 @@ func (s *ScreenshotService) CaptureSelectedRegion(format string) (string, error)
 		return "", nil
 	}
 
-	img, err := screenshot.CaptureRect(rect)
-	if err != nil {
-		return "", fmt.Errorf("capture failed: %w", err)
+	// 优先从冻结帧裁剪；冻结帧缺失或与选区不匹配时回退到实时抓屏兜底。
+	var img image.Image
+	if frozen := FrozenFrame.Img; frozen != nil {
+		cropped := cropRGBA(frozen, rect)
+		if cropped != nil {
+			img = cropped
+		}
 	}
+	if img == nil {
+		live, cerr := screenshot.CaptureRect(rect)
+		if cerr != nil {
+			return "", fmt.Errorf("capture failed: %w", cerr)
+		}
+		img = live
+	}
+	// 用完释放，避免整屏位图长期占用内存
+	FrozenFrame.Img = nil
 
 	// 复制到剪贴板（微信式行为）；失败不影响 base64 返回
 	if err := copyImageToClipboard(img); err != nil {
@@ -539,6 +554,20 @@ func (s *ScreenshotService) CaptureSelectedRegion(format string) (string, error)
 	}
 
 	return encodeImageToBase64Format(img, format)
+}
+
+// cropRGBA 从整屏 RGBA 中按屏幕坐标矩形裁剪出子图（自动限制在图像范围内），
+// 无有效交集时返回 nil。
+func cropRGBA(full *image.RGBA, rect image.Rectangle) *image.RGBA {
+	r := rect.Intersect(full.Bounds())
+	if r.Dx() <= 0 || r.Dy() <= 0 {
+		return nil
+	}
+	out := image.NewRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
+	// dst 必须用 out 自身坐标系 (0,0,dx,dy)，源点用整屏坐标下的 r.Min；
+	// 若误把整屏坐标的 r 当 dst 传入，draw.Draw 会将其裁剪到 out 范围外→一像素不画→空白图。
+	draw.Draw(out, out.Bounds(), full, r.Min, draw.Src)
+	return out
 }
 
 // PickColorFromScreen 弹出全屏取色覆盖层（冻结屏幕 + 放大镜），单击取色，

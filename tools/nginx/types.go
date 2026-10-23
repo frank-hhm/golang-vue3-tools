@@ -105,7 +105,16 @@ type InstallProgress struct {
 
 /* ============================ 目录约定 ============================ */
 
+// goToolsDir 返回 Nginx 数据目录。
+// 优先使用可移植目录 <exedir>/data/（与 PHP 的 defaultDocRoot 保持同一层次），
+// 失败时回退到 %APPDATA%/go-tools/。
 func goToolsDir() (string, error) {
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Join(filepath.Dir(exe), "data")
+		if err := os.MkdirAll(dir, 0o755); err == nil {
+			return dir, nil
+		}
+	}
 	base, err := os.UserConfigDir()
 	if err != nil {
 		home, herr := os.UserHomeDir()
@@ -165,7 +174,8 @@ func instancesFilePath() (string, error) {
 	return filepath.Join(d, "nginx-instances.json"), nil
 }
 
-// instanceDir 实例 prefix 目录（conf/ + logs/ + html/）
+// instanceDir 实例 prefix 目录（conf/ + logs/ + html/ + temp/ 各子目录）
+// Windows 版 nginx 启动时必须预建 temp 子目录，否则报 CreateDirectory() failed
 func instanceDir(id string) (string, error) {
 	d, err := goToolsDir()
 	if err != nil {
@@ -175,7 +185,15 @@ func instanceDir(id string) (string, error) {
 		return "", fmt.Errorf("实例 ID 不能为空")
 	}
 	dir := filepath.Join(d, "nginx-instances", filepath.Base(id))
-	for _, sub := range []string{"", "conf", "logs", "html"} {
+	for _, sub := range []string{
+		"", "conf", "logs", "html",
+		"temp",
+		"temp/client_body_temp",
+		"temp/proxy_temp",
+		"temp/fastcgi_temp",
+		"temp/uwsgi_temp",
+		"temp/scgi_temp",
+	} {
 		if err := os.MkdirAll(filepath.Join(dir, sub), 0o755); err != nil {
 			return "", err
 		}
